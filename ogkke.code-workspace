@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"[python]": {
+			"python.pythonPath": "~/Proyectos/Python/ogkke/bin/python"
+		}
+	}
+}
