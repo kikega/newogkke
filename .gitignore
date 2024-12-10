@@ -31,7 +31,7 @@ collectstatic
 
 # IDE
 .vscode
-karate.code-workspace
+*.code-workspace
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
