@@ -1,0 +1,27 @@
+{% load static %}
+
+<header class="p-2">
+    <div class="container-fluid">
+        <div class="d-flex flex-wrap align-items-center justify-content-end justify-content-lg-end">
+            <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+                <input type="search" class="form-control" placeholder="Buscar grado..." aria-label="Search">
+            </form>
+
+            <div class="dropdown text-end">
+                <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="me-2 text-warning"> {{ user.username|capfirst }} </span>
+                    <img src={% static "img/toshiro.jpg" %} alt="imagen login" width="32" height="32" class="rounded-circle">
+                </a>
+                <ul class="mt-2 dropdown-menu text-small">
+                    <li><a class="dropdown-item" data-bs-toggle="modal" href="#modalCambiocontraseña">Cambiar contrraseña</a></li>
+                    <li><a class="dropdown-item" href="#">Perfil</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="{% url 'logout' %}">Salir</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</header>

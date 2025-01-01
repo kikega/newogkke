@@ -1,3 +1,4 @@
+"""Modelos de usuario"""
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
@@ -30,4 +31,4 @@ class Usuario(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     def __str__(self):
-        return(self.username)
+        return str(self.username)

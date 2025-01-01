@@ -72,9 +72,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ogkke.wsgi.application'
 
-# Usuarios customizados
-AUTH_USER_MODEL = 'usuarios.Usuario'
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -133,6 +130,9 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'collectstatic')
+
+# Usuarios customizados
+AUTH_USER_MODEL = 'usuarios.Usuario'
 
 # URLs para autenticación
 LOGIN_URL = 'login'
