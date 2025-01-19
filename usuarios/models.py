@@ -1,9 +1,23 @@
 """Modelos de usuario"""
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import RegexValidator
 
 # Create your models here.
+
+class UserManager(BaseUserManager):
+    """Manager personalizado para usuarios que usan email como nombre de usuario."""
+
+    def create_user(self, email, password=None, **extra_fields):
+        """Crea y guarda un usuario con el email y la contraseña dados."""
+        if not email:
+            raise ValueError('El email es obligatorio')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
 class Usuario(AbstractUser):
     """Modelo de usuario
     Heredamos de AbstractUser, cambiamos el campo username con email y añadimos algunos campos extra
@@ -26,9 +40,18 @@ class Usuario(AbstractUser):
         default=True,
         help_text='Configurado a True cuando el usuario ha verificado su email'
     )
+    is_active = models.BooleanField(default=True, verbose_name='Activo')
+    is_staff = models.BooleanField(default=False, verbose_name='Staff')
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = []
+
+    # Se indica que el UserManager será el administrador de objetos por defecto para ese modelo.
+    objects = UserManager()
+
+    class Meta:
+        verbose_name = 'Usuario'
+        verbose_name_plural = "Usuarios"
 
     def __str__(self):
         return str(self.username)
