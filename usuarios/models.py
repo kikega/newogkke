@@ -1,6 +1,6 @@
 """Modelos de usuario"""
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin, Group
 from django.core.validators import RegexValidator
 
 # Create your models here.
@@ -18,7 +18,19 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-class Usuario(AbstractUser):
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        """Crea y guarda un superusuario con el email y la contraseña dados."""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('El superusuario debe tener is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('El superusuario debe tener is_superuser=True.')
+        return self.create_user(email, password, **extra_fields)
+
+class Usuario(AbstractUser, PermissionsMixin):
     """Modelo de usuario
     Heredamos de AbstractUser, cambiamos el campo username con email y añadimos algunos campos extra
     """
@@ -42,6 +54,7 @@ class Usuario(AbstractUser):
     )
     is_active = models.BooleanField(default=True, verbose_name='Activo')
     is_staff = models.BooleanField(default=False, verbose_name='Staff')
+    groups = models.ManyToManyField(Group, blank=True, related_name='custom_user_set')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -54,4 +67,4 @@ class Usuario(AbstractUser):
         verbose_name_plural = "Usuarios"
 
     def __str__(self):
-        return str(self.username)
+        return str(self.email)

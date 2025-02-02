@@ -10,6 +10,8 @@ class Dojo(models.Model):
     """
     Modelo que representa un gimnasio de la asociación
     """
+    objects = models.Manager()
+
     nombre = models.CharField(max_length=100, verbose_name="Nombre")
     direccion = models.CharField(max_length=100, verbose_name="Dirección")
     poblacion = models.CharField(max_length=100, verbose_name="Población")
@@ -28,9 +30,10 @@ class Alumno(models.Model):
     """ 
     Modelo que representa un Alumno
     """
+    objects = models.Manager()
 
     username = None # No usamos el username
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, verbose_name="Alumno", blank=True, null=True)
+    usuario = models.OneToOneField(Usuario, on_delete=models.SET_NULL, verbose_name="Alumno", blank=True, null=True)
     nombre = models.CharField(max_length=50)
     apellidos = models.CharField(max_length=50)
     fecha_nacimiento = models.DateField(auto_now=False, auto_now_add=False, blank=True, null=True)
@@ -59,6 +62,7 @@ class Cursillo(models.Model):
     """
     Listado de los cursillos
     """
+    objects = models.Manager()
 
     evento = models.CharField(max_length=50)
     ciudad = models.CharField(max_length=50)
@@ -78,6 +82,7 @@ class Examen(models.Model):
     """
     Realización de exámenes
     """
+    objects = models.Manager()
 
     alumno = models.ForeignKey(Alumno, on_delete=models.CASCADE)
     evento = models.ForeignKey(Cursillo, on_delete=models.CASCADE)
@@ -92,6 +97,7 @@ class Examen(models.Model):
 
 class Peticion(models.Model):
     """Petición realizada por un instructor"""
+    objects = models.Manager()
 
     fecha = models.DateField(auto_now=False, auto_now_add=True)
     dojo = models.ForeignKey(Dojo, on_delete=models.CASCADE)

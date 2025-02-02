@@ -5,11 +5,12 @@ from .models import *
 
 class DojoAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'direccion', 'poblacion', 'provincia', 'codigo_postal')
-
+    search_fields = ('nombre',)
 
 class AlumnoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'apellidos', 'dojo','grado','instructor', 'activo')
+    list_display = ('apellidos','nombre','dojo','grado','instructor', 'activo')
     list_filter = ('dojo',)
+    search_fields = ('nombre', 'apellidos')
 
 class CursilloAdmin(admin.ModelAdmin):
     list_display = ('fecha', 'evento', 'ciudad', 'pais', 'internacional')
@@ -22,11 +23,6 @@ class ExamenAdmin(admin.ModelAdmin):
     list_display = ('evento', 'alumno', 'grado')
     raw_id_fields = ('alumno',)
     list_filter = ('evento',)
-
-
-class PeticionAdmin(admin.ModelAdmin):
-    list_display = ('fecha', 'dojo', 'titulo', 'finalizada')
-    list_filter = ('dojo', 'finalizada')
 
 
 class PeticionAdmin(admin.ModelAdmin):

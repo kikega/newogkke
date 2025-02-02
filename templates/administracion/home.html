@@ -13,12 +13,129 @@
             <div class="text-center bg-body-tertiary">
                 <div class="container py-3">
                     <h1>Okinawa Goju-Ryu Karate-Do Kyokai España<h1>
-                            <h2 class="col-lg-8 mx-auto lead">
-                                Sensei Ryoichi Onaga, Hansi 10º Dan. Director Técnico OGKKE
-                            </h2>
+                    <h2 class="col-lg-8 mx-auto lead">
+                        Sensei Ryoichi Onaga, Hansi 10º Dan. Director Técnico OGKKE
+                    </h2>
                 </div>
             </div>
         </div>
+
+        <section class="album py-5">
+            <div class="container">
+                
+                <article class="row row-cols-1 row-cols-sm-1 row-cols-md-2 g-3">
+                    <div class="col">
+                        <div class="card shadow-sm">
+                            <img src="{% static "img/dojos.jpg" %}" class="card-img-top img-fluid" alt="Dojos">
+                            <div class="m-3">
+                                <h3 class="card-title">Dojos <span class="badge text-bg-dark fs-3">{{ dojos }}</span></h3>
+                            </div>
+    
+                            <div class="card-body">
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-warning">Acceder</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card shadow-sm">
+                            <img src="{% static "img/cn.jpg" %}" class="card-img-top img-fluid" alt="DojosCintos negros">
+                            <div class="m-3">
+                                <h3 class="card-title">Cintos Negros <span class="badge text-bg-dark fs-3">{{ cn }}</span></h3>
+                            </div>
+    
+                            <div class="card-body">
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-warning">Acceder</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card shadow-sm">
+                            <img src="{% static "img/gassukus.jpg" %}" class="card-img-top img-fluid" alt="Gasshukus">
+                            <div class="m-3">
+                                <h3 class="card-title">Gasshukus <span class="badge text-bg-dark fs-3">{{ cursos }}</span></h3>
+                            </div>
+    
+                            <div class="card-body">
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-warning">Acceder</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="card shadow-sm">
+                            <img src="{% static "img/peticiones.jpg" %}" class="card-img-top img-fluid" alt="Peticiones">
+                            <div class="m-3">
+                                <h3 class="card-title">Peticiones <span class="badge text-bg-dark fs-3">{{ peticiones }}</span></h3>
+                            </div>
+    
+                            <div class="card-body">
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-warning">Acceder</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </article>
+            </div>
+        </section>
+
+        <div class="container">
+            <div>
+                <canvas id="graficoDanes" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <script>
+            const data = JSON.parse('{{ data_json|safe }}'); // Obtener los datos como objeto JavaScript
+
+            const ctx = document.getElementById('graficoDanes').getContext('2d');
+            const config = {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        data: data.values,      
+                        borderWidth: 1,
+                    }],
+                    labels: data.labels, // Etiquetas de cada barra
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            text: 'Grado',
+                        },
+                        title: {
+                            display: true,
+                            font: {
+                                size: 26,
+                            },
+                            text: 'Alumnos por grado',
+                        }
+                    },
+                },
+            };
+
+            const myChart = new Chart(ctx, config);
+        </script>
+
     </main>
 
     {% endblock container %}
