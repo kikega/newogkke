@@ -19,6 +19,11 @@
                 <input type="password" class="form-control" id="password" name="password" placeholder="Password">
                 <label for="password">Contraseña</label>
             </div>
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                {{ error }}
+                </div>           
+            {% endif %}
             <div class="form-check text-start my-3">
                 <input class="form-check-input" type="checkbox" value="remember-me" id="flexCheckDefault">
                 <label class="form-check-label" for="flexCheckDefault">

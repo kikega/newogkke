@@ -9,7 +9,7 @@
                 <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="me-2 text-warning"> {{ user.username|capfirst }} </span>
-                    <img src={% static "img/toshiro.jpg" %} alt="imagen login" width="32" height="32" class="rounded-circle">
+                    <img src="{{ usuario_foto.url }}" alt="foto usuario" width="32" height="32" class="rounded-circle">
                 </a>
                 <ul class="mt-2 dropdown-menu text-small">
                     <li><a class="dropdown-item" data-bs-toggle="modal" href="#modalCambiocontraseña">Cambiar contrraseña</a></li>

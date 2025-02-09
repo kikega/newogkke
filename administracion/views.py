@@ -8,9 +8,11 @@ import json
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 
 # App administracion
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen
+from usuarios.models import Usuario
 
 # Para envío de correo
 from django.core.mail import send_mail
@@ -40,17 +42,19 @@ def home(request):
     data_json = json.dumps({
         'labels': labels,
         'values': values,
-        'titulo': 'Alumnos por grado',
+        'titulo': 'Número de alumnos por grado',
     })
 
-    danes = list()
-    for i in range(1, 11):
-        i = Alumno.objects.filter(grado=i).count()
-        danes.append(i)
-  
+    try:
+        usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
+    except Alumno.DoesNotExist: # pylint: disable=no-member
+        usuario_foto = None
+
+    #usuario_logado = Usuario.objects.get(email=request.user.email)
+    #usuario_foto = Alumno.objects.get(usuario=usuario_logado.id)
+
     return render(request, 'administracion/home.html', {
         'cn': cn,
-        'danes': danes,
         'cursos': cursos,
         'nacional': nacional,
         'internacional': internacional,
@@ -59,4 +63,5 @@ def home(request):
         'dojos': dojos,
         'hoy': hoy,
         'data_json': data_json,
+        'usuario_foto': usuario_foto.foto,
     })
