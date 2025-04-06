@@ -24,5 +24,6 @@ from administracion import views as administracion_views
 urlpatterns = [
     path("", administracion_views.home, name='home'),
     path("usuarios/", include("usuarios.urls")),
+    path("administracion/", include("administracion.urls")),
     path('admin/', admin.site.urls),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

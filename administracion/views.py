@@ -12,7 +12,6 @@ from django.shortcuts import get_object_or_404
 
 # App administracion
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen
-from usuarios.models import Usuario
 
 # Para envío de correo
 from django.core.mail import send_mail
@@ -49,9 +48,6 @@ def home(request):
         usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
     except Alumno.DoesNotExist: # pylint: disable=no-member
         usuario_foto = None
-
-    #usuario_logado = Usuario.objects.get(email=request.user.email)
-    #usuario_foto = Alumno.objects.get(usuario=usuario_logado.id)
 
     return render(request, 'administracion/home.html', {
         'cn': cn,
