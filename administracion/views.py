@@ -7,6 +7,8 @@ import json
 # Django
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, ListView, View
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
@@ -61,3 +63,37 @@ def home(request):
         'data_json': data_json,
         'usuario_foto': usuario_foto.foto,
     })
+
+class AlumnosView(LoginRequiredMixin, ListView):
+    """
+    Vista de alumnos
+    """
+    model = Alumno
+    template_name = 'administracion/alumnos.html'
+    context_object_name = 'alumnos'
+    paginate_by = 10
+
+    
+    def get_context_data(self, **kwargs):
+        """Obtenemos la foto del usuario que esta logado
+
+        Returns:
+            La foto del usuario que esta logado
+        """
+        context = super().get_context_data(**kwargs)
+        try:
+            usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=self.request.user.email)
+        except Alumno.DoesNotExist: # pylint: disable=no-member
+            usuario_foto = None
+        data = Alumno.objects.values('grado').annotate(total=Count('id')).order_by('grado')
+        labels = [item['grado'] for item in data]
+        values = [item['total'] for item in data]
+        data_json = json.dumps({
+            'labels': labels,
+            'values': values,
+            'titulo': 'Número de alumnos por grado',})
+        context = {
+            'usuario_foto': usuario_foto.foto,
+            'data_json': data_json
+        }
+        return context

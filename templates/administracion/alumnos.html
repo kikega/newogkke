@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block container %}
+    
+    {% include "administracion/header.html" %}
+
+    <main class="container mt-5 mb-5">
+
+        <!-- Breadcrumb -->
+        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
+        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                <!-- Puedes añadir más niveles si es necesario -->
+                <li class="breadcrumb-item active text-warning" aria-current="page">Cintos Negros</li>
+            </ol>
+        </nav>
+        <!-- Fin Breadcrumb -->
+
+        <!-- Título Principal -->
+        <h1 class="text-center mb-5 color-texto">Cintos Negros</h1>
+
+        <div class="container">
+            <div>
+                <canvas id="graficoDanes" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <script>
+            const data = JSON.parse('{{ data_json|safe }}'); // Obtener los datos como objeto JavaScript
+
+            const ctx = document.getElementById('graficoDanes').getContext('2d');
+            const config = {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        label: 'DAN',
+                        data: data.values,      
+                        borderWidth: 2,
+                        borderRadius: 10,
+                        backgroundColor: [
+                            'rgba(255, 255, 255, 0.6)',
+                            'rgba(255, 255, 0, 0.6)',
+                            'rgba(255, 165, 0, 0.6)',
+                            'rgba(0, 128, 0, 0.6)',
+                            'rgba(0, 0, 255, 0.6)',
+                            'rgba(165, 42, 42, 0.6)',
+                            'rgba(128, 0, 128, 0.6)',
+                            'rgba(255, 0, 0, 0.6)',
+                            'rgba(128, 128, 128, 0.6)',
+                        ],
+                        borderColor: [
+                            'rgba(255, 255, 255)',
+                            'rgba(255, 255, 0)',
+                            'rgba(255, 165, 0)',
+                            'rgba(0, 128, 0)',
+                            'rgba(0, 0, 255)',
+                            'rgba(165, 42, 42)',
+                            'rgba(128, 0, 128)',
+                            'rgba(255, 0, 0)',
+                            'rgba(128, 128, 128)',
+                        ],
+                    }],
+                    labels: ['1º DAN', '2º DAN', '3º DAN', '4º DAN','5º DAN','6º DAN','7º DAN','8º DAN','10º DAN'],
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        title: {
+                            display: true,
+                            font: {
+                                size: 26,
+                            },
+                            text: data.titulo,
+                        }
+                    },
+                },
+            };
+
+            const myChart = new Chart(ctx, config);
+        </script>
+    </main>
+
+{% endblock container %}

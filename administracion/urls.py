@@ -7,5 +7,5 @@ from django.urls import path
 from administracion import views as administracion_views
 
 urlpatterns = [
-    #path("alumnos/", administracion_views.alumnos, name="alumnos"),
+    path("alumnos/", administracion_views.AlumnosView.as_view(), name="alumnos"),
 ]
