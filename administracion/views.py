@@ -34,7 +34,7 @@ def home(request):
     nacional = Cursillo.objects.filter(pais='España').count()
     internacional = Cursillo.objects.filter(internacional=True).count()
     extranjero = Cursillo.objects.exclude(pais='España').count()
-    peticiones = Peticion.objects.filter(finalizada=False).count()
+    # peticiones = Peticion.objects.filter(finalizada=False).count()
     dojos = Dojo.objects.all().count()
     hoy = datetime.date.today()
     data = Alumno.objects.values('grado').annotate(total=Count('id')).order_by('grado')
@@ -46,10 +46,10 @@ def home(request):
         'titulo': 'Número de alumnos por grado',
     })
 
-    try:
-        usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
-    except Alumno.DoesNotExist: # pylint: disable=no-member
-        usuario_foto = None
+    # try:
+    #     usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
+    # except Alumno.DoesNotExist: # pylint: disable=no-member
+    #     usuario_foto = None
 
     return render(request, 'administracion/home.html', {
         'cn': cn,
@@ -57,11 +57,11 @@ def home(request):
         'nacional': nacional,
         'internacional': internacional,
         'extranjero': extranjero,
-        'peticiones': peticiones,
+        # 'peticiones': peticiones,
         'dojos': dojos,
         'hoy': hoy,
         'data_json': data_json,
-        'usuario_foto': usuario_foto.foto,
+        # 'usuario_foto': usuario_foto.foto,
     })
 
 class AlumnosView(LoginRequiredMixin, ListView):
@@ -75,16 +75,17 @@ class AlumnosView(LoginRequiredMixin, ListView):
 
     
     def get_context_data(self, **kwargs):
-        """Obtenemos la foto del usuario que esta logado
+        """
+        Obtenemos la foto del usuario que esta logado
 
         Returns:
             La foto del usuario que esta logado
         """
         context = super().get_context_data(**kwargs)
-        try:
-            usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=self.request.user.email)
-        except Alumno.DoesNotExist: # pylint: disable=no-member
-            usuario_foto = None
+        # try:
+        #     usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=self.request.user.email)
+        # except Alumno.DoesNotExist: # pylint: disable=no-member
+        #     usuario_foto = None
         data = Alumno.objects.values('grado').annotate(total=Count('id')).order_by('grado')
         labels = [item['grado'] for item in data]
         values = [item['total'] for item in data]
@@ -93,7 +94,7 @@ class AlumnosView(LoginRequiredMixin, ListView):
             'values': values,
             'titulo': 'Número de alumnos por grado',})
         context = {
-            'usuario_foto': usuario_foto.foto,
+            # 'usuario_foto': usuario_foto.foto,
             'data_json': data_json
         }
         return context

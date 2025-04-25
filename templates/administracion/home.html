@@ -7,10 +7,10 @@
 
     <main class="mb-5 mt-5">
         <div class="mb-5 color-texto">
-            <div class="text-center bg-body-tertiary">
+            <div class="text-center">
                 <img class="my-4 img-fluid" src={% static "img/logo.png" %} alt="Logo OGKKE">
             </div>
-            <div class="text-center bg-body-tertiary">
+            <div class="text-center">
                 <div class="container py-3">
                     <h1>Okinawa Goju-Ryu Karate-Do Kyokai España<h1>
                     <h2 class="col-lg-8 mx-auto lead">
@@ -23,7 +23,7 @@
         <section class="album py-5">
             <div class="container">
                 
-                <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 g-3">
+                <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xl-3 g-3">
                     <article class="col">
                         <div class="card shadow-sm">
                             <img src="{% static "img/dojos.jpg" %}" class="card-img-top img-fluid" alt="Dojos">
@@ -75,7 +75,7 @@
                         </div>
                     </article>
 
-                    <article class="col">
+                    {% comment %} <article class="col">
                         <div class="card shadow-sm">
                             <img src="{% static "img/peticiones.jpg" %}" class="card-img-top img-fluid" alt="Peticiones">
                             <div class="m-3">
@@ -90,7 +90,7 @@
                                 </div>
                             </div>
                         </div>
-                    </article>
+                    </article> {% endcomment %}
 
                 </div>
             </div>
