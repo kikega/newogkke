@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block container %}
+    
+    {% include "administracion/header.html" %}
+
+    <main class="container mt-5 mb-5">
+
+        <!-- Breadcrumb -->
+        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
+        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'alumnos' %}">Gashukus</a></li>
+                <!-- Puedes añadir más niveles si es necesario -->
+                <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Gashuku</li>
+            </ol>
+        </nav>
+        <!-- Fin Breadcrumb -->
+
+        <!-- Título Principal -->
+        <h1 class="text-center mb-5 color-texto">Detalle Gashuku</h1>
+
+        
+    </main>
+
+{% endblock container %}

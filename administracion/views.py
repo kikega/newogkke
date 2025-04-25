@@ -64,7 +64,7 @@ def home(request):
         # 'usuario_foto': usuario_foto.foto,
     })
 
-class AlumnosView(LoginRequiredMixin, ListView):
+class Alumnos_View(LoginRequiredMixin, ListView):
     """
     Vista de alumnos
     """
@@ -76,10 +76,10 @@ class AlumnosView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         """
-        Obtenemos la foto del usuario que esta logado
+        Obtenemos los datos de los cintos negros para hacer el grafico de barras
 
         Returns:
-            La foto del usuario que esta logado
+            El número de cintos negros por grado
         """
         context = super().get_context_data(**kwargs)
         # try:
@@ -98,3 +98,10 @@ class AlumnosView(LoginRequiredMixin, ListView):
             'data_json': data_json
         }
         return context
+    
+
+class Dojos_View(LoginRequiredMixin, ListView):
+    """Listado de gimnasios de la asociación"""
+    template_name = 'dojos.html'
+    model = Dojo
+    context_object_name = 'dojo'
