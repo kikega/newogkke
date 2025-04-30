@@ -64,14 +64,31 @@ def home(request):
         # 'usuario_foto': usuario_foto.foto,
     })
 
-class Alumnos_View(LoginRequiredMixin, ListView):
+class AlumnosView(LoginRequiredMixin, ListView):
     """
-    Vista de alumnos
+    Vista de alumnos por grado
     """
     model = Alumno
     template_name = 'administracion/alumnos.html'
     context_object_name = 'alumnos'
-    paginate_by = 10
+    # paginate_by = 10
+
+
+    def get_queryset(self):
+        """
+        Define la consulta para obtener los alumnos por grado.
+        Filtra por el grado obtenido en los parametros de la url
+        Ordena los resultados
+        """
+
+        # Obtiene el valor de 'grado' de los argumentos de la URL (kwargs)
+        # Si no se pasa 'grado' en la URL, usa 1 como valor predeterminado.
+        grado = self.kwargs.get('grado', 1)
+        #queryset = super().get_queryset().filter(grado=grado).order_by('dojo', 'apellidos')
+        # Alternativamente, podrías escribirlo sin llamar a super() aquí:
+        queryset = Alumno.objects.filter(grado=grado).order_by('dojo', 'apellidos')
+
+        return queryset
 
     
     def get_context_data(self, **kwargs):
@@ -82,26 +99,39 @@ class Alumnos_View(LoginRequiredMixin, ListView):
             El número de cintos negros por grado
         """
         context = super().get_context_data(**kwargs)
-        # try:
-        #     usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=self.request.user.email)
-        # except Alumno.DoesNotExist: # pylint: disable=no-member
-        #     usuario_foto = None
+        grado = self.kwargs.get('grado', 1)
+        context['grado'] = grado
+
+        # Obtenemos los datos para hacer el gráfico de barras
         data = Alumno.objects.values('grado').annotate(total=Count('id')).order_by('grado')
+
         labels = [item['grado'] for item in data]
         values = [item['total'] for item in data]
         data_json = json.dumps({
             'labels': labels,
             'values': values,
             'titulo': 'Número de alumnos por grado',})
-        context = {
-            # 'usuario_foto': usuario_foto.foto,
-            'data_json': data_json
-        }
+        context['data_json'] = data_json
+
+        # Obtenemos la cantidad de cintos negros en la consulta
+        if self.context_object_name in context:
+            context['cantidad'] = context[self.context_object_name].count()
+        else:
+            context['cantidad'] = self.get_queryset().count()
+
         return context
     
 
-class Dojos_View(LoginRequiredMixin, ListView):
+class DojosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""
-    template_name = 'dojos.html'
+
+    template_name = 'administracion/dojos.html'
     model = Dojo
     context_object_name = 'dojo'
+
+
+@login_required
+def Cursillos_View(request):
+    cursillo = Cursillo.objects.all().order_by('-fecha')
+    hoy = datetime.date.today()
+    return render(request, 'administracion/cursillos.html', {'cursillo': cursillo, 'hoy': hoy})

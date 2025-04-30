@@ -19,14 +19,49 @@
         <!-- Fin Breadcrumb -->
 
         <!-- Título Principal -->
-        <h1 class="text-center mb-5 color-texto">Cintos Negros</h1>
+        <h1 class="text-center mb-5 color-texto">Cintos Negros {{ grado }}º DAN</h1>
+
+        <div class="col">
+            <div class="row">
+              <h2 class="text-center color-texto">Total: <strong>{{ cantidad }}</strong></h2>
+            </div>
+        </div>
 
         <div class="container">
             <div>
                 <canvas id="graficoDanes" width="300" height="150"></canvas>
             </div>
         </div>
-        
+
+        {% if alumnos %}
+        <div class="col mt-5">
+            <div class="row">
+              <table id="tbalumno" class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Gimnasio</th>
+                    <th>Activo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for alm in alumnos %}
+                    <tr>
+                      <td><a href="{{ alm.id }}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
+                      <td>{{ alm.dojo }}</td>
+                      <td>
+                        {% if alm.activo %}
+                          <i class="bi bi-check-circle-fill text-success"></i>
+                        {% endif %}
+                      </td>
+                    </tr>		
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+        </div>
+        {% endif %}
+
         <script>
             const data = JSON.parse('{{ data_json|safe }}'); // Obtener los datos como objeto JavaScript
 

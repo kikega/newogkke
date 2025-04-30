@@ -7,6 +7,8 @@ from django.urls import path
 from administracion import views as administracion_views
 
 urlpatterns = [
-    path("alumnos/", administracion_views.Alumnos_View.as_view(), name="alumnos"),
-    path("dojos/", administracion_views.Dojos_View.as_view(), name="dojos"),
+    path("alumnos/", administracion_views.AlumnosView.as_view(), name="alumnos"),
+    #path("alumnos/<int:grado>/", administracion_views.AlumnosView.as_view(), name="alumnos"),
+    path("dojos/", administracion_views.DojosView.as_view(), name="dojos"),
+    path("cursillos/", administracion_views.Cursillos_View, name="cursillos"),
 ]

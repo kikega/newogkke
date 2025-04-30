@@ -11,17 +11,16 @@ def common_navbar_context(request):
     }
 
     # Obtenemos la foto del usuario que esta logado
-    try:
-        usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
-    except Alumno.DoesNotExist: # pylint: disable=no-member
-        usuario_foto = None
-
-    # Contar peticiones pendientes 
-    peticiones_pendientes = Peticion.objects.filter(finalizada=False).count()
-
-    context_data = {
-        'usuario_foto': usuario_foto.foto,
-        'peticiones': peticiones_pendientes,
-    }
+    if request.user.is_authenticated:
+        try:
+            usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
+        except Alumno.DoesNotExist: # pylint: disable=no-member
+            usuario_foto = None
+        # Contar peticiones pendientes 
+        peticiones_pendientes = Peticion.objects.filter(finalizada=False).count()
+        context_data = {
+            'usuario_foto': usuario_foto.foto,
+            'peticiones': peticiones_pendientes,
+        }
 
     return context_data
