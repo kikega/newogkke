@@ -90,6 +90,10 @@
     color: yellow !important;
 }
 
+.card:hover {
+    border-color: #ffc107;
+}
+
 
 /* Para centrar el menú principal de forma más robusta si es necesario */
 @media (min-width: 768px) { /* md breakpoint */

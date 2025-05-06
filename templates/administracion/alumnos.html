@@ -4,22 +4,17 @@
 {% block container %}
     
     {% include "administracion/header.html" %}
-
-    <main class="container mt-5 mb-5">
-
-        <!-- Breadcrumb -->
-        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-                <!-- Puedes añadir más niveles si es necesario -->
-                <li class="breadcrumb-item active text-warning" aria-current="page">Cintos Negros</li>
-            </ol>
-        </nav>
-        <!-- Fin Breadcrumb -->
+      <!-- Breadcrumb -->
+      {% comment %} <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+          <li class="breadcrumb-item active text-warning" aria-current="page">Cintos Negros</li>
+         </ol>
+      </nav> {% endcomment %}
+      <!-- Fin Breadcrumb -->
 
         <!-- Título Principal -->
-        <h1 class="text-center mb-5 color-texto">Cintos Negros {{ grado }}º DAN</h1>
+        <h1 class="text-center mb-5 mt-5 color-texto">Cintos Negros {{ grado }}º DAN</h1>
 
         <div class="col">
             <div class="row">
@@ -28,15 +23,44 @@
         </div>
 
         <div class="container">
-            <div>
+            <div class="d-none d-md-block">
                 <canvas id="graficoDanes" width="300" height="150"></canvas>
             </div>
         </div>
+        <!-- Formulariode selección de DAN y búsqueda -->
+        <div class="container col-md-6 justify-content-center mt-5">
+          <div class="row">
+            <label class="form-label" for="gradoSelect">Seleccionar grado </label>
+            <select name="grado" id="gradoSelect" class="fornm-select form-select-lg mb-3">
+                        
+              {% for g in grados_posibles %}
+                <option value="{{ g }}" {% if g == grado %}selected{% endif %}>
+                  {{ g }}º DAN
+                </option>
+              {% endfor %}           
+            </select>
+          </div>
+          
+          {% comment %} <div class="row">
+          
+              {# --- Formulario de Búsqueda --- #}
+              <div>
+                  <form action="#" method="post" style="display: inline-flex; align-items: center; gap: 5px;">
+                      {% csrf_token %} {# ¡Importante para POST! #}
+                      <label for="searchTermInput">Buscar Alumno:</label>
+                      <input type="text" id="searchTermInput" name="search_term" placeholder="Nombre o Apellidos..." required>
+                      <button type="submit">Buscar</button>
+                  </form>
+              </div>
+          </div> {% endcomment %}
+        </div>
+        
+      </div>
 
-        {% if alumnos %}
+      {% if alumnos %}
         <div class="col mt-5">
             <div class="row">
-              <table id="tbalumno" class="table table-striped">
+              <table id="tbalumno" class="table table-striped display">
                 <thead>
                   <tr>
                     <th>Nombre</th>
@@ -60,9 +84,22 @@
               </table>
             </div>
         </div>
-        {% endif %}
+      {% endif %}
+      
+{% endblock container %}
 
+{% block script_js %}
         <script>
+          // Script para la selección de grado
+          document.getElementById('gradoSelect').addEventListener('change', function() {
+            const selectedGrado = this.value;
+            const baseUrl = "{% url 'alumnos_grado' 0 %}";
+            const newUrl = baseUrl.replace('/0/', '/' + selectedGrado + '/');
+            window.location.href = newUrl;
+          });
+
+
+          // Script para la generacion del gráfico de barras
             const data = JSON.parse('{{ data_json|safe }}'); // Obtener los datos como objeto JavaScript
 
             const ctx = document.getElementById('graficoDanes').getContext('2d');
@@ -115,7 +152,29 @@
             };
 
             const myChart = new Chart(ctx, config);
-        </script>
-    </main>
 
-{% endblock container %}
+            //new DataTable('#tbalumno');
+            $('#tbalumno').DataTable({
+                "pageLength": 25,
+                "responsive": true,
+                "language": {
+                    search: "Buscar en la tabla ",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    zeroRecords: "No se encontraron registros",
+                    paginate: {
+                        first: "Primera",
+                        last: "Última",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    },
+                }
+            });
+
+            
+        </script>
+{% endblock script_js %}
+
+    

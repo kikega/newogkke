@@ -5,24 +5,115 @@
     
     {% include "administracion/header.html" %}
 
-    <main class="container mt-5 mb-5">
-
         <!-- Breadcrumb -->
         <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+        <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
                 <li class="breadcrumb-item"><a href="{% url 'alumnos' %}">Alumnos</a></li>
                 <!-- Puedes añadir más niveles si es necesario -->
-                <li class="breadcrumb-item active text-warning" aria-current="page">Detalle alumno</li>
+                <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Cinto Negro</li> 
             </ol>
         </nav>
         <!-- Fin Breadcrumb -->
 
         <!-- Título Principal -->
-        <h1 class="text-center mb-5 color-texto">Detalle alumno</h1>
+        <h1 class="text-center mb-5 mt-5 color-texto">Detalle Cinto Negro</h1>
 
-        
-    </main>
+        <!-- SECCIÓN SUPERIOR: Gráfico e Info Personal -->
+        <section class="row mb-5 gy-4">
+            <!-- Columna Izquierda: Información Personal -->
+            <div class="col-lg-5 col-md-6">
+                <div class="card h-100">
+                    <div class="card-header text-center">
+                        <h4 class="mb-0">
+                            <span class="badge bg-dark p-2">Cinturón Negro {{ alumno.grado }}º DAN</span>
+                        </h4>
+                    </div>
+                    <div class="card-body text-center"> <!-- text-center para centrar foto/icono y texto -->
+
+                        <!-- Contenedor para la Foto o Icono -->
+                        <div class="profile-picture-container">
+                            <!-- ** LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO ** -->
+
+                            <!-- Opción 1: Si SÍ hay foto (esto lo generarías dinámicamente) -->
+                            <!--
+                                <img src="ruta/a/la/foto_alumno.jpg" alt="Foto de Nombre Apellido" class="rounded-circle img-thumbnail profile-picture">
+                            -->
+
+                            <!-- Opción 2: Si NO hay foto (mostrar icono) -->
+                            <i class="bi bi-person-circle text-secondary profile-icon"></i>
+
+                        </div>
+
+                        <!-- Detalles del alumno (centrados por card-body text-center) -->
+                        <h3 class="card-title mb-3">{{ alumno.nombre }} {{ alumno.apellidos }}</h3>
+                        <p class="card-text mb-1"><strong>Edad:</strong> 35 años</p>
+                        <p class="card-text"><strong>Dojo:</strong> Honbu Dojo Central</p>
+                    </div>
+                    <div class="card-footer text-muted text-center">
+                        Años de cinturón negro: 15 años
+                    </div>
+                </div>
+            </div>
+            <!-- Columna Derecha: Gráfico de Barras -->
+            <div class="col-lg-7 col-md-6">
+                <div class="card h-100">
+                    <div class="card-header text-center">
+                        <h4 class="mb-0">
+                            <span class="badge bg-dark p-2">Tiempo en cada grado</span>
+                        </h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <div id="yearsPerGradeChartPlaceholder">
+                            [ Aquí se mostrará el gráfico de barras ]
+                        </div>
+                        <p class="text-muted small mt-2 text-center">
+                            * Se requiere integrar una librería JavaScript (ej. Chart.js) para visualizar el gráfico.
+                        </p>
+                        <!-- Canvas para Chart.js (ejemplo) -->
+                        <!-- <canvas id="yearsChart" style="max-height: 300px;"></canvas> -->
+                    </div>
+                </div>
+            </div>
+
+        </section> <!-- Fin Sección Superior -->
+
+
+        <!-- SECCIÓN INFERIOR: Timeline -->
+        <section class="row justify-content-center">
+            <div class="col-lg-10 col-md-11">
+                <h2 class="text-center mb-5">Exámenes realizados</h2>
+                <div class="timeline">
+                    <!-- ... (Items del Timeline van aquí, como en el ejemplo anterior) ... -->
+                    <div class="timeline-item exam">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-date text-muted">Julio 2023</span>
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">Examen 3er Dan</h5>
+                                    <p class="card-text small mb-1">Gashuku Internacional de Verano.</p>
+                                    <p class="card-text small fst-italic">Examinador: Sensei Principal.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="timeline-item start">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-date text-muted">Enero 2009</span>
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">Inicio - Cinturón Blanco</h5>
+                                    <p class="card-text small mb-1">Inscripción en Honbu Dojo Central.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Añade más items -->
+                </div>
+            </div>
+        </section> <!-- Fin Sección Timeline -->
 
 {% endblock container %}

@@ -5,10 +5,11 @@ import datetime
 import json
 
 # Django
+from django.db.models.query import QuerySet
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, ListView, View
+from django.views.generic import TemplateView, ListView, DetailView, View
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
@@ -84,9 +85,10 @@ class AlumnosView(LoginRequiredMixin, ListView):
         # Obtiene el valor de 'grado' de los argumentos de la URL (kwargs)
         # Si no se pasa 'grado' en la URL, usa 1 como valor predeterminado.
         grado = self.kwargs.get('grado', 1)
-        #queryset = super().get_queryset().filter(grado=grado).order_by('dojo', 'apellidos')
+        queryset = super().get_queryset().filter(grado=grado).order_by('dojo', 'apellidos')
         # Alternativamente, podrías escribirlo sin llamar a super() aquí:
         queryset = Alumno.objects.filter(grado=grado).order_by('dojo', 'apellidos')
+       
 
         return queryset
 
@@ -118,9 +120,20 @@ class AlumnosView(LoginRequiredMixin, ListView):
             context['cantidad'] = context[self.context_object_name].count()
         else:
             context['cantidad'] = self.get_queryset().count()
+        
+        context['grados_posibles'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         return context
     
+
+class AlumnoDetailView(LoginRequiredMixin, DetailView):
+    """
+    Muestra los detalles de un alumno específico.
+    """
+    model = Alumno
+    template_name = 'administracion/detalle_alumno.html' # Crea esta plantilla
+    context_object_name = 'alumno' # Nombre del objeto en la plantilla detalle
+
 
 class DojosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""
