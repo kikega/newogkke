@@ -47,11 +47,6 @@ def home(request):
         'titulo': 'Número de alumnos por grado',
     })
 
-    # try:
-    #     usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
-    # except Alumno.DoesNotExist: # pylint: disable=no-member
-    #     usuario_foto = None
-
     return render(request, 'administracion/home.html', {
         'cn': cn,
         'cursos': cursos,
@@ -87,7 +82,7 @@ class AlumnosView(LoginRequiredMixin, ListView):
         grado = self.kwargs.get('grado', 1)
         queryset = super().get_queryset().filter(grado=grado).order_by('dojo', 'apellidos')
         # Alternativamente, podrías escribirlo sin llamar a super() aquí:
-        queryset = Alumno.objects.filter(grado=grado).order_by('dojo', 'apellidos')
+        #queryset = Alumno.objects.filter(grado=grado).order_by('dojo', 'apellidos')
        
 
         return queryset
@@ -129,11 +124,49 @@ class AlumnosView(LoginRequiredMixin, ListView):
 class AlumnoDetailView(LoginRequiredMixin, DetailView):
     """
     Muestra los detalles de un alumno específico.
+    Los exámenes que ha realizado y el tiempo que ha estado en cada grado
     """
     model = Alumno
     template_name = 'administracion/detalle_alumno.html' # Crea esta plantilla
     context_object_name = 'alumno' # Nombre del objeto en la plantilla detalle
 
+    def get_context_data(self, **kwargs):
+        """
+        Calculamos los eventos en los que se haexaminado y los años en cada grado
+        """
+        # Creamos las variables locales para los calculos
+        anios = list()
+        examen = list()
+        hoy = datetime.date.today()
+        # Llama a la implementación de la base para obtener el contexto inicial
+        context = super(AlumnoDetailView, self).get_context_data(**kwargs)
+        # Obtiene el objeto alumno actual
+        alumno = self.get_object()
+        print(alumno)
+        # Obtenemos la lista de examwenes de ese alumno
+        examenes = Examen.objects.filter(alumno=alumno.id)
+        print(examenes)
+
+        for idx, exam in enumerate(examenes):
+            examen.append(str(exam.grado) + "º DAN")
+            print(exam.evento.evento)
+            print(exam.evento.fecha)
+            # Verificamos si el indica actual es el último de la lista
+            if idx == len(examenes) - 1:
+                anios.append(hoy.year - exam.evento.fecha.year)
+            else:
+                anios.append(examenes[idx + 1].evento.fecha.year - exam.evento.fecha.year)
+
+
+        context['examen'] = examen
+        print(examen)
+        context['examenes'] = examenes
+        context['hoy'] = hoy
+
+        context['anios'] = anios
+        print(anios)
+
+        return context
 
 class DojosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""

@@ -33,23 +33,28 @@
                     <div class="card-body text-center"> <!-- text-center para centrar foto/icono y texto -->
 
                         <!-- Contenedor para la Foto o Icono -->
-                        <div class="profile-picture-container">
+                        <div class="profile-picture-container mt-2">
                             <!-- ** LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO ** -->
-
-                            <!-- Opción 1: Si SÍ hay foto (esto lo generarías dinámicamente) -->
-                            <!--
-                                <img src="ruta/a/la/foto_alumno.jpg" alt="Foto de Nombre Apellido" class="rounded-circle img-thumbnail profile-picture">
-                            -->
-
-                            <!-- Opción 2: Si NO hay foto (mostrar icono) -->
-                            <i class="bi bi-person-circle text-secondary profile-icon"></i>
-
+                            {% if alumno.foto.url != none %}
+                                <img src="{{ alumno.foto.url }}" alt="Foto dalumno" class="rounded-circle img-thumbnail profile-picture">
+                            {% else %}
+                                <i class="bi bi-person-circle text-secondary profile-icon"></i>
+                            {% endif %}
                         </div>
 
                         <!-- Detalles del alumno (centrados por card-body text-center) -->
                         <h3 class="card-title mb-3">{{ alumno.nombre }} {{ alumno.apellidos }}</h3>
+                        {% if alumno.rango == "k" %}
+                            <p>Kyoshi</p>
+                        {% endif %}
+                        {% if alumno.rango == "r" %}
+                            <p>Renshi</p>
+                        {% endif %}
+                        {% if alumno.rango == "H" %}
+                            <p>Hanshi</p>
+                        {% endif %}
                         <p class="card-text mb-1"><strong>Edad:</strong> 35 años</p>
-                        <p class="card-text"><strong>Dojo:</strong> Honbu Dojo Central</p>
+                        <p class="card-text"><strong>Dojo:</strong> {{ alumno.dojo }}</p>
                     </div>
                     <div class="card-footer text-muted text-center">
                         Años de cinturón negro: 15 años
@@ -86,31 +91,22 @@
                 <h2 class="text-center mb-5">Exámenes realizados</h2>
                 <div class="timeline">
                     <!-- ... (Items del Timeline van aquí, como en el ejemplo anterior) ... -->
+                    {% for exm in examenes %}
                     <div class="timeline-item exam">
                         <div class="timeline-marker"></div>
-                        <div class="timeline-content">
-                            <span class="timeline-date text-muted">Julio 2023</span>
+                        <div class="timeline-content mb-3">
+
+                            <span class="timeline-date text-muted">Fecha: {{ exm.evento.fecha }}</span>
                             <div class="card shadow-sm">
                                 <div class="card-body">
-                                    <h5 class="card-title">Examen 3er Dan</h5>
-                                    <p class="card-text small mb-1">Gashuku Internacional de Verano.</p>
-                                    <p class="card-text small fst-italic">Examinador: Sensei Principal.</p>
+                                    <h5 class="card-title">Examen {{ exm.grado }}º Dan</h5>
+                                    <p class="card-text small mb-1">{{ exm.evento.evento }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="timeline-item start">
-                        <div class="timeline-marker"></div>
-                        <div class="timeline-content">
-                            <span class="timeline-date text-muted">Enero 2009</span>
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title">Inicio - Cinturón Blanco</h5>
-                                    <p class="card-text small mb-1">Inscripción en Honbu Dojo Central.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {% endfor %}
+                    
                     <!-- Añade más items -->
                 </div>
             </div>
