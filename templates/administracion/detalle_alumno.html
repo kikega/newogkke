@@ -27,7 +27,17 @@
                 <div class="card h-100">
                     <div class="card-header text-center">
                         <h4 class="mb-0">
-                            <span class="badge bg-dark p-2">Cinturón Negro {{ alumno.grado }}º DAN</span>
+                            <span class="badge bg-dark p-2">Cinturón Negro {{ alumno.grado }}º DAN
+                                {% if alumno.rango == "k" %}
+                                     - Kyoshi
+                                {% endif %}
+                                {% if alumno.rango == "r" %}
+                                     - Renshi
+                                {% endif %}
+                                {% if alumno.rango == "h" %}
+                                     - Hanshi
+                                {% endif %}
+                            </span>
                         </h4>
                     </div>
                     <div class="card-body text-center"> <!-- text-center para centrar foto/icono y texto -->
@@ -44,51 +54,37 @@
 
                         <!-- Detalles del alumno (centrados por card-body text-center) -->
                         <h3 class="card-title mb-3">{{ alumno.nombre }} {{ alumno.apellidos }}</h3>
-                        {% if alumno.rango == "k" %}
-                            <p>Kyoshi</p>
-                        {% endif %}
-                        {% if alumno.rango == "r" %}
-                            <p>Renshi</p>
-                        {% endif %}
-                        {% if alumno.rango == "H" %}
-                            <p>Hanshi</p>
-                        {% endif %}
-                        <p class="card-text mb-1"><strong>Edad:</strong> 35 años</p>
+                        <p class="card-text mb-1"><strong>Edad:</strong> {{ edad }}</p>
                         <p class="card-text"><strong>Dojo:</strong> {{ alumno.dojo }}</p>
                     </div>
                     <div class="card-footer text-muted text-center">
-                        Años de cinturón negro: 15 años
+                        Años de cinturón negro: {{ total_anios }} años
                     </div>
                 </div>
             </div>
+
             <!-- Columna Derecha: Gráfico de Barras -->
             <div class="col-lg-7 col-md-6">
                 <div class="card h-100">
                     <div class="card-header text-center">
                         <h4 class="mb-0">
-                            <span class="badge bg-dark p-2">Tiempo en cada grado</span>
+                            <span class="badge bg-dark p-2">Años en cada grado</span>
                         </h4>
                     </div>
                     <div class="card-body text-center">
-                        <div id="yearsPerGradeChartPlaceholder">
-                            [ Aquí se mostrará el gráfico de barras ]
+                        <div class="d-none d-md-block d-flex justify-content-center chart-container">
+                            <canvas id="graficoAniosGrado"></canvas>
                         </div>
-                        <p class="text-muted small mt-2 text-center">
-                            * Se requiere integrar una librería JavaScript (ej. Chart.js) para visualizar el gráfico.
-                        </p>
-                        <!-- Canvas para Chart.js (ejemplo) -->
-                        <!-- <canvas id="yearsChart" style="max-height: 300px;"></canvas> -->
                     </div>
                 </div>
             </div>
 
         </section> <!-- Fin Sección Superior -->
 
-
         <!-- SECCIÓN INFERIOR: Timeline -->
         <section class="row justify-content-center">
             <div class="col-lg-10 col-md-11">
-                <h2 class="text-center mb-5">Exámenes realizados</h2>
+                <h2 class="text-center mb-5 color-texto">Exámenes realizados</h2>
                 <div class="timeline">
                     <!-- ... (Items del Timeline van aquí, como en el ejemplo anterior) ... -->
                     {% for exm in examenes %}
@@ -96,20 +92,58 @@
                         <div class="timeline-marker"></div>
                         <div class="timeline-content mb-3">
 
-                            <span class="timeline-date text-muted">Fecha: {{ exm.evento.fecha }}</span>
+                            <h3 class="card-title color-texto">Examen {{ exm.grado }}º Dan</h3>
                             <div class="card shadow-sm">
                                 <div class="card-body">
-                                    <h5 class="card-title">Examen {{ exm.grado }}º Dan</h5>
-                                    <p class="card-text small mb-1">{{ exm.evento.evento }}</p>
+                                    <h4 class="card-text mb-1">{{ exm.evento.evento }}</h4>
+                                    <span class="timeline-date text-muted">Fecha: {{ exm.evento.fecha }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
-                    
-                    <!-- Añade más items -->
                 </div>
             </div>
         </section> <!-- Fin Sección Timeline -->
 
 {% endblock container %}
+
+{% block script_js %}
+        <script>
+            const data = JSON.parse('{{ data_json|safe }}'); // Obtener los datos como objeto JavaScript
+
+            const ctx = document.getElementById('graficoAniosGrado');
+            const config = {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        label: '',
+                        data: data.values,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 10,
+                        datalabels: { // Configuración de chartjs-plugin-datalabels para ESTE dataset
+                            display: false // Oculta las etiquetas de datos solo para este dataset
+                        },
+                    }],
+                    labels: data.labels,
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false // Esto oculta la leyenda completamente
+                        },
+                    },             
+                },
+            };
+
+            const myChart = new Chart(ctx, config);                
+        </script>
+
+{% endblock script_js %}

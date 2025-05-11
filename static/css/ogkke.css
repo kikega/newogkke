@@ -104,11 +104,11 @@
     }
 }
 
-/* Estilos básicos para el Timeline */
+/*Estilos básicos para el Timeline */
 .timeline {
     position: relative;
     padding-left: 50px;
-    border-left: 2px solid #dee2e6;
+    border-left: 2px solid #ffc107;
 }
 
 .timeline-item {
@@ -118,12 +118,12 @@
 
 .timeline-marker {
     position: absolute;
-    left: -39px;
+    left: -60px;
     top: 5px;
     width: 18px;
     height: 18px;
     background-color: #0d6efd;
-    border: 3px solid #fff;
+    border: 1px solid #ffc107;
     border-radius: 50%;
     z-index: 1;
 }
@@ -133,7 +133,7 @@
 }
 
 .timeline-item.exam .timeline-marker {
-    background-color: #dc3545;
+    background-color: #ffc107;
 }
 
 .timeline-content .card-title {
@@ -144,4 +144,15 @@
     font-size: 0.85em;
     margin-bottom: 0.5rem;
     display: block;
+}
+
+
+
+/* Gráfico años en grado */
+.chart-container {
+    width: auto; /* O un valor fijo como 600px */
+    max-width: 600px; /* Límite superior */
+    height: 300px; /* O déjalo en 'auto' si quieres que la altura dependa del aspect ratio */
+    margin: auto; /* Centrar y añadir margen */
+    position: relative; /* Importante para la responsividad de Chart.js */
 }

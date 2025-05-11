@@ -142,13 +142,12 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
         context = super(AlumnoDetailView, self).get_context_data(**kwargs)
         # Obtiene el objeto alumno actual
         alumno = self.get_object()
-        print(alumno)
-        # Obtenemos la lista de examwenes de ese alumno
+
+        # Obtenemos la lista de examenes de ese alumno
         examenes = Examen.objects.filter(alumno=alumno.id)
-        print(examenes)
 
         for idx, exam in enumerate(examenes):
-            examen.append(str(exam.grado) + "º DAN")
+            examen.append(str(exam.grado) + " DAN")
             print(exam.evento.evento)
             print(exam.evento.fecha)
             # Verificamos si el indica actual es el último de la lista
@@ -157,14 +156,31 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
             else:
                 anios.append(examenes[idx + 1].evento.fecha.year - exam.evento.fecha.year)
 
-
         context['examen'] = examen
-        print(examen)
         context['examenes'] = examenes
         context['hoy'] = hoy
 
         context['anios'] = anios
-        print(anios)
+        context['total_anios'] = sum(anios)
+
+        # Calculamos la edad del alumno
+        if alumno.fecha_nacimiento == None:
+            edad_a = 0
+            edad_b = 0
+        else:
+            edad = hoy - alumno.fecha_nacimiento
+            edad = divmod(edad.days, 365)
+            edad_a = edad[0]
+            edad_b = edad[1]
+        context['edad'] = edad_a
+        
+        # Preparamos el gráfico
+        data_json = json.dumps({
+            'labels': examen,
+            'values': anios,
+            'titulo': 'Años en cada grado',
+        })
+        context['data_json'] = data_json
 
         return context
 
