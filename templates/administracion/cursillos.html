@@ -4,24 +4,89 @@
 {% block container %}
     
     {% include "administracion/header.html" %}
+    
+    <!-- Breadcrumb -->
+    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
+    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <!-- Puedes añadir más niveles si es necesario -->
+            <li class="breadcrumb-item active text-warning" aria-current="page">Cursillos</li>
+        </ol>
+    </nav>
+    <!-- Fin Breadcrumb -->
 
-    <main class="container mt-5 mb-5">
+    <!-- Título Principal -->
+    <h1 class="text-center mb-5 color-texto">Cursillos</h1>
 
-        <!-- Breadcrumb -->
-        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-                <!-- Puedes añadir más niveles si es necesario -->
-                <li class="breadcrumb-item active text-warning" aria-current="page">Cursillos</li>
-            </ol>
-        </nav>
-        <!-- Fin Breadcrumb -->
+    <div class="col">
+        <div class="row">
+            <h2 class="text-center color-texto">Total: <strong>{{ cantidad }}</strong></h2>
+        </div>
+    </div>
 
-        <!-- Título Principal -->
-        <h1 class="text-center mb-5 color-texto">Cursillos</h1>
-
-        
-    </main>
+    {% if cursillos %}
+        <div class="col mt-5">
+            <div class="row">
+              <table id="tbcursillo" class="table table-striped display">
+                <thead>
+                  <tr>
+                      <th>Fecha</th>
+                    <th>Evento</th>
+                    <th>Ciudad</th>
+                    <th>País</th>
+                    <th>Internacional</th>
+                    <th>Exámenes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cursillo in cursillos %}
+                    <tr>
+                        <td>{{ cursillo.fecha }}</td>
+                        <td><a href="{{ cursillo.id }}">{{ cursillo.evento }}</a></td>
+                        <td>{{ cursillo.ciudad }}</td>
+                        <td>{{ cursillo.pais }}</td>
+                        <td>
+                            {% if cursillo.internacional %}
+                                <i class="bi bi-check-circle-fill text-primary"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cursillo.examenes %}
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            {% endif %}
+                        </td>
+                    </tr>		
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+        </div>
+      {% endif %}
 
 {% endblock container %}
+
+{% block script_js %}
+<script>
+    //new DataTable('#tbalumno');
+    $('#tbcursillo').DataTable({
+        "pageLength": 25,
+        "responsive": true,
+        "ordering": false,
+        "language": {
+            search: "Buscar en la tabla ",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            infoEmpty: "Mostrando 0 a 0 de 0 registros",
+            infoFiltered: "(filtrado de _MAX_ registros totales)",
+            lengthMenu: "Mostrar _MENU_ registros",
+            zeroRecords: "No se encontraron registros",
+            paginate: {
+                first: "Primera",
+                last: "Última",
+                next: "Siguiente",
+                previous: "Anterior"
+            },
+        }
+    });
+</script>
+{% endblock script_js %}

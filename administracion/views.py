@@ -132,7 +132,7 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         """
-        Calculamos los eventos en los que se haexaminado y los años en cada grado
+        Calculamos los eventos en los que se ha examinado y los años en cada grado
         """
         # Creamos las variables locales para los calculos
         anios = list()
@@ -189,8 +189,32 @@ class DojosView(LoginRequiredMixin, ListView):
 
     template_name = 'administracion/dojos.html'
     model = Dojo
-    context_object_name = 'dojo'
+    context_object_name = 'dojos'
 
+
+    def get_context_data(self, **kwargs):
+        """
+        Obtenemos la cantidad de dojos asociados para añadirlo al contexto
+        """
+        context = super().get_context_data(**kwargs)
+        context['cantidad'] = self.get_queryset().count()
+        return context
+
+class CursillosView(LoginRequiredMixin, ListView):
+    """Listado de gimnasios de la asociación"""
+
+    template_name = 'administracion/cursillos.html'
+    model = Cursillo
+    context_object_name = 'cursillos'
+
+
+    def get_context_data(self, **kwargs):
+        """
+        Obtenemos la cantidad de dojos asociados para añadirlo al contexto
+        """
+        context = super().get_context_data(**kwargs)
+        context['cantidad'] = self.get_queryset().count()
+        return context
 
 @login_required
 def Cursillos_View(request):
