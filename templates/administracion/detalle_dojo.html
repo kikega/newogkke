@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block container %}
+    
+    {% include "administracion/header.html" %}
+
+    <!-- Breadcrumb -->
+    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
+    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:dojos' %}">Dojos</a></li>
+            <!-- Puedes añadir más niveles si es necesario -->
+            <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Dojo</li> 
+        </ol>
+    </nav>
+    <!-- Fin Breadcrumb -->
+
+    <!-- Título Principal -->
+    <h1 class="text-center mb-5 mt-5 color-texto">Detalle Dojo</h1>
+
+    <!-- SECCIÓN SUPERIOR: Gráfico e Info Personal -->
+    <section class="row mb-5 gy-4">
+        <!-- Columna Izquierda: Información Personal -->
+        <div class="col-lg-5 col-md-6">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">
+                        <span class="badge bg-dark p-2">Dojo {{ dojo.nombre }}</span>
+                    </h4>
+                </div>
+                <div class="card-body text-center"> <!-- text-center para centrar foto/icono y texto -->
+
+                    <!-- Contenedor para la Foto o Icono -->
+                    <div class="profile-picture-container mt-2">
+                        <!-- ** LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO ** -->
+                        {% if instructor.foto.url != none %}
+                            <img src="{{ instructor.foto.url }}" alt="Foto instructor" class="rounded-circle img-thumbnail profile-picture">
+                        {% else %}
+                            <i class="bi bi-person-circle text-secondary profile-icon"></i>
+                        {% endif %}
+                    </div>
+
+                    <!-- Detalles del alumno (centrados por card-body text-center) -->
+                    <h3 class="card-title mb-3">{{ dojo.direccion }}</h3>
+                    <p class="card-text mb-1"><strong>{{ dojo.poblacion }}</strong>, {{ dojo.provincia }}, {{ dojo.codigo_postal }}</p>
+                    <p class="card-text"><strong>Instructor: </strong> {{ instructor.nombre }} {{ instructor.apellidos }}, {{ instructor.grado }}º DAN</p>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    Email: {{ instructor.usuario.email }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Gráfico de Barras -->
+        <div class="col-lg-7 col-md-6">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">
+                        <span class="badge bg-dark p-2">Cintos Negros del Dojo: {{ total_cintos_negros }}</span>
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="d-none d-md-block d-flex justify-content-center chart-container">
+                        <canvas id="graficoCintosNegrosDojo"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section> <!-- Fin Sección Superior -->
+
+    <!-- Seccion de botones para Tablon de anuncios y peticiones-->
+    <!-- Formulario de selección de DAN y búsqueda -->
+    <div class="container col-md-4 justify-content-center mt-5">
+        <div class="row">
+            <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
+                <button type="button" class="btn btn-outline-warning">Tablón</button>
+                <button type="button" class="btn btn-outline-warning">Peticiones
+                    <span class="badge text-bg-info rounded-circle">1</span>
+                </button>
+            </div>
+        </div>  
+    </div>
+    <!-- Fin de sección de botones -->
+
+    <!-- SECCIÓN INFERIOR: Listado alumnos -->
+    <section class="row justify-content-center">
+        <div class="col mt-5">
+            <div class="row">
+              <table id="tbalumno" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Grado</th>
+                    <th>Activo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for alm in cintos_negros_dojo %}
+                    <tr>
+                      <td><a href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
+                      <td>{{ alm.grado }}º DAN</td>
+                      <td>
+                        {% if alm.activo %}
+                          <i class="bi bi-check-circle-fill text-success"></i>
+                        {% endif %}
+                      </td>
+                    </tr>		
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+        </div>
+    </section> 
+    <!-- Fin Sección Timeline -->
+
+    {% endblock container %}
+
+    {% block script_js %}
+        <script>
+            const data = JSON.parse('{{ cinturon_negro_data_json|safe }}'); // Obtener los datos como objeto JavaScript
+
+            const ctx = document.getElementById('graficoCintosNegrosDojo');
+            const config = {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        label: '',
+                        data: data.values,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 10,
+                        datalabels: { // Configuración de chartjs-plugin-datalabels para ESTE dataset
+                            display: false // Oculta las etiquetas de datos solo para este dataset
+                        },
+                    }],
+                    labels: data.labels,
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false // Esto oculta la leyenda completamente
+                        },
+                    },             
+                },
+            };
+
+            const myChart = new Chart(ctx, config);    
+            
+            //new DataTable('#tbalumno');
+            $('#tbalumno').DataTable({
+                "pageLength": 25,
+                "responsive": true,
+                "language": {
+                    search: "Buscar en la tabla ",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    zeroRecords: "No se encontraron registros",
+                    paginate: {
+                        first: "Primera",
+                        last: "Última",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    },
+                }
+            });
+        </script>
+
+{% endblock script_js %}

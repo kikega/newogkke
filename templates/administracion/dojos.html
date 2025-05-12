@@ -32,14 +32,14 @@
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>GimnPoblaciónasio</th>
+                    <th>Población</th>
                     <th>Provincia</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for dojo in dojos %}
                     <tr>
-                      <td><a href="{{ dojo.id }}">{{ dojo.nombre }}</a></td>
+                      <td><a href="{% url 'administracion:dojo_detalle' pk=dojo.id %}">{{ dojo.nombre }}</a></td>
                       <td>{{ dojo.poblacion }}</td>
                       <td>{{ dojo.provincia }}</td>
                     </tr>		

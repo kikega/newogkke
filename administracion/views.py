@@ -200,6 +200,59 @@ class DojosView(LoginRequiredMixin, ListView):
         context['cantidad'] = self.get_queryset().count()
         return context
 
+class DojoDetailView(LoginRequiredMixin, DetailView):
+    """
+    Detalle de un Dojo
+    """
+
+    template_name = 'administracion/detalle_dojo.html'
+    model = Dojo
+    context_object_name = 'dojo'
+
+    def get_context_data(self, **kwargs):
+        """
+        Obtenemos la cantidad de dojos asociados para añadirlo al contexto
+        """
+        context = super().get_context_data(**kwargs)
+        # Obtenemos el objeto dojo actual
+        dojo_actual = self.get_object() 
+        # Obtenemos los datos del instructor y lo añadimos al contexto
+        # instructor_obj = Alumno.objects.filter(dojo=dojo_actual, instructor=False).count()
+        instructor_obj = Alumno.objects.select_related('usuario').filter(
+            dojo=dojo_actual,
+            instructor=True
+        ).first()
+        context['instructor'] = instructor_obj
+
+        # Obtenemos todos los cintos negros del dojo
+        cintos_negros_dojo_obj = Alumno.objects.filter(dojo = dojo_actual, instructor=False).order_by("apellidos")
+        context['cintos_negros_dojo'] = cintos_negros_dojo_obj
+
+        # Obtenemos los cintos negros por grado
+        # 1. Filtra por el dojo actual y que no sean instructores
+        # 2. Agrupa por 'grado' usando values('grado')
+        # 3. Cuenta los alumnos en cada grupo ('grado')
+        # 4. Ordena por 'grado'
+        cintos_negros_por_grado = Alumno.objects.filter(
+            dojo=dojo_actual,
+            instructor=False
+        ).values('grado').annotate(
+            total=Count('id')
+        ).order_by('grado')
+        # Extracción de Datos
+        labels = [item['grado'] for item in cintos_negros_por_grado]
+        values = [item['total'] for item in cintos_negros_por_grado]
+        context['cinturon_negro_data_json'] = json.dumps({
+            'labels': labels,
+            'values': values,
+            'titulo': f'Alumnos por Grado en {dojo_actual.nombre}', # Título dinámico
+        })
+        context['total_cintos_negros'] = sum(values)
+
+        return context
+
+
+
 class CursillosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""
 
@@ -215,6 +268,16 @@ class CursillosView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['cantidad'] = self.get_queryset().count()
         return context
+
+class CursilloDetailView(LoginRequiredMixin, DetailView):
+    """
+    Obtenemos el detalle de cada cursillo
+    Los alumnos que han asistido y si hubo exámenes, los que se examinaron
+    """
+
+    model = Cursillo
+    template_name = 'administracion/detalle_cursillo.html'
+    context_object_name = 'cursillo'
 
 @login_required
 def Cursillos_View(request):

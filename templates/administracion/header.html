@@ -22,29 +22,29 @@
                         {% endif %}
                     <li class="nav-item">
                         {%  if request.resolver_match.url_name == "alumnos" or request.resolver_match.url_name == "alumno_detalle" or request.resolver_match.url_name == "alumnos_grado"%}
-                            <a class="nav-link active" aria-current="page" href="{% url "alumnos" %}">Cintos Negros</a></li>
+                            <a class="nav-link active" aria-current="page" href="{% url "administracion:alumnos" %}">Cintos Negros</a></li>
                         {% else %}
-                            <a class="nav-link" href="{% url "alumnos" %}">Cintos Negros</a></li>
+                            <a class="nav-link" href="{% url "administracion:alumnos" %}">Cintos Negros</a></li>
                         {% endif %}
                     <li class="nav-item">
-                        {%  if request.resolver_match.url_name == "dojos" %} 
-                            <a class="nav-link active" aria-current="page" href="{% url "dojos" %}">Dojos</a></li>
+                        {%  if request.resolver_match.url_name == "dojos" or request.resolver_match.url_name == "dojo_detalle" %} 
+                            <a class="nav-link active" aria-current="page" href="{% url "administracion:dojos" %}">Dojos</a></li>
                         {% else %}
-                            <a class="nav-link" href="{% url "dojos" %}">Dojos</a></li>
+                            <a class="nav-link" href="{% url "administracion:dojos" %}">Dojos</a></li>
                         {% endif %}
                     <li class="nav-item">
                         {%  if request.resolver_match.url_name == "cursillos" %} 
-                            <a class="nav-link active" aria-current="page" href="{% url "cursillos" %}">Cursillos</a></li>
+                            <a class="nav-link active" aria-current="page" href="{% url "administracion:cursillos" %}">Cursillos</a></li>
                         {% else %}
-                            <a class="nav-link" href="{% url "cursillos" %}">Cursillos</a></li>
+                            <a class="nav-link" href="{% url "administracion:cursillos" %}">Cursillos</a></li>
                         {% endif %}
                     {% if peticiones > 0 and user.is_staff %}
                         {%  if request.resolver_match.url_name == "cursillos" %} 
-                            <a class="nav-link active" aria-current="page" href="{% url "peticiones" %}">Peticiones</a>
+                            <a class="nav-link active" aria-current="page" href="{% url "administracion:peticiones" %}">Peticiones</a>
                                 <span class="badge rounded-pill bg-danger">{{ peticiones }}</a>
                             </li>
                         {% else %}
-                            <a class="nav-link" href="{% url "peticiones" %}">Peticiones</a>
+                            <a class="nav-link" href="{% url "administracion:peticiones" %}">Peticiones</a>
                                 <span class="badge rounded-pill bg-danger">{{ peticiones }}</a>
                             </li>
                         {% endif %}

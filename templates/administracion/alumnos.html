@@ -5,12 +5,12 @@
     
     {% include "administracion/header.html" %}
       <!-- Breadcrumb -->
-      {% comment %} <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+      <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
           <li class="breadcrumb-item active text-warning" aria-current="page">Cintos Negros</li>
          </ol>
-      </nav> {% endcomment %}
+      </nav>
       <!-- Fin Breadcrumb -->
 
         <!-- Título Principal -->
@@ -71,7 +71,7 @@
                 <tbody>
                   {% for alm in alumnos %}
                     <tr>
-                      <td><a href="{{ alm.id }}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
+                      <td><a href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
                       <td>{{ alm.dojo }}</td>
                       <td>
                         {% if alm.activo %}
@@ -93,7 +93,7 @@
           // Script para la selección de grado
           document.getElementById('gradoSelect').addEventListener('change', function() {
             const selectedGrado = this.value;
-            const baseUrl = "{% url 'alumnos_grado' 0 %}";
+            const baseUrl = "{% url 'administracion:alumnos_grado' 0 %}";
             const newUrl = baseUrl.replace('/0/', '/' + selectedGrado + '/');
             window.location.href = newUrl;
           });
@@ -138,7 +138,7 @@
                 },
                 options: {
                     responsive: true,
-                    indexAxis: 'y',
+                    indexAxis: 'x',
                     plugins: {
                         title: {
                             display: true,
@@ -146,7 +146,10 @@
                                 size: 26,
                             },
                             text: data.titulo,
-                        }
+                        },
+                        legend: {
+                          display: false // Esto oculta la leyenda completamente
+                        },
                     },
                 },
             };

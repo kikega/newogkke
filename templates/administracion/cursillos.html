@@ -43,12 +43,12 @@
                   {% for cursillo in cursillos %}
                     <tr>
                         <td>{{ cursillo.fecha }}</td>
-                        <td><a href="{{ cursillo.id }}">{{ cursillo.evento }}</a></td>
+                        <td><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></td>
                         <td>{{ cursillo.ciudad }}</td>
                         <td>{{ cursillo.pais }}</td>
                         <td>
                             {% if cursillo.internacional %}
-                                <i class="bi bi-check-circle-fill text-primary"></i>
+                                <i class="bi bi-check-circle-fill text-warning"></i>
                             {% endif %}
                         </td>
                         <td>
