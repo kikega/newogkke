@@ -279,6 +279,65 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
     template_name = 'administracion/detalle_cursillo.html'
     context_object_name = 'cursillo'
 
+
+class PeticionView(LoginRequiredMixin, TemplateView):
+    """
+    Vista para realizar peticiones
+    """
+    template_name = 'administracion/peticion.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['dojos'] = Dojo.objects.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Procesa el formulario de petición.
+        """
+        titulo = request.POST.get('titulo')
+        tipo = request.POST.get('tipo')
+        dojo_id = request.POST.get('dojo')
+        descripcion = request.POST.get('descripcion')
+
+        # Validar que los campos no estén vacíos
+        if not all([titulo, tipo, dojo_id, descripcion]):
+            return render(request, self.template_name, {
+                'error': 'Por favor, complete todos los campos.',
+                'dojos': Dojo.objects.all()
+            })
+
+        # Obtener el Dojo
+        dojo = get_object_or_404(Dojo, pk=dojo_id)
+
+        # Crear la petición
+        peticion = Peticion.objects.create(
+            titulo=titulo,
+            tipo=tipo,
+            dojo=dojo,
+            descripcion=descripcion
+        )
+
+        # Enviar correo electrónico
+        try:
+            send_mail(
+                subject=f'Nueva petición de {dojo.nombre}: {titulo}',
+                message=f'Tipo: {peticion.get_tipo_display()}\n\nDescripción:\n{descripcion}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.EMAIL_ADMIN],
+                fail_silently=False,
+            )
+            return render(request, self.template_name, {
+                'mensaje': 'Petición enviada correctamente.',
+                'dojos': Dojo.objects.all()
+            })
+        except SMTPException as e:
+            return render(request, self.template_name, {
+                'error': f'Error al enviar el correo: {e}',
+                'dojos': Dojo.objects.all()
+                })
+        
+
 @login_required
 def Cursillos_View(request):
     cursillo = Cursillo.objects.all().order_by('-fecha')

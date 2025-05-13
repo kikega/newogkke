@@ -18,4 +18,5 @@ urlpatterns = [
     path("dojos/<int:pk>/", administracion_views.DojoDetailView.as_view(), name="dojo_detalle"),
     path("cursillos/", administracion_views.CursillosView.as_view(), name="cursillos"),
     path("cursillos/<int:pk>/", administracion_views.CursilloDetailView.as_view(), name="cursillo_detalle"),
+    path("peticion/", administracion_views.PeticionView.as_view(), name="peticion"),
 ]
