@@ -149,6 +149,12 @@ EMAIL_HOST_USER = config('EMAIL_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_PASSWORD')
 EMAIL_USE_SSL = True
 
+# Correo de personal staff
+EMAIL_DEFAULT_STAFF = [
+    "kike@egalvez.es",
+    "kikega@telefonica.net",
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

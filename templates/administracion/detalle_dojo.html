@@ -126,7 +126,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{% url "administracion:peticion" %}" method='post'>
+                    <form action="{% url "administracion:peticiones" %}" method='post'>
                         {% csrf_token %}
                         <div class="form-floating mb-3">
                             <input type="password" class="form-control" id="oldPassword" name="old_password" placeholder="Contraseña">
@@ -171,12 +171,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{% url "administracion:peticion" %}" method='post'>
+                    <form class="form" action="{% url "administracion:peticiones" %}" method='post' id="peticionesForm">
                         {% csrf_token %}
                         <input type="hidden" value="{{ dojo.id }}" name="dojo">
                         <div class="mb-3">
                             <label for="tipoSelect" class="form-label">Tipo de Petición</label>
-                            <select class="form-select form-select-lg mb-3" id="tipoSelect" aria-label="Large select example">
+                            <select class="form-select form-select-lg mb-3" id="tipoSelect" aria-label="Large select example" name="tipo">
                                 <option selected>Seleccionar del menú</option>
                                 <option value="a">Añadir</option>
                                 <option value="m">Modificar</option>
@@ -200,7 +200,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" form= "cambioPassword" class="btn btn-primary">Enviar</button>
+                    <button type="submit" form= "peticionesForm" class="btn btn-primary">Enviar</button>
                 </div>
             </div>
         </div>

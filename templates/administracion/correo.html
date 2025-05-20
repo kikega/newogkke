@@ -5,11 +5,9 @@
     
     {% include "administracion/header.html" %}
 
-    <main class="container mt-5 mb-5">
-
         <!-- Breadcrumb -->
         <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+        <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
                 <!-- Puedes añadir más niveles si es necesario -->
@@ -20,8 +18,18 @@
 
         <!-- Título Principal -->
         <h1 class="text-center mb-5 color-texto">Correo</h1>
-
+        {% if instructores %}
+        <h2>Lista de instructores</h2>
+        <table>
+            {% for instructor in instructores %}
+            <tr>
+                <td>{{ instructor.nombre }}, {{ instructor.apellidos }} </td>
+                <td>{{ instructor.usuario.email }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
         
-    </main>
+
 
 {% endblock container %}

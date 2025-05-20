@@ -9,23 +9,22 @@ from django.db.models.query import QuerySet
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, ListView, DetailView, View
+from django.views.generic import TemplateView, ListView, DetailView, CreateView
 from django.db.models import Count
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from django.conf import settings
 
 # App administracion
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen
 
-# Para envío de correo
-from django.core.mail import send_mail
-from django.conf import settings
-from smtplib import SMTPException
+# Utilidades
+from .utils import envio_correo, enviar_correo_html
 
 @login_required
 def home(request):
     """
     Home de la aplicación
-    
+
     Devolvemos datos globales
     - El total de cinturones negros, dojos, cursillos tanto nacionales como internacionales
     - La cantidad de alumnos por danes
@@ -83,11 +82,10 @@ class AlumnosView(LoginRequiredMixin, ListView):
         queryset = super().get_queryset().filter(grado=grado).order_by('dojo', 'apellidos')
         # Alternativamente, podrías escribirlo sin llamar a super() aquí:
         #queryset = Alumno.objects.filter(grado=grado).order_by('dojo', 'apellidos')
-       
 
         return queryset
 
-    
+
     def get_context_data(self, **kwargs):
         """
         Obtenemos los datos de los cintos negros para hacer el grafico de barras
@@ -115,11 +113,11 @@ class AlumnosView(LoginRequiredMixin, ListView):
             context['cantidad'] = context[self.context_object_name].count()
         else:
             context['cantidad'] = self.get_queryset().count()
-        
+
         context['grados_posibles'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         return context
-    
+
 
 class AlumnoDetailView(LoginRequiredMixin, DetailView):
     """
@@ -164,7 +162,7 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
         context['total_anios'] = sum(anios)
 
         # Calculamos la edad del alumno
-        if alumno.fecha_nacimiento == None:
+        if alumno.fecha_nacimiento is None:
             edad_a = 0
             edad_b = 0
         else:
@@ -173,7 +171,7 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
             edad_a = edad[0]
             edad_b = edad[1]
         context['edad'] = edad_a
-        
+
         # Preparamos el gráfico
         data_json = json.dumps({
             'labels': examen,
@@ -215,7 +213,7 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
         """
         context = super().get_context_data(**kwargs)
         # Obtenemos el objeto dojo actual
-        dojo_actual = self.get_object() 
+        dojo_actual = self.get_object()
         # Obtenemos los datos del instructor y lo añadimos al contexto
         # instructor_obj = Alumno.objects.filter(dojo=dojo_actual, instructor=False).count()
         instructor_obj = Alumno.objects.select_related('usuario').filter(
@@ -280,25 +278,36 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'cursillo'
 
 
+class PeticionCreateView(LoginRequiredMixin, CreateView):
+    """
+    Introducimos los datos de una petición nueva en la BBDD
+    """
+
+    model = Peticion
+    fields = ['titulo', 'tipo', 'dojo', 'descripcion']
+
+
 class PeticionView(LoginRequiredMixin, TemplateView):
     """
     Vista para realizar peticiones
     """
-    template_name = 'administracion/peticion.html'
+    template_name = 'administracion/peticiones.html'
+    context_object_name = 'peticion'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['dojos'] = Dojo.objects.all()
         return context
 
     def post(self, request, *args, **kwargs):
         """
         Procesa el formulario de petición.
         """
+        # Obtenemos las variables del formulario
         titulo = request.POST.get('titulo')
         tipo = request.POST.get('tipo')
         dojo_id = request.POST.get('dojo')
         descripcion = request.POST.get('descripcion')
+        destinatario = settings.EMAIL_DEFAULT_STAFF
 
         # Validar que los campos no estén vacíos
         if not all([titulo, tipo, dojo_id, descripcion]):
@@ -307,36 +316,56 @@ class PeticionView(LoginRequiredMixin, TemplateView):
                 'dojos': Dojo.objects.all()
             })
 
+        # Obtenemos las plantillas HTML y TXT para el correo
+        template_name_html='administracion/emails/notificacion_peticion.html',
+        template_name_texto='administracion/emails/notificacion_peticion.txt',
+
         # Obtener el Dojo
         dojo = get_object_or_404(Dojo, pk=dojo_id)
 
         # Crear la petición
-        peticion = Peticion.objects.create(
+        Peticion.objects.create(
             titulo=titulo,
             tipo=tipo,
             dojo=dojo,
             descripcion=descripcion
         )
+        # Convertimos el objeto creado un un diccionario
+        peticion = {
+            'titulo': titulo,
+            'dojo': dojo.nombre,
+            'email': request.user.email,
+            'descripcion': descripcion,
+        }
+        contexto = {
+            'peticion': peticion,
+        }
 
-        # Enviar correo electrónico
-        try:
-            send_mail(
-                subject=f'Nueva petición de {dojo.nombre}: {titulo}',
-                message=f'Tipo: {peticion.get_tipo_display()}\n\nDescripción:\n{descripcion}',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.EMAIL_ADMIN],
-                fail_silently=False,
-            )
-            return render(request, self.template_name, {
-                'mensaje': 'Petición enviada correctamente.',
-                'dojos': Dojo.objects.all()
-            })
-        except SMTPException as e:
-            return render(request, self.template_name, {
-                'error': f'Error al enviar el correo: {e}',
-                'dojos': Dojo.objects.all()
-                })
-        
+        # Enviamos el correo electrónico
+        enviar_correo_html(
+            asunto = f'Nueva petición de {dojo.nombre}: {titulo}',
+            template_name_html=template_name_html,
+            template_name_texto=template_name_texto,
+            contexto = contexto,
+            destinatarios = destinatario,
+        )
+
+        return redirect('administracion:peticiones')
+
+
+class CorreoView(LoginRequiredMixin, TemplateView):
+    """Envío de correo a instructores"""
+    template_name = 'administracion/correo.html'
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Obtenemos todos los instructores y sus correos
+        instructores = Alumno.objects.select_related('usuario').filter(instructor=True).order_by('apellidos')
+        context['instructores'] = instructores
+
+        return context
 
 @login_required
 def Cursillos_View(request):

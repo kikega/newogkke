@@ -37,16 +37,32 @@
                             <a class="nav-link active" aria-current="page" href="{% url "administracion:cursillos" %}">Cursillos</a></li>
                         {% else %}
                             <a class="nav-link" href="{% url "administracion:cursillos" %}">Cursillos</a></li>
-                        {% endif %}
-                    {% if peticiones > 0 and user.is_staff %}
-                        {%  if request.resolver_match.url_name == "cursillos" %} 
-                            <a class="nav-link active" aria-current="page" href="{% url "administracion:peticiones" %}">Peticiones</a>
-                                <span class="badge rounded-pill bg-danger">{{ peticiones }}</a>
-                            </li>
+                        {% endif %}                   
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                        {%  if request.resolver_match.url_name == "correo" %} 
+                            <a class="nav-link active" aria-current="page" href="{% url "administracion:correo" %}">Correo</a></li>                                         </li>
                         {% else %}
-                            <a class="nav-link" href="{% url "administracion:peticiones" %}">Peticiones</a>
-                                <span class="badge rounded-pill bg-danger">{{ peticiones }}</a>
-                            </li>
+                            <a class="nav-link" href="{% url "administracion:correo" %}">Correo</a></li>                     
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                        {%  if request.resolver_match.url_name == "peticiones" %} 
+                            <a class="nav-link active" aria-current="page" href="{% url "administracion:peticiones" %}">Peticiones
+                                {% if peticiones > 0 %}
+                                   <span class="badge rounded-pill bg-danger">{{ peticiones }}
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% else %}
+                            <a class="nav-link" href="{% url "administracion:peticiones" %}">Peticiones
+                                {% if peticiones > 0 %}
+                                    <span class="badge rounded-pill bg-danger">{{ peticiones }}
+                                {% endif %}
+                            </a>
+                        </li>
                         {% endif %}
                     {% endif %}
                     {% if user.is_staff %}
