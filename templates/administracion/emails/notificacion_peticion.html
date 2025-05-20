@@ -16,9 +16,8 @@
 </head>
 <body>
     <div class="container">
-        <img src="img/logo.png" alt="Logo OGKKE">
-    </div>
-    <div class="container">
+        <!-- DEBUG Plantilla: Valor de logo_cid = {{ logo_cid }} -->
+        <img src="cid:{{ logo_cid }}" alt="Logo de la Empresa">
         <h1>Nueva Petición de Contacto Recibida</h1>
         <p>Hola Administrador,</p>
         <p>Se ha recibido una nueva petición de contacto a través del formulario del sitio web con los siguientes detalles:</p>
@@ -27,7 +26,6 @@
             <p><strong class="label">Dojo:</strong> {{ peticion.dojo }}</p>
             <p><strong class="label">Email de Contacto:</strong> {{ peticion.email }}</p>
             <p><strong class="label">Asunto:</strong> {{ peticion.titulo }}</p>
-            <p><strong class="label">Fecha de Envío:</strong> {{ peticion.fecha|date:"d/m/Y H:i" }}</p>
         </div>
 
         <p><strong class="label">Mensaje:</strong></p>
@@ -37,7 +35,7 @@
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <p>Por favor, revisa esta petición en el panel de administración o contacta al remitente a la mayor brevedad.</p>
-        <p>Saludos,<br>El Sistema de Notificaciones OGKKE</p>
+        <p>Saludos,<br>El Sistema de Notificaciones <strong>OGKKE</strong></p>
     </div>
 </body>
 </html>

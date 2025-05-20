@@ -4,7 +4,9 @@
 # logging nos permite un registro de eventos más robusto
 import logging
 
+# Correo
 from smtplib import SMTPException
+from email.mime.image import MIMEImage
 
 # Parser HTML
 from html.parser import HTMLParser
@@ -14,6 +16,7 @@ import io
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.contrib.staticfiles import finders 
 from django.contrib import messages
 
 
@@ -83,6 +86,22 @@ def enviar_correo_html(asunto, template_name_html, template_name_texto, contexto
     - remitente: Email del remitente (opcional, usa settings.DEFAULT_FROM_EMAIL por defecto).
     """
 
+    # Obtenemos el path relativo y el absoluto de la imagen a incrustar
+    # Y lo añadimos al contexto
+    contexto_completo = contexto.copy()
+    path_relativo_logo = 'img/logo.png'
+    # path_absoluto_logo = settings.BASE_DIR / path_relativo_logo
+    # id_imagen_cid = path_relativo_logo.split('/')[-1]
+    # contexto_completo['logo_cid'] = id_imagen_cid 
+
+    # print(path_relativo_logo, path_absoluto_logo, id_imagen_cid)
+
+    if path_relativo_logo:
+        path_absoluto_logo = finders.find(path_relativo_logo)
+        if path_absoluto_logo:
+            id_imagen_cid = path_relativo_logo.split('/')[-1].replace('.', '_') # Hacerlo más único y sin puntos
+            contexto_completo['logo_cid'] = id_imagen_cid
+
     if not destinatarios:
         return False, "No se proporcionaron destinatarios."
 
@@ -92,7 +111,7 @@ def enviar_correo_html(asunto, template_name_html, template_name_texto, contexto
     try:
         logger.info("Intentando enviar correo: Asunto = %s, Destinatarios= %s", asunto, destinatarios)
         # Renderizar la plantilla HTML
-        html_content = render_to_string(template_name_html, contexto)
+        html_content = render_to_string(template_name_html, contexto_completo)
 
         # Renderizar la plantilla de texto plano
         # Si no se proporciona una plantilla de texto, se puede intentar generar a partir del HTML
@@ -104,6 +123,15 @@ def enviar_correo_html(asunto, template_name_html, template_name_texto, contexto
         # Crear el objeto EmailMultiAlternatives
         msg = EmailMultiAlternatives(asunto, text_content, remitente, destinatarios)
         msg.attach_alternative(html_content, "text/html") # Adjuntar la versión HTML
+
+        if path_absoluto_logo and id_imagen_cid:
+            try:
+                with open(path_absoluto_logo, 'rb') as f:
+                    mime_image = MIMEImage(f.read())
+                    mime_image.add_header('Content-ID', f'<{id_imagen_cid}>') # El < > es importante
+                    msg.attach(mime_image)
+            except IOError as e:
+                print(f"Error al leer o adjuntar imagen: {e}")
 
         # Enviar el correo
         msg.send(fail_silently=False)
