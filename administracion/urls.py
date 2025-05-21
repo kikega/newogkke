@@ -19,5 +19,6 @@ urlpatterns = [
     path("cursillos/", administracion_views.CursillosView.as_view(), name="cursillos"),
     path("cursillos/<int:pk>/", administracion_views.CursilloDetailView.as_view(), name="cursillo_detalle"),
     path("peticiones/", administracion_views.PeticionView.as_view(), name="peticiones"),
+    path("peticiones/anular/<int:pk>/", administracion_views.PeticionAnularView.as_view(), name="peticiones_anular"),
     path("correo/", administracion_views.CorreoView.as_view(), name="correo"),
 ]

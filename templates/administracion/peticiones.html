@@ -5,23 +5,50 @@
     
     {% include "administracion/header.html" %}
 
-    <main class="container mt-5 mb-5">
+    <!-- Breadcrumb -->
+    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
+    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <!-- Puedes añadir más niveles si es necesario -->
+            <li class="breadcrumb-item active text-warning" aria-current="page">Peticiones</li>
+        </ol>
+    </nav>
+    <!-- Fin Breadcrumb -->
 
-        <!-- Breadcrumb -->
-        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-                <!-- Puedes añadir más niveles si es necesario -->
-                <li class="breadcrumb-item active text-warning" aria-current="page">Peticiones</li>
-            </ol>
-        </nav>
-        <!-- Fin Breadcrumb -->
+    <!-- Título Principal -->
+    {% if user.is_staff or user.is_superuser %}
+        <h1 class="text-center mb-5 color-texto">Peticiones totales</h1>
+    {% else %}
+        <h1 class="text-center mb-5 color-texto">Peticiones {{ dojo_usuario.nombre }}</h1>
+    {% endif %}
 
-        <!-- Título Principal -->
-        <h1 class="text-center mb-5 color-texto">Peticiones</h1>
-
-        
-    </main>
+    {% if peticiones_pendientes %}
+      <div class="row row-cols-1 mt-5">
+        {% for p in peticiones_pendientes %}
+        <div class="card mt-3">
+          <div class="card-header">
+            {{ p.fecha }}
+          </div>
+          <div class="card-body">
+            <h5 class="card-title color-texto">{{ p.titulo }}</h5>
+            <p class="card-text">{{ p.descripcion }}</p>
+            <div class="text-end">
+              <form method="post" action="{% url 'administracion:peticiones_anular' pk=p.id %}" style="display: inline;">
+                {% csrf_token %}
+                {% if user.is_staff %}
+                    <input type="hidden" name="action" value="finalizar">
+                    <button type="submit" class="btn btn-warning btn-sm">Resolver</button>
+                {% else %}
+                    <input type="hidden" name="action" value="borrar">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres borrar esta petición?');">Eliminar</button>
+                {% endif %}
+            </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
 {% endblock container %}

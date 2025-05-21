@@ -78,14 +78,16 @@
             <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
                 <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalTablon">Tablón</button>
                 <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPeticiones">Peticiones 
-                    <span class="badge text-bg-info rounded-circle">1</span>
+                    {% if numero_peticiones > 0 %}
+                        <span class="badge text-bg-info rounded-circle">{{ numero_peticiones }}</span>
+                    {% endif %}
                 </button>
             </div>
         </div>  
     </div>
     <!-- Fin de sección de botones -->
 
-    <!-- SECCIÓN INFERIOR: Listado alumnos -->
+    <!-- SECCIÓN INFERIOR: Listado alumnos del Dojo -->
     <section class="row justify-content-center">
         <div class="col mt-5">
             <div class="row">

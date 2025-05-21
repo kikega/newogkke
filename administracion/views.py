@@ -9,7 +9,7 @@ from django.db.models.query import QuerySet
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, ListView, DetailView, CreateView
+from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.conf import settings
@@ -118,7 +118,6 @@ class AlumnosView(LoginRequiredMixin, ListView):
 
         return context
 
-
 class AlumnoDetailView(LoginRequiredMixin, DetailView):
     """
     Muestra los detalles de un alumno específico.
@@ -215,12 +214,12 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
         # Obtenemos el objeto dojo actual
         dojo_actual = self.get_object()
         # Obtenemos los datos del instructor y lo añadimos al contexto
-        # instructor_obj = Alumno.objects.filter(dojo=dojo_actual, instructor=False).count()
         instructor_obj = Alumno.objects.select_related('usuario').filter(
             dojo=dojo_actual,
             instructor=True
         ).first()
         context['instructor'] = instructor_obj
+        print(instructor_obj)
 
         # Obtenemos todos los cintos negros del dojo
         cintos_negros_dojo_obj = Alumno.objects.filter(dojo = dojo_actual, instructor=False).order_by("apellidos")
@@ -247,9 +246,13 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
         })
         context['total_cintos_negros'] = sum(values)
 
+        # Obtenemos las peticiones pendientes por dojo
+        peticiones = Peticion.objects.filter(dojo=dojo_actual, finalizada=False)
+        numero_peticiones = peticiones.count()
+        context['peticiones'] = peticiones
+        context['numero_peticiones'] = numero_peticiones
+
         return context
-
-
 
 class CursillosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""
@@ -277,7 +280,6 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
     template_name = 'administracion/detalle_cursillo.html'
     context_object_name = 'cursillo'
 
-
 class PeticionCreateView(LoginRequiredMixin, CreateView):
     """
     Introducimos los datos de una petición nueva en la BBDD
@@ -285,7 +287,6 @@ class PeticionCreateView(LoginRequiredMixin, CreateView):
 
     model = Peticion
     fields = ['titulo', 'tipo', 'dojo', 'descripcion']
-
 
 class PeticionView(LoginRequiredMixin, TemplateView):
     """
@@ -296,11 +297,46 @@ class PeticionView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Obtenemos los datos del usuario logado
+        user = self.request.user
+
+        # Inicializamos las variables
+        # Esto garantiza que estas variables de contexto siempre existan,
+        # incluso si el usuario no está asociado a un Dojo.
+        dojo_usuario = None
+        peticiones_pendientes = Peticion.objects.none()
+
+        # Obtenemos los datos deldojo y sus peticiones pendientes
+        if user.is_authenticated:
+            try:
+                # Obtiene una instancia de alumno para el usuario actual
+                alumno = Alumno.objects.select_related('dojo').get(usuario=user)
+                dojo_usuario = alumno.dojo
+                # Obtenemos todas las peticiones pendientes si el usuario es staff o superuser
+                # En caso sontrario las del dojo actual
+                if user.is_staff or user.is_superuser:
+                    peticiones_pendientes = Peticion.objects.filter(
+                        finalizada=False
+                    ).order_by('-fecha')
+                else:
+                    peticiones_pendientes = Peticion.objects.filter(
+                        dojo=dojo_usuario,
+                        finalizada=False
+                    ).order_by('-fecha')
+            except Alumno.DoesNotExist: # pylint: disable=no-member
+                pass
+
+        # Almacena el objeto dojo y sus peticiones pendientes
+        context ['dojo_usuario'] = dojo_usuario
+        context['peticiones_pendientes'] = peticiones_pendientes
+        context['user'] = user
+
         return context
 
     def post(self, request, *args, **kwargs):
         """
-        Procesa el formulario de petición.
+        Procesa el formulario de petición y crea la petición en la BBDD.
         """
         # Obtenemos las variables del formulario
         titulo = request.POST.get('titulo')
@@ -352,6 +388,18 @@ class PeticionView(LoginRequiredMixin, TemplateView):
 
         return redirect('administracion:peticiones')
 
+
+class PeticionAnularView(LoginRequiredMixin, View):
+    """
+    Anula una petición
+    """
+
+    def post(self, request, pk):
+        peticion = get_object_or_404(Peticion, pk=pk)
+        peticion.finalizada = True
+        peticion.save()
+
+        return redirect('administracion:peticiones')
 
 class CorreoView(LoginRequiredMixin, TemplateView):
     """Envío de correo a instructores"""
