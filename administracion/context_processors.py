@@ -13,14 +13,13 @@ def common_navbar_context(request):
     # Obtenemos la foto del usuario que esta logado
     if request.user.is_authenticated:
         try:
-            usuario_foto = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
+            alumno_obj = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
+            context_data['usuario_foto'] = alumno_obj.foto
         except Alumno.DoesNotExist: # pylint: disable=no-member
-            usuario_foto = None
+            # Si no hay alumno asociado, usuario foto ya es None
+            pass
         # Contar peticiones pendientes 
         peticiones_pendientes = Peticion.objects.filter(finalizada=False).count()
-        context_data = {
-            'usuario_foto': usuario_foto.foto,
-            'peticiones': peticiones_pendientes,
-        }
+        context_data['peticiones'] = peticiones_pendientes
 
     return context_data
