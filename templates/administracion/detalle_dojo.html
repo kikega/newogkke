@@ -76,8 +76,10 @@
     <div class="container col-md-4 justify-content-center mt-5">
         <div class="row">
             <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
-                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalTablon">Tablón</button>
-                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPeticiones">Peticiones 
+                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalTablon">
+                    <i class="bi bi-list-ul"></i> Tablón</button>
+                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPeticiones">
+                    <i class="bi bi-person-raised-hand"></i> Peticiones 
                     {% if numero_peticiones > 0 %}
                         <span class="badge text-bg-info rounded-circle">{{ numero_peticiones }}</span>
                     {% endif %}
@@ -177,13 +179,14 @@
                         {% csrf_token %}
                         <input type="hidden" value="{{ dojo.id }}" name="dojo">
                         <div class="mb-3">
-                            <label for="tipoSelect" class="form-label">Tipo de Petición</label>
+                            <!--<label for="tipoSelect" class="form-label">Tipo de Petición</label>
                             <select class="form-select form-select-lg mb-3" id="tipoSelect" aria-label="Large select example" name="tipo">
                                 <option selected>Seleccionar del menú</option>
                                 <option value="a">Añadir</option>
                                 <option value="m">Modificar</option>
                                 <option value="e">Eliminar</option>
-                              </select>
+                              </select>-->
+                              <p>Se va a crear una nueva petición, describa exactamente lo que necesita</p>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="titulo">Titulo</label>
@@ -194,7 +197,8 @@
                         <div class="mb-3">
                             <label for="descripcion" class="form-label">Descripción</label>
                             <div class="input-group">
-                                <textarea class="form-control" id="descripcion" rows="5" name="descripcion"></textarea>
+                                <textarea class="form-control" id="descripcion" rows="5" name="descripcion">
+                                </textarea>
                             </div>
                         </div>
                     </form>

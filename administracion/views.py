@@ -291,6 +291,10 @@ class PeticionCreateView(LoginRequiredMixin, CreateView):
 class PeticionView(LoginRequiredMixin, TemplateView):
     """
     Vista para realizar peticiones
+    Procesa el formulario de petición y crea la petición en la BBDD.
+    Obtiene los datos de la petición para mostrarlos en el template
+    Si el usuario es staff, obtiene todas las peticiones pendiente
+    Si el usuario es instructor, obtiene las peticiones pendientes del dojo actual
     """
     template_name = 'administracion/peticiones.html'
     context_object_name = 'peticion'

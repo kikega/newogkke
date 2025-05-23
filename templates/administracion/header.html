@@ -41,15 +41,15 @@
                     <li class="nav-item">
                     {%  if request.resolver_match.url_name == "peticiones" %} 
                         <a class="nav-link active" aria-current="page" href="{% url "administracion:peticiones" %}">Peticiones
-                            {% if peticiones > 0 and user.is_staff %}
-                                <span class="badge rounded-pill bg-danger">{{ peticiones }}</span>
+                            {% if peticiones_totales > 0 and user.is_staff %}
+                                <span class="badge rounded-pill bg-danger">{{ peticiones_totales }}</span>
                             {% endif %}
                         </a>
                     </li>
                     {% else %}
                         <a class="nav-link" href="{% url "administracion:peticiones" %}">Peticiones
-                            {% if peticiones > 0 and user.is_staff %}
-                                <span class="badge rounded-pill bg-danger">{{ peticiones }}</span>
+                            {% if peticiones_totales > 0 and user.is_staff %}
+                                <span class="badge rounded-pill bg-danger">{{ peticiones_totales }}</span>
                             {% endif %}
                         </a>
                     </li>

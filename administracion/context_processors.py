@@ -1,3 +1,9 @@
+"""
+Los context processors en Django son funciones que toman el objeto request como argumento
+ y devuelven un diccionario que se añade al contexto de la solicitud. Estos 
+ procesadores permiten compartir datos globales, como configuraciones del sitio, 
+ en todos los templates sin necesidad de pasarlos manualmente a través de cada vista.
+"""
 # Importamos los modelos de Alumno y Peticion
 from administracion.models import Alumno, Peticion
 
@@ -7,7 +13,7 @@ def common_navbar_context(request):
     """
     context_data = {
         'usuario_foto': None,
-        'peticiones': 0,
+        'peticiones_totales': 0,
     }
 
     # Obtenemos la foto del usuario que esta logado
@@ -20,6 +26,6 @@ def common_navbar_context(request):
             pass
         # Contar peticiones pendientes 
         peticiones_pendientes = Peticion.objects.filter(finalizada=False).count()
-        context_data['peticiones'] = peticiones_pendientes
+        context_data['peticiones_totales'] = peticiones_pendientes
 
     return context_data
