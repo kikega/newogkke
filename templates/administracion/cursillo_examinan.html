@@ -33,24 +33,24 @@
             </div>
         </div>
 
-        <!-- Listado de alumnos asistentes -->
+        <!-- Listado de alumnos asisque se examinan -->
         <section class="album py-5">
             <div class="container">
                 
                 <div class="row row-cols-1">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
-                            <a href="#" class="nav-link active">Asistentes</a>
+                            <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="nav-link">Asistentes</a>
                         </li>
                         <li class="nav-item">
-                            <a href="{% url 'administracion:cursillo_examinados' pk=cursillo.id %}" class="nav-link">Exámen</a>
+                            <a href="#" class="nav-link active">Exámen</a>
                         </li>
                     </ul>
                 </div>
         
                 <div class="row row-cols-1 mt-5">
         
-                    {% if asistentes %}
+                    {% if examinan %}
                         <div class="col mt-5">
                             <div class="row">
                                 <table id="tbalumno" class="table table-striped display">
@@ -62,11 +62,11 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for alm in asistentes %}
+                                    {% for alm in examinan %}
                                         <tr>
-                                            <td>{{ alm.apellidos }}, {{ alm.nombre }}</td>
-                                            <td>{{ alm.dojo }}</td>
-                                            <td>{{ alm.grado }}</td>
+                                            <td>{{ alm.alumno.apellidos }}, {{ alm.alumno.nombre }}</td>
+                                            <td>{{ alm.alumno.dojo }}</td>
+                                            <td>{{ alm.alumno.grado }}</td>
                                         </tr>		
                                     {% endfor %}
                                     </tbody>
@@ -78,7 +78,7 @@
                 </div>    
             </div>
         </section>
-        <!-- Fin listado de alumnos asistentes -->
+        <!-- Fin listado de alumnos que se examinan -->
 
         {% endblock container %}
 
@@ -108,4 +108,3 @@
 
 
 {% endblock script_js %}
-

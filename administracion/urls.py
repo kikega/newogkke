@@ -18,6 +18,7 @@ urlpatterns = [
     path("dojos/<int:pk>/", administracion_views.DojoDetailView.as_view(), name="dojo_detalle"),
     path("cursillos/", administracion_views.CursillosView.as_view(), name="cursillos"),
     path("cursillos/<int:pk>/", administracion_views.CursilloDetailView.as_view(), name="cursillo_detalle"),
+    path("cursillos/<int:pk>/examinados", administracion_views.CursilloExaminaListView.as_view(), name="cursillo_examinados"),
     path("peticiones/", administracion_views.PeticionView.as_view(), name="peticiones"),
     path("peticiones/anular/<int:pk>/", administracion_views.PeticionAnularView.as_view(), name="peticiones_anular"),
     path("correo/", administracion_views.CorreoView.as_view(), name="correo"),

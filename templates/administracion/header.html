@@ -33,7 +33,7 @@
                             <a class="nav-link" href="{% url "administracion:dojos" %}">Dojos</a></li>
                         {% endif %}
                     <li class="nav-item">
-                        {%  if request.resolver_match.url_name == "cursillos" %} 
+                        {%  if request.resolver_match.url_name == "cursillos" or request.resolver_match.url_name == "cursillo_detalle" or request.resolver_match.url_name == "cursillo_examinados" %} 
                             <a class="nav-link active" aria-current="page" href="{% url "administracion:cursillos" %}">Cursillos</a></li>
                         {% else %}
                             <a class="nav-link" href="{% url "administracion:cursillos" %}">Cursillos</a></li>

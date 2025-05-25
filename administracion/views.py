@@ -273,13 +273,42 @@ class CursillosView(LoginRequiredMixin, ListView):
 class CursilloDetailView(LoginRequiredMixin, DetailView):
     """
     Obtenemos el detalle de cada cursillo
-    Los alumnos que han asistido y si hubo exámenes, los que se examinaron
+    Los alumnos que han asistido
     """
 
     model = Cursillo
     template_name = 'administracion/detalle_cursillo.html'
     context_object_name = 'cursillo'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        curso_actual = self.get_object()
+        # Obtenemos todos los asistentes a un cursillo
+        # asistentes_obj = Cursillo.objects.select_related('alumnos').get(pk=curso_actual.id)
+        context["asistentes"] = curso_actual.alumnos.all().order_by('apellidos')
+
+        return context
+
+
+class CursilloExaminaListView(LoginRequiredMixin, DetailView):
+    """
+    Listado de todos los que se examinan en un cursillo
+    """
+    
+    model = Cursillo
+    template_name = 'administracion/cursillo_examinan.html'
+    context_object_name = 'cursillo'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        curso_actual = self.get_object()
+
+        # Obtenemos todos los alumnos que se examinan en el cursillo
+        context['examinan'] = Examen.objects.filter(evento=curso_actual).select_related('alumno').order_by('alumno__apellidos')
+        context['curso'] = curso_actual
+        print(curso_actual)
+
+        return context
 class PeticionCreateView(LoginRequiredMixin, CreateView):
     """
     Introducimos los datos de una petición nueva en la BBDD
