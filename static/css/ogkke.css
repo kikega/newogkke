@@ -156,3 +156,12 @@
     margin: auto; /* Centrar y añadir margen */
     position: relative; /* Importante para la responsividad de Chart.js */
 }
+
+/* Footer siempre en el bottom */
+@media (max-height: 768px) {
+    .footer {
+        position: -webkit-sticky;
+        position: sticky;
+        bottom: 0;
+    }
+}

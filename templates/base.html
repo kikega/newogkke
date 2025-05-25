@@ -22,10 +22,10 @@
 {%  if request.resolver_match.url_name == "login" %}
 <body class="d-flex align-items-center py-4 bg-body-tertiary">
 {% else %}
-<body>
+<body class="d-flex flex-column min-vh-100">
 {% endif %}
     
-    <main class="container mt-5 mb-5">
+    <main class="container mt-5 mb-5 {% if request.resolver_match.url_name != "login" %}flex-grow-1{% endif %}">
         
         {% block container %}
         {% endblock container %}
@@ -80,16 +80,17 @@
             </div>
         </div>
     </main>
-    <footer class="footer py-4 mt-5 bg-body-tertiary sticky-bottom">
+
+    <!-- ===== FOOTER ===== -->
+    {% if request.resolver_match.url_name != "login" %}
+    <footer class="footer py-4 mt-5 bg-body-tertiary">
         <div class="container">
             <div class="d-flex justify-content-center">
                 <img class="img-thumbnail" src="{% static "img/logo2.png" %}" alt="Logo egalvez" width="137" height="40">
             </div>
-            <div class="d-flex justify-content-center">
-                <p>2025 © Egalvez</p>
-            </div>
         </div>
     </footer>
+    {% endif %}
 
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
