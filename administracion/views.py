@@ -237,7 +237,7 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
             total=Count('id')
         ).order_by('grado')
         # Extracción de Datos
-        labels = [item['grado'] for item in cintos_negros_por_grado]
+        labels = [f"{item['grado']}º DAN" for item in cintos_negros_por_grado]
         values = [item['total'] for item in cintos_negros_por_grado]
         context['cinturon_negro_data_json'] = json.dumps({
             'labels': labels,
@@ -245,6 +245,7 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
             'titulo': f'Alumnos por Grado en {dojo_actual.nombre}', # Título dinámico
         })
         context['total_cintos_negros'] = sum(values)
+        print(labels)
 
         # Obtenemos las peticiones pendientes por dojo
         peticiones = Peticion.objects.filter(dojo=dojo_actual, finalizada=False)
