@@ -17,19 +17,46 @@
         <!-- Fin Breadcrumb -->
 
         <!-- Título Principal -->
-        <h1 class="text-center mb-5 color-texto">Correo</h1>
-        {% if instructores %}
-        <h2>Lista de instructores</h2>
-        <table>
-            {% for instructor in instructores %}
-            <tr>
-                <td>{{ instructor.nombre }}, {{ instructor.apellidos }} </td>
-                <td>{{ instructor.usuario.email }}</td>
-            </tr>
-            {% endfor %}
-        </table>
+        <h1 class="text-center mb-5 color-texto">Correo a Instructores</h1>
+                
+        {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
         {% endif %}
-        
 
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        {# Campos de Asunto y Mensaje #}
+        <div class="mb-3">
+            <label for="{{ form.asunto.id_for_label }}" class="form-label">{{ form.asunto.label }}</label>
+            {{ form.asunto }}
+            {% if form.asunto.errors %}<div class="invalid-feedback d-block">{{ form.asunto.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.mensaje.id_for_label }}" class="form-label">{{ form.mensaje.label }}</label>
+            {{ form.mensaje }}
+            {% if form.mensaje.errors %}<div class="invalid-feedback d-block">{{ form.mensaje.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        {# El widget FilteredSelectMultiple #}
+        <fieldset class="mt-5 form-select module aligned color-texto">
+            <div class="mt-3 form-row field-{{ form.instructores.name }}">
+                <div>
+                    <!--<label for="{{ form.instructores.id_for_label }}">{{ form.instructores.label }}:</label>
+                    <p class="help">{{ form.instructores.help_text }}</p>-->
+                    {{ form.instructores }} {# Esto renderizará el widget #}
+                    {% if form.instructores.errors %}<ul class="errorlist">{% for error in form.instructores.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+            </div>
+        </fieldset>
+        
+        <button type="submit" class="btn btn-primary mt-5">Enviar Correos</button>
+    </form>
 
 {% endblock container %}
+

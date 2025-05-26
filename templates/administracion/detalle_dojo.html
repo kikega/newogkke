@@ -225,7 +225,7 @@
                 type: 'bar',
                 data: {
                     datasets: [{
-                        label: 'DAN',
+                        label: '',
                         data: data.values,
                         backgroundColor: [
                             'rgba(54, 162, 235, 0.2)',
@@ -248,7 +248,7 @@
                             display: false // Esto oculta la leyenda completamente
                         },
                     },
-                    scales: {
+                    scales: { // Configuración del eje Y sin porcentajes
                         y: {
                             beginAtZero: true,
                             ticks: {

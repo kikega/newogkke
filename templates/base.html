@@ -10,13 +10,26 @@
     <link rel="icon" href={% static "img/favicon.png" %} size="25x25" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <title>OGKKE</title>
+    
+    {# Esto es CRUCIAL para los JS y CSS del widget #}
+    {% block extrahead %}
+        {% if form %}
+            {{ form.media.css }}
+        {% endif %}
+    {% endblock %}
+
     {%  if request.resolver_match.url_name == "login" %}
     <link rel="stylesheet" href={% static "css/ogkke-login.css" %}>
     {% else %}
     <link rel="stylesheet" href={% static "css/ogkke.css" %}>
     {% endif %}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <title>OGKKE</title>
+
+    {% block extrajs %}
+        {# Los js del formulario se moveran a un bloque después del JQuery para asegurar el orden de carga #}
+    {% endblock %}
 </head>
 
 {%  if request.resolver_match.url_name == "login" %}
@@ -100,6 +113,9 @@
     <script src={% static "js/password_change.js" %}></script>
 
     {% block script_js %}
+        {% if form %}
+            {{ form.media.js }}
+        {% endif %}
     {% endblock script_js %}
 
 </body>

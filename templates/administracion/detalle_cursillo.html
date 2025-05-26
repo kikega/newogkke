@@ -64,7 +64,8 @@
                                     <tbody>
                                     {% for alm in asistentes %}
                                         <tr>
-                                            <td>{{ alm.apellidos }}, {{ alm.nombre }}</td>
+                                            <!--<td>{{ alm.apellidos }}, {{ alm.nombre }}</td>-->
+                                            <td><a href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
                                             <td>{{ alm.dojo }}</td>
                                             <td>{{ alm.grado }}</td>
                                         </tr>		

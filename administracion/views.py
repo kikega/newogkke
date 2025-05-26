@@ -13,9 +13,13 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.conf import settings
+from django.contrib import messages
 
 # App administracion
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen
+
+# Formularios
+from .forms import EmailInstructoresForm
 
 # Utilidades
 from .utils import envio_correo, enviar_correo_html
@@ -58,6 +62,7 @@ def home(request):
         'data_json': data_json,
         # 'usuario_foto': usuario_foto.foto,
     })
+
 
 class AlumnosView(LoginRequiredMixin, ListView):
     """
@@ -117,6 +122,7 @@ class AlumnosView(LoginRequiredMixin, ListView):
         context['grados_posibles'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         return context
+
 
 class AlumnoDetailView(LoginRequiredMixin, DetailView):
     """
@@ -181,6 +187,7 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
 
         return context
 
+
 class DojosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""
 
@@ -196,6 +203,7 @@ class DojosView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['cantidad'] = self.get_queryset().count()
         return context
+
 
 class DojoDetailView(LoginRequiredMixin, DetailView):
     """
@@ -255,6 +263,7 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
 
         return context
 
+
 class CursillosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""
 
@@ -270,6 +279,7 @@ class CursillosView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['cantidad'] = self.get_queryset().count()
         return context
+
 
 class CursilloDetailView(LoginRequiredMixin, DetailView):
     """
@@ -291,11 +301,18 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class CursoNuevoView(LoginRequiredMixin, TemplateView):
+    """
+    Creamos un curso nuevo
+    """
+    pass
+
+
 class CursilloExaminaListView(LoginRequiredMixin, DetailView):
     """
     Listado de todos los que se examinan en un cursillo
     """
-    
+
     model = Cursillo
     template_name = 'administracion/cursillo_examinan.html'
     context_object_name = 'cursillo'
@@ -310,6 +327,8 @@ class CursilloExaminaListView(LoginRequiredMixin, DetailView):
         print(curso_actual)
 
         return context
+
+
 class PeticionCreateView(LoginRequiredMixin, CreateView):
     """
     Introducimos los datos de una petición nueva en la BBDD
@@ -317,6 +336,7 @@ class PeticionCreateView(LoginRequiredMixin, CreateView):
 
     model = Peticion
     fields = ['titulo', 'tipo', 'dojo', 'descripcion']
+
 
 class PeticionView(LoginRequiredMixin, TemplateView):
     """
@@ -435,6 +455,7 @@ class PeticionAnularView(LoginRequiredMixin, View):
 
         return redirect('administracion:peticiones')
 
+
 class CorreoView(LoginRequiredMixin, TemplateView):
     """Envío de correo a instructores"""
     template_name = 'administracion/correo.html'
@@ -448,6 +469,63 @@ class CorreoView(LoginRequiredMixin, TemplateView):
         context['instructores'] = instructores
 
         return context
+
+
+@login_required
+def enviar_correo_instructores(request):
+    """
+    Envío de correo a instructores
+    """
+
+    # Obtenemos las plantillas HTML y TXT para el correo
+    template_name_html='administracion/emails/notificacion_peticion.html',
+    template_name_texto='administracion/emails/notificacion_peticion.txt',
+
+    if request.method == 'POST':
+        form = EmailInstructoresForm(request.POST)
+        if form.is_valid():
+            instructores_seleccionados = form.cleaned_data['instructores']
+            asunto = form.cleaned_data['asunto']
+            mensaje_base = form.cleaned_data['mensaje']
+
+            emails_destinatarios = []
+            datatuple = [] # Para send_mass_mail
+
+            for alumno_instructor in instructores_seleccionados:
+                if alumno_instructor.usuario and alumno_instructor.usuario.email:
+                    emails_destinatarios.append(alumno_instructor.usuario.email)
+                    # Personalizar el mensaje para cada instructor si es necesario
+                    mensaje_personalizado = f"Hola {alumno_instructor.nombre},\n\n{mensaje_base}"
+                    datatuple.append((asunto, mensaje_personalizado, settings.DEFAULT_FROM_EMAIL, [alumno_instructor.usuario.email]))
+                else:
+                    messages.warning(request, f"El instructor {alumno_instructor.nombre} {alumno_instructor.apellidos} no tiene un email asociado y no se le enviará correo.")
+
+            if datatuple:
+                try:
+                    print(datatuple)
+                    enviar_correo_html(
+                        asunto = asunto,
+                        template_name_html=template_name_html,
+                        template_name_texto=template_name_texto,
+                        contexto = mensaje_base,
+                        destinatarios = emails_destinatarios,
+                    )
+                    #send_mass_mail(datatuple, fail_silently=False)
+                    messages.success(request, f"Correo enviado exitosamente a {len(datatuple)} instructor(es).")
+                except Exception as e:
+                    messages.error(request, f"Ocurrió un error al enviar los correos: {e}")
+            else:
+                messages.info(request, "No se seleccionaron instructores con email válido para enviar correos.")
+
+            return redirect('administracion:correo') # Redirige a la misma página o a otra
+    else:
+        form = EmailInstructoresForm()
+
+    print("DEBUG: Contenido de form.media:") # Línea de depuración
+    print(form.media) # Línea de depuración
+
+    return render(request, 'administracion/correo.html', {'form': form})
+
 
 @login_required
 def Cursillos_View(request):

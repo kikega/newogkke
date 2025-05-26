@@ -30,9 +30,9 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.admin',
     'usuarios.apps.UsuariosConfig',
     'administracion.apps.AdministracionConfig',
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -152,7 +152,7 @@ EMAIL_USE_SSL = True
 # Correo de personal staff
 EMAIL_DEFAULT_STAFF = [
     "kike@egalvez.es",
-    "kikega@telefonica.net",
+    "jaselpe@gmail.com",
 ]
 
 # Default primary key field type

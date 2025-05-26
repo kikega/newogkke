@@ -64,7 +64,7 @@
                                     <tbody>
                                     {% for alm in examinan %}
                                         <tr>
-                                            <td>{{ alm.alumno.apellidos }}, {{ alm.alumno.nombre }}</td>
+                                            <td><a href="{% url 'administracion:alumno_detalle' pk=alm.alumno.id %}">{{ alm.alumno.apellidos }}, {{ alm.alumno.nombre }}</a></td>
                                             <td>{{ alm.alumno.dojo }}</td>
                                             <td>{{ alm.alumno.grado }}</td>
                                         </tr>		
