@@ -37,26 +37,30 @@
         </div>
         <!-- Fin de sección de botones -->
     {% endif %}
-
+    <h2>Fechas: {{ curso.fecha }} - {{ hoy }}</h2>
     {% if cursillos %}
         <div class="col mt-5">
             <div class="row">
               <table id="tbcursillo" class="table table-striped display">
                 <thead>
                   <tr>
-                      <th>Fecha</th>
-                    <th>Evento</th>
-                    <th>Ciudad</th>
-                    <th>País</th>
-                    <th>Internacional</th>
-                    <th>Exámenes</th>
+                        <th>Evento</th>
+                        <th>Fecha</th>
+                        <th>Ciudad</th>
+                        <th>País</th>
+                        <th>Internacional</th>
+                        <th>Exámenes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for cursillo in cursillos %}
-                    <tr>
-                        <td>{{ cursillo.fecha }}</td>
+                    {% for cursillo in cursillos %}
+                        {% if curso.fecha > hoy %}
+                            <tr class="table-success">
+                        {% else %}
+                            <tr>
+                        {% endif %} 
                         <td><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></td>
+                        <td>{{ cursillo.fecha }}</td>
                         <td>{{ cursillo.ciudad }}</td>
                         <td>{{ cursillo.pais }}</td>
                         <td>
@@ -77,7 +81,7 @@
         </div>
       {% endif %}
 
-      <!-- Modal Tablón de anuncios -->
+      <!-- Modal Alta de cursillo nuevo -->
     <div class="modal fade" id="modalCursoNuevo" tabindex="-1" aria-labelledby="modalCursoNuevoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -86,30 +90,36 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{% url "administracion:curso_nuevo" %}" method='post'>
+                    <form action="{% url "administracion:curso_nuevo" %}" method='post' id="cursoNuevo">
                         {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label" for="evento">Evento</label>
-                            <input type="text" class="form-control" id="evento" name="evento" placeholder="Nombre evento">
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                <label class="form-label" for="evento">Evento</label>
+                                <input type="text" class="form-control pe-2" id="evento" name="evento" placeholder="Nombre evento">
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="lugar">Lugar</label>
-                            <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Lugar">
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                <label class="form-label" for="lugar">Lugar</label>
+                                <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Lugar">
+                            </div>
+                            <div class="col mb-3">
+                                <label class="form-label" for="fecha">Fecha</label>
+                                <input type="date" class="form-control" id="fecha" name="fecha" placeholder="Fecha">
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="pais">País</label>
-                            <input type="text" class="form-control" id="pais" name="pais" placeholder="País">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="evento">Ciudad</label>
-                            <input type="text" class="form-control" id="ciudad" name="ciudad" placeholder="Ciudad">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="fecha">Fecha</label>
-                            <input type="date" class="form-control" id="fecha" name="fecha" placeholder="Fecha">
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                <label class="form-label" for="pais">País</label>
+                                <input type="text" class="form-control" id="pais" name="pais" placeholder="País">
+                            </div>
+                            <div class="col mb-3">
+                                <label class="form-label" for="evento">Ciudad</label>
+                                <input type="text" class="form-control" id="ciudad" name="ciudad" placeholder="Ciudad">
+                            </div>
                         </div>
                         <div class="row">
-                            <div class="col mb-3 form-check form-switch">
+                            <div class="col ms-2 mb-3 form-check form-switch">
                                 <label class="form-check-label" for="switchInternacional">Curso internacional</label>
                                 <input class="form-check-input" type="checkbox" role="switch" id="switchInternacional">
                             </div>
@@ -123,7 +133,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form= "cambioPassword" class="btn btn-primary">Crear curso</button>
+                    <button type="submit" form= "cursoNuevo" class="btn btn-primary">Crear curso</button>
                 </div>
             </div>
         </div>

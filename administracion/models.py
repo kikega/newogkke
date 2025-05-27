@@ -64,13 +64,16 @@ class Cursillo(models.Model):
     """
     objects = models.Manager()
 
-    evento = models.CharField(max_length=50)
+    evento = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True, null=True)
+    lugar = models.CharField(max_length=100, blank=True, null=True)
     ciudad = models.CharField(max_length=50)
-    internacional = models.BooleanField(default=False, blank=True)
+    internacional = models.BooleanField(default=False, blank=True, null=True)
     pais = models.CharField(max_length=50, default='España')
     fecha = models.DateField(auto_now=False, auto_now_add=False)
-    examenes = models.BooleanField()
+    examenes = models.BooleanField(default=False, blank=True, null=True)
     alumnos = models.ManyToManyField(Alumno, blank=True, null=True)
+    circular = models.FileField(upload_to='pdf', max_length=100, blank=True, null=True)
 
     class Meta:
         ordering = ['-fecha']

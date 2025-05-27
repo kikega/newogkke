@@ -22,7 +22,7 @@ from .models import Alumno, Cursillo, Dojo, Peticion, Examen
 from .forms import EmailInstructoresForm
 
 # Utilidades
-from .utils import envio_correo, enviar_correo_html
+from .utils import enviar_correo_html
 
 @login_required
 def home(request):
@@ -301,11 +301,62 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class CursoNuevoView(LoginRequiredMixin, TemplateView):
+class CursoNuevoView(LoginRequiredMixin, ListView):
     """
     Creamos un curso nuevo
     """
-    pass
+    template_name = 'administracion/cursillos.html'
+    model = Cursillo
+    context_object_name = 'cursillos'
+
+    def get_context_data(self, **kwargs):
+        """
+        Obtenemos la cantidad de dojos asociados para añadirlo al contexto
+        """
+        context = super().get_context_data(**kwargs)
+        context['cantidad'] = self.get_queryset().count()
+
+        # Obtenemos la fecha actual
+        hoy = datetime.date.today()
+        context['hoy'] = hoy
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Procesa el formulario de creación de un nuevo curso
+        """
+
+        # Obtenemos los datos del formulario
+        evento = request.POST.get('evento')
+        descripcion = request.POST.get('descripcion')
+        lugar = request.POST.get('lugar')
+        pais = request.POST.get('pais')
+        ciudad = request.POST.get('ciudad')
+        fecha = request.POST.get('fecha')
+        internacional = request.POST.get('internacional')
+        examenes = request.POST.get('examenes')
+        circular = request.POST.get("circular")
+
+        # Validar si los campos no estan vacíos o tienen errores
+
+        # Creamos el nuevo curso
+        try:
+            Cursillo.objects.get_or_create(
+                evento = evento,
+                descripcion = descripcion,
+                lugar = lugar,
+                pais = pais,
+                ciudad = ciudad,
+                fecha = fecha,
+                internacional = internacional,
+                examenes = examenes,
+                circular = circular
+            )
+        except Exception as e:
+            print(f'Ha habido un error: {e}')
+
+        return redirect('administracion:cursillos')
 
 
 class CursilloExaminaListView(LoginRequiredMixin, DetailView):
@@ -502,7 +553,6 @@ def enviar_correo_instructores(request):
 
             if datatuple:
                 try:
-                    print(datatuple)
                     enviar_correo_html(
                         asunto = asunto,
                         template_name_html=template_name_html,
@@ -520,9 +570,6 @@ def enviar_correo_instructores(request):
             return redirect('administracion:correo') # Redirige a la misma página o a otra
     else:
         form = EmailInstructoresForm()
-
-    print("DEBUG: Contenido de form.media:") # Línea de depuración
-    print(form.media) # Línea de depuración
 
     return render(request, 'administracion/correo.html', {'form': form})
 

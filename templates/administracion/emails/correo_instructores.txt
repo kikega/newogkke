@@ -1,0 +1,16 @@
+Hola Administrador,
+
+Se ha recibido una nueva petición de contacto a través del formulario del sitio web con los siguientes detalles:
+
+Nombre: {{ peticion.nombre }}
+Email de Contacto: {{ peticion.email_contacto }}
+Asunto: {{ peticion.asunto }}
+Fecha de Envío: {{ peticion.fecha_creacion|date:"d/m/Y H:i" }}
+
+Mensaje:
+{{ peticion.mensaje }}
+
+Por favor, revisa esta petición en el panel de administración o contacta al remitente a la brevedad.
+
+Saludos,
+El Sistema de Notificaciones
