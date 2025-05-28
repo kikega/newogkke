@@ -37,7 +37,7 @@
         </div>
         <!-- Fin de sección de botones -->
     {% endif %}
-    <h2>Fechas: {{ curso.fecha }} - {{ hoy }}</h2>
+
     {% if cursillos %}
         <div class="col mt-5">
             <div class="row">
@@ -54,13 +54,13 @@
                 </thead>
                 <tbody>
                     {% for cursillo in cursillos %}
-                        {% if curso.fecha > hoy %}
-                            <tr class="table-success">
+                        {% if cursillo.fecha > hoy %}
+                            <tr class="table-warning">
                         {% else %}
                             <tr>
                         {% endif %} 
                         <td><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></td>
-                        <td>{{ cursillo.fecha }}</td>
+                        <td>{{ cursillo.fecha|date:"d-m-Y" }}</td>
                         <td>{{ cursillo.ciudad }}</td>
                         <td>{{ cursillo.pais }}</td>
                         <td>
@@ -100,8 +100,14 @@
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
+                                <label class="form-label" for="descripcion">Descripción</label>
+                                <textarea class="form-control pe-2" rows="4" id="descripcion" name="descripcion" placeholder="Descripción del mismo"></textarea>
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb-3">
                                 <label class="form-label" for="lugar">Lugar</label>
-                                <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Lugar">
+                                <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Lugar dónde se va a realizar">
                             </div>
                             <div class="col mb-3">
                                 <label class="form-label" for="fecha">Fecha</label>
@@ -111,14 +117,14 @@
                         <div class="row input-group">
                             <div class="col mb-3">
                                 <label class="form-label" for="pais">País</label>
-                                <input type="text" class="form-control" id="pais" name="pais" placeholder="País">
+                                <input type="text" class="form-control" id="pais" name="pais">
                             </div>
                             <div class="col mb-3">
                                 <label class="form-label" for="evento">Ciudad</label>
-                                <input type="text" class="form-control" id="ciudad" name="ciudad" placeholder="Ciudad">
+                                <input type="text" class="form-control" id="ciudad" name="ciudad">
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row mb-3">
                             <div class="col ms-2 mb-3 form-check form-switch">
                                 <label class="form-check-label" for="switchInternacional">Curso internacional</label>
                                 <input class="form-check-input" type="checkbox" role="switch" id="switchInternacional">
@@ -126,6 +132,12 @@
                             <div class="col mb-3 form-check form-switch">
                                 <label class="form-check-label" for="switchExamenes">Exámenes</label>
                                 <input class="form-check-input" type="checkbox" role="switch" id="switchExamenes">
+                            </div>
+                        </div>
+                        <div class="row input-group mb-2">
+                            <div class="col custom-file">
+                                <label for="circularFile" class="input-file-label mb-3">Si existe circular del evento, seleccione el archivo, formato PDF</label>
+                                <input type="file" class="form-control ps-3" id="circularFile" aria-label="Circular" name="circular" accept=".pdf">
                             </div>
                         </div>
                         

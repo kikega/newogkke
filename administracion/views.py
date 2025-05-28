@@ -278,6 +278,10 @@ class CursillosView(LoginRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
         context['cantidad'] = self.get_queryset().count()
+        
+        # Obtenemos la fecha actual
+        hoy = datetime.date.today()
+        context['hoy'] = hoy
         return context
 
 
@@ -297,6 +301,8 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
         # Obtenemos todos los asistentes a un cursillo
         # asistentes_obj = Cursillo.objects.select_related('alumnos').get(pk=curso_actual.id)
         context["asistentes"] = curso_actual.alumnos.all().order_by('apellidos')
+        # Obtenemos la fecha actual
+        context['hoy'] = datetime.date.today()
 
         return context
 
@@ -311,14 +317,10 @@ class CursoNuevoView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         """
-        Obtenemos la cantidad de dojos asociados para añadirlo al contexto
+        Obtenemos la cantidad de seminarios realizados
         """
         context = super().get_context_data(**kwargs)
         context['cantidad'] = self.get_queryset().count()
-
-        # Obtenemos la fecha actual
-        hoy = datetime.date.today()
-        context['hoy'] = hoy
 
         return context
 

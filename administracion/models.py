@@ -73,7 +73,7 @@ class Cursillo(models.Model):
     fecha = models.DateField(auto_now=False, auto_now_add=False)
     examenes = models.BooleanField(default=False, blank=True, null=True)
     alumnos = models.ManyToManyField(Alumno, blank=True, null=True)
-    circular = models.FileField(upload_to='pdf', max_length=100, blank=True, null=True)
+    circular = models.FileField(upload_to='pdf', max_length=100, blank=True, null=True, default=None)
 
     class Meta:
         ordering = ['-fecha']
