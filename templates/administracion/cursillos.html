@@ -81,6 +81,10 @@
         </div>
       {% endif %}
 
+      <div>
+        Error si existe: {{ error.e.error}} - {{ error.e.message }}
+      </div>
+
       <!-- Modal Alta de cursillo nuevo -->
     <div class="modal fade" id="modalCursoNuevo" tabindex="-1" aria-labelledby="modalCursoNuevoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -90,12 +94,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{% url "administracion:curso_nuevo" %}" method='post' id="cursoNuevo">
+                    <form class="needs-validation"action="{% url "administracion:curso_nuevo" %}" method='post' id="cursoNuevo" novalidate>
                         {% csrf_token %}
                         <div class="row input-group">
                             <div class="col mb-3">
                                 <label class="form-label" for="evento">Evento</label>
-                                <input type="text" class="form-control pe-2" id="evento" name="evento" placeholder="Nombre evento">
+                                <input type="text" class="form-control pe-2" id="evento" name="evento" placeholder="Nombre evento" required>
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca un nombre de evento.
+                                </div>
                             </div>
                         </div>
                         <div class="row input-group">
@@ -107,11 +114,17 @@
                         <div class="row input-group">
                             <div class="col mb-3">
                                 <label class="form-label" for="lugar">Lugar</label>
-                                <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Lugar dónde se va a realizar">
+                                <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Lugar dónde se va a realizar" required>
+                                <div class="invalid-feedback">
+                                    Introduzca donde se va a realizar el evento.
+                                </div>
                             </div>
                             <div class="col mb-3">
                                 <label class="form-label" for="fecha">Fecha</label>
-                                <input type="date" class="form-control" id="fecha" name="fecha" placeholder="Fecha">
+                                <input type="date" class="form-control" id="fecha" name="fecha" placeholder="Fecha" required>
+                                <div class="invalid-feedback">
+                                    Introduzca una fecha válida.
+                                </div>
                             </div>
                         </div>
                         <div class="row input-group">
@@ -121,7 +134,10 @@
                             </div>
                             <div class="col mb-3">
                                 <label class="form-label" for="evento">Ciudad</label>
-                                <input type="text" class="form-control" id="ciudad" name="ciudad">
+                                <input type="text" class="form-control" id="ciudad" name="ciudad" required>
+                                <div class="invalid-feedback">
+                                    Introduzca una ciudad válida.
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -139,13 +155,12 @@
                                 <label for="circularFile" class="input-file-label mb-3">Si existe circular del evento, seleccione el archivo, formato PDF</label>
                                 <input type="file" class="form-control ps-3" id="circularFile" aria-label="Circular" name="circular" accept=".pdf">
                             </div>
+                        </div>  
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" form= "cursoNuevo" class="btn btn-primary">Crear curso</button>
                         </div>
-                        
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form= "cursoNuevo" class="btn btn-primary">Crear curso</button>
                 </div>
             </div>
         </div>
@@ -175,5 +190,27 @@
             },
         }
     });
+
+    // Validación del formulario Nuevo curso
+    (function () {
+        'use strict'
+      
+        // Obtén todos los formularios a los que quieres aplicar estilos de validación de Bootstrap personalizados
+        var forms = document.querySelectorAll('.needs-validation')
+      
+        // Bucle sobre ellos y evita el envío
+        Array.prototype.slice.call(forms)
+          .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+              if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+              }
+      
+              form.classList.add('was-validated')
+            }, false)
+          })
+      })()
+
 </script>
 {% endblock script_js %}
