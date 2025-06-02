@@ -158,6 +158,12 @@
 }
 
 /* Ajustar el CSS del widget Admin */
+.selector {
+    display: flex;
+    flex-grow: 1;
+    gap: 0 10px;
+}
+
 .selector .selector-filter {
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-radius: var(--bs-border-radius);
@@ -167,12 +173,23 @@
 }
 
 .selector select {
+    height: 17.2em;
+    flex: 1 0 auto;
+    overflow: scroll;
+    width: 100%;
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-radius: var(--bs-border-radius);
     background-color: var(--bs-body-bg);
     font-size: 1rem;
     margin-bottom: 30px;
     height: 20em;
+}
+
+.selector-available, .selector-chosen {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1;
 }
 
 .selector .selector-available input {
@@ -188,5 +205,3 @@
 a.selector-chooseall, a.selector-clearall {
     margin-bottom: 30px;
 }
-
-
