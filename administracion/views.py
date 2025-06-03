@@ -22,7 +22,7 @@ from .models import Alumno, Cursillo, Dojo, Peticion, Examen
 from .forms import EmailInstructoresForm
 
 # Utilidades
-from .utils import enviar_correo_html
+from .utils import enviar_correo_html, validar_cadena
 
 @login_required
 def home(request):
@@ -253,7 +253,6 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
             'titulo': f'Alumnos por Grado en {dojo_actual.nombre}', # Título dinámico
         })
         context['total_cintos_negros'] = sum(values)
-        print(labels)
 
         # Obtenemos las peticiones pendientes por dojo
         peticiones = Peticion.objects.filter(dojo=dojo_actual, finalizada=False)
@@ -278,7 +277,7 @@ class CursillosView(LoginRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
         context['cantidad'] = self.get_queryset().count()
-        
+
         # Obtenemos la fecha actual
         hoy = datetime.date.today()
         context['hoy'] = hoy
@@ -340,7 +339,18 @@ class CursoNuevoView(LoginRequiredMixin, ListView):
         examenes = request.POST.get('examenes')
         circular = request.POST.get("circular")
 
-        # Validar si los campos no estan vacíos o tienen errores
+        # Validar que los campos que son obligatorios, no contengan caracteres especiales
+        if not validar_cadena(evento):
+            error_producido = 403
+            return redirect ('administracion:errores', error_producido)
+
+        if not validar_cadena(lugar):
+            error_producido = 403
+            return redirect ('administracion:errores', error_producido)
+
+        if not validar_cadena(ciudad):
+            error_producido = 403
+            return redirect ('administracion:errores', error_producido)
 
         # Creamos el nuevo curso
         try:
@@ -381,6 +391,46 @@ class CursilloExaminaListView(LoginRequiredMixin, DetailView):
 
         return context
 
+
+class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
+    """
+    Obtiene las estadisticas de todos los cintos negros de cada Dojo que han asistido al cursillo
+    """
+
+    model = Cursillo
+    template_name = "administracion/cursillo_estadisticas.html"
+    context_object_name = 'cursillo'
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+
+        curso_actual = self.object
+        context['curso'] = curso_actual
+
+        asistentes_por_dojo = curso_actual.alumnos.values(
+            'dojo__nombre'  # Agrupa por el nombre del Dojo
+        ).annotate(
+            total_asistentes=Count('id') # Cuenta los alumnos (id) en cada grupo de dojo
+        ).order_by('-total_asistentes') 
+        context['estadisticas_asistentes_por_dojo'] = asistentes_por_dojo
+
+        # Preparar datos para el gráfico
+        labels_dojo = []
+        values_asistentes = []
+
+        for item in asistentes_por_dojo:
+            labels_dojo.append(item['dojo__nombre'])
+            values_asistentes.append(item['total_asistentes'])
+
+        # Convertir a JSON para pasarlo a JavaScript en la plantilla
+        context['asistentes_por_dojo'] = json.dumps({
+            'labels': labels_dojo,
+            'values': values_asistentes,
+        })
+
+        return context
+    
 
 class PeticionCreateView(LoginRequiredMixin, CreateView):
     """
@@ -432,7 +482,7 @@ class PeticionView(LoginRequiredMixin, TemplateView):
                         finalizada=False
                     ).order_by('-fecha')
             except Alumno.DoesNotExist: # pylint: disable=no-member
-                pass
+                redirect ('administracion:error', context={'error_code': 404, 'error_message': 'No se encontró el usuario'})
 
         # Almacena el objeto dojo y sus peticiones pendientes
         context ['dojo_usuario'] = dojo_usuario
@@ -511,8 +561,8 @@ class PeticionAnularView(LoginRequiredMixin, View):
 
 class CorreoView(LoginRequiredMixin, TemplateView):
     """Envío de correo a instructores"""
-    template_name = 'administracion/correo.html'
 
+    template_name = 'administracion/correo.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -520,6 +570,27 @@ class CorreoView(LoginRequiredMixin, TemplateView):
         # Obtenemos todos los instructores y sus correos
         instructores = Alumno.objects.select_related('usuario').filter(instructor=True).order_by('apellidos')
         context['instructores'] = instructores
+
+        return context
+
+
+class ErrorView(LoginRequiredMixin, TemplateView):
+    """
+    Página donde se definen los errores que se procuden
+    """
+    template_name = 'administracion/error.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Obtenemos el codifgo de error
+        error_code = self.kwargs.get('error_code')
+
+        if error_code == 403:
+            error_message = "Se han introducido caracteres no validos en algún campo del formulario. Sólo se permiten caracteres alfanuméricos y espacios."
+
+        context['error_message'] = error_message
+        context['error_code'] = error_code
 
         return context
 

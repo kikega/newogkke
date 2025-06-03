@@ -12,13 +12,17 @@ from email.mime.image import MIMEImage
 from html.parser import HTMLParser
 import io
 
+# Expresiones regulares
+import re
+
 # Django
 from django.core.mail import send_mail, EmailMultiAlternatives, send_mass_mail
 from django.template.loader import render_to_string
 from django.conf import settings
-from django.contrib.staticfiles import finders 
+from django.contrib.staticfiles import finders
 from django.contrib import messages
 
+logger = logging.getLogger(__name__)
 
 class StripTags(HTMLParser):
     """Clase para eliminar tags HTML"""
@@ -44,8 +48,6 @@ def strip_tags(html):
     s.feed(html)
     return s.get_data()
 
-
-logger = logging.getLogger(__name__)
 
 def envio_correo(asunto, mensaje, destinatario, mensaje_html=None):
     """
@@ -92,7 +94,7 @@ def enviar_correo_html(asunto, template_name_html, template_name_texto, contexto
     path_relativo_logo = 'img/logo.png'
     # path_absoluto_logo = settings.BASE_DIR / path_relativo_logo
     # id_imagen_cid = path_relativo_logo.split('/')[-1]
-    # contexto_completo['logo_cid'] = id_imagen_cid 
+    # contexto_completo['logo_cid'] = id_imagen_cid
 
     # print(path_relativo_logo, path_absoluto_logo, id_imagen_cid)
 
@@ -145,4 +147,17 @@ def enviar_correo_html(asunto, template_name_html, template_name_texto, contexto
         # logger.error(f"Error al enviar correo con plantilla HTML: {e}", exc_info=True) # Para producción
         return False, f"Ocurrió un error al enviar el correo: {e}"
 
+
+def validar_cadena(cadena):
+    """
+    Chequea si una cadena contiene caracteres especiales
+    Devuelve False si contiene caracteres especiales
+    """
+
+    patron = re.compile(r'[^a-zA-Z0-9\s]*$')
+
+    if patron.match(cadena):
+        return True
+    else:
+        return False
 

@@ -44,52 +44,46 @@
             </div>
         </div>
 
-        <!-- Listado de alumnos asistentes -->
+        <!-- Pestañas -->
         <section class="album py-5">
             <div class="container">
                 
                 <div class="row row-cols-1">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
-                            <a href="#" class="nav-link active">Asistentes</a>
+                            <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="nav-link">Asistentes</a>
                         </li>
                         <li class="nav-item">
                             <a href="{% url 'administracion:cursillo_examinados' pk=cursillo.id %}" class="nav-link">Exámen</a>
                         </li>
                         <li class="nav-item">
-                            <a href="{% url 'administracion:cursillo_estadisticas' pk=cursillo.id %}" class="nav-link">Estadísticas</a>
+                            <a href="#" class="nav-link active">Estadísticas</a>
                         </li>
                     </ul>
                 </div>
         
                 <div class="row row-cols-1 mt-5">
-        
-                    {% if asistentes %}
-                        <div class="col mt-5">
-                            <div class="row">
-                                <table id="tbalumno" class="table table-striped display">
-                                    <thead>
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>Gimnasio</th>
-                                        <th>Grado</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for alm in asistentes %}
-                                        <tr>
-                                            <!--<td>{{ alm.apellidos }}, {{ alm.nombre }}</td>-->
-                                            <td><a href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
-                                            <td>{{ alm.dojo }}</td>
-                                            <td>{{ alm.grado }}</td>
-                                        </tr>		
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Dojo</th>
+                                <th>Total de Asistentes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in estadisticas_asistentes_por_dojo %}
+                            <tr>
+                                <td>{{ item.dojo__nombre }}</td>
+                                <td>{{ item.total_asistentes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>   
+                    <div class="container">
+                        <div class="d-none d-md-block d-flex justify-content-center mt-5">
+                            <canvas id="graficoAsistentesPorDojo"></canvas>
                         </div>
-                    {% endif %}
-        
+                    </div>
                 </div>    
             </div>
         </section>
@@ -119,6 +113,52 @@
             },
         }
     });
+
+    // Gráfica asistentes por dojo
+    const data = JSON.parse('{{ asistentes_por_dojo|safe }}'); // Obtener los datos como objeto JavaScript
+
+    const ctx = document.getElementById('graficoAsistentesPorDojo');
+    const config = {
+        type: 'bar',
+        data: {
+            datasets: [{
+                label: '',
+                data: data.values,
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                ],
+                borderWidth: 2,
+                borderRadius: 10,
+                datalabels: { // Configuración de chartjs-plugin-datalabels para ESTE dataset
+                    display: false // Oculta las etiquetas de datos solo para este dataset
+                },
+            }],
+            labels: data.labels,
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false // Esto oculta la leyenda completamente
+                },
+            },
+            scales: { // Configuración del eje Y sin porcentajes
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }          
+        },
+    };
+
+    const myChart = new Chart(ctx, config); 
+    
 </script>
 
 

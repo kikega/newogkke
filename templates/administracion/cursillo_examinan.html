@@ -26,17 +26,28 @@
                 </div>
                 <div class="card-body">
                     <h5 class="card-title color-texto">{{ cursillo.evento }}</h5>
-                    <p class="card-text">{{ cursillo.fecha }}</p>
-                    <p class="card-text">{{ cursillo.pais }}</p>
-                    <p class="card-text">{{ cursillo.ciudad }}</p>
+                    <p class="card-text"><i class="bi bi-calendar3"></i> {{ cursillo.fecha }}</p>
+                    {% if cursillo.descripcion != None %}
+                        <p class="card-text">{{ cursillo.descripcion }}</p>
+                    {% endif %}
+                    <p class="card-text">{{ cursillo.lugar }}. {{ cursillo.ciudad }}, {{ cursillo.pais }}</p>
+                    {% if cursillo.fecha > hoy %}
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
+                            <i class="bi bi-list-ul"></i> Inscripción</button>
+                        {% if cursillo.circular != '' %}
+                            <a href="{% url 'administracion:cursillos' %}" class="btn btn-outline-warning ms-4"><i class="bi bi-arrow-up-right-circle"></i> Circular</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Listado de alumnos asisque se examinan -->
         <section class="album py-5">
             <div class="container">
                 
+                <!-- Pestañas -->
                 <div class="row row-cols-1">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
@@ -45,9 +56,13 @@
                         <li class="nav-item">
                             <a href="#" class="nav-link active">Exámen</a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{% url 'administracion:cursillo_estadisticas' pk=cursillo.id %}" class="nav-link">Estadísticas</a>
+                        </li>
                     </ul>
                 </div>
-        
+                
+                <!-- Listado de alumnos asisque se examinan -->
                 <div class="row row-cols-1 mt-5">
         
                     {% if examinan %}
