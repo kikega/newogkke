@@ -13,7 +13,6 @@ from html.parser import HTMLParser
 import io
 
 # Expresiones regulares
-import re
 
 # Django
 from django.core.mail import send_mail, EmailMultiAlternatives, send_mass_mail
@@ -21,6 +20,9 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.contrib import messages
+
+import re
+
 
 logger = logging.getLogger(__name__)
 
@@ -154,10 +156,10 @@ def validar_cadena(cadena):
     Devuelve False si contiene caracteres especiales
     """
 
-    patron = re.compile(r'[^a-zA-Z0-9\s]*$')
+    patron_variable = re.compile(r'[a-zA-Z0-9\s]*$')
+    resultado_match = patron_variable.match(cadena)
 
-    if patron.match(cadena):
+    if resultado_match: # Usa el resultado del match que debería funcionar
         return True
     else:
         return False
-
