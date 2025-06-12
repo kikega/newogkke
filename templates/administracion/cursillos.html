@@ -90,7 +90,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="needs-validation"action="{% url "administracion:curso_nuevo" %}" method='post' id="cursoNuevo" novalidate>
+                    <form class="needs-validation"action="{% url "administracion:curso_nuevo" %}" method='post' enctype="multipart/form-data" id="cursoNuevo" novalidate>
                         {% csrf_token %}
                         <div class="row input-group">
                             <div class="col mb-3">

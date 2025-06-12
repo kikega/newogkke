@@ -6,11 +6,11 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
 # Modelos
-from administracion.models import Alumno 
+from administracion.models import Alumno
 
 class EmailInstructoresForm(forms.Form):
     """
-    Formulario para la selección de instrauctores
+    Formulario para la selección de instructores
     """
 
     # Filtra solo instructores y trae el usuario asociado

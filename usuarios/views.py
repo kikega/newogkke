@@ -8,8 +8,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 
 # Modelos
-from administracion.models import Alumno
+from administracion.models import Alumno, Dojo
 from .models import Usuario
+
+# Formularios
+from .forms import CreaUsuarioForm, UsuarioSelectDojoForm
+
 
 def login_view(request):
     """Vista para hacer login en la aplicación"""
@@ -25,6 +29,18 @@ def login_view(request):
             return render(request, 'usuarios/login.html', {'error': 'Usuario o password incorrecto'})
 
     return render(request, 'usuarios/login.html')
+
+def registro_view(request):
+    """Vista para hacer registro de un alumno en la aplicación"""
+
+    if request.method == 'POST':
+        form = UsuarioSelectDojoForm(request.POST)
+        if form.is_valid():
+            dojo = form.cleaned_data['dojo']
+    else:
+        form = UsuarioSelectDojoForm()
+
+    return render(request, 'usuarios/registro.html', {'form': form})
 
 
 @login_required
@@ -53,7 +69,7 @@ def cambio_password(request):
                 return render(request, 'usuarios/cambio_password.html', {
                     'error': 'Las contraseñas no coinciden',
                     'usuario_foto': usuario_foto.foto,
-                    })
+                })
             user = Usuario.objects.get(email=request.user.email)
             user.set_password(new_password)
             user.save()
@@ -64,4 +80,4 @@ def cambio_password(request):
             return render(request, 'usuarios/cambio_password.html', {
                 'error': 'Contraseña incorrecta',
                 'usuario_foto': usuario_foto.foto,
-                })
+            })

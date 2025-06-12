@@ -14,6 +14,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.conf import settings
 from django.contrib import messages
+from django.http import FileResponse
 
 # App administracion
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen
@@ -337,7 +338,7 @@ class CursoNuevoView(LoginRequiredMixin, ListView):
         fecha = request.POST.get('fecha')
         internacional = request.POST.get('internacional')
         examenes = request.POST.get('examenes')
-        circular = request.POST.get("circular")
+        circular = request.FILES["circular"]
 
         # Validar que los campos que son obligatorios, no contengan caracteres especiales
         if not validar_cadena(evento):
@@ -431,6 +432,21 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
 
         return context
     
+
+@login_required
+def descargar_circular(request, pk):
+    cursillo = get_object_or_404(Cursillo, pk=pk)
+
+    if cursillo.circular and hasattr(cursillo.circular, 'path'):
+        circular_path = cursillo.circular.path
+        # Abrir el archivo en modo binario para lectura
+        response = FileResponse(open(circular_path, 'rb'), as_attachment=True, filename=cursillo.circular.name)
+        # as_attachment=True: Fuerza la descarga.
+        # filename=evento.circular.name: Sugiere el nombre original del archivo al navegador.
+        # Django se encarga de las cabeceras Content-Type, Content-Disposition, 
+        return response
+    else:
+        return redirect("administracion:error", error_code=404, error_message="No se encontró el archivo circular")
 
 class PeticionCreateView(LoginRequiredMixin, CreateView):
     """
@@ -557,21 +573,6 @@ class PeticionAnularView(LoginRequiredMixin, View):
         peticion.save()
 
         return redirect('administracion:peticiones')
-
-
-class CorreoView(LoginRequiredMixin, TemplateView):
-    """Envío de correo a instructores"""
-
-    template_name = 'administracion/correo.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # Obtenemos todos los instructores y sus correos
-        instructores = Alumno.objects.select_related('usuario').filter(instructor=True).order_by('apellidos')
-        context['instructores'] = instructores
-
-        return context
 
 
 class ErrorView(LoginRequiredMixin, TemplateView):
