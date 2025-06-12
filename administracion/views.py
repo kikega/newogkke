@@ -338,7 +338,8 @@ class CursoNuevoView(LoginRequiredMixin, ListView):
         fecha = request.POST.get('fecha')
         internacional = request.POST.get('internacional')
         examenes = request.POST.get('examenes')
-        circular = request.FILES["circular"]
+        if request.FILES.get('circular'):
+            circular = request.FILES["circular"]
 
         # Validar que los campos que son obligatorios, no contengan caracteres especiales
         if not validar_cadena(evento):
