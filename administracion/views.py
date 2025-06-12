@@ -438,12 +438,16 @@ def descargar_circular(request, pk):
     cursillo = get_object_or_404(Cursillo, pk=pk)
 
     if cursillo.circular and hasattr(cursillo.circular, 'path'):
+        # Obtener la ruta absoluta al archivo
+        # cursillo.circular.path te da la ruta absoluta si MEDIA_ROOT está bien configurado
         circular_path = cursillo.circular.path
         # Abrir el archivo en modo binario para lectura
         response = FileResponse(open(circular_path, 'rb'), as_attachment=True, filename=cursillo.circular.name)
         # as_attachment=True: Fuerza la descarga.
-        # filename=evento.circular.name: Sugiere el nombre original del archivo al navegador.
+        # filename=cursillo.circular.name: Sugiere el nombre original del archivo al navegador.
         # Django se encarga de las cabeceras Content-Type, Content-Disposition, 
+        if not settings.DEBUG: # Solo añadir en producción
+            response['Connection'] = 'close'
         return response
     else:
         return redirect("administracion:error", error_code=404, error_message="No se encontró el archivo circular")
