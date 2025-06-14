@@ -28,11 +28,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
 # Variables para tráfico HTTPS
-CSRF_TRUSTED_ORIGINS = [
-    'https://ogkke-fedora.es',
-    # Si tienes subdominios que también necesitan esto, añádelos:
-    'https://www.ogkke-fedora.es', 
-]
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", cast=Csv())
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
