@@ -93,7 +93,7 @@ class ActividadNuevaForm(forms.Form):
         label="Provincia",
         max_length=50,
         widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
-    ),
+    )
     pais = forms.CharField(
         label="País",
         max_length=50,
