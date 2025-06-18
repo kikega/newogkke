@@ -25,5 +25,7 @@ urlpatterns = [
     path("peticiones/", administracion_views.PeticionView.as_view(), name="peticiones"),
     path("peticiones/anular/<int:pk>/", administracion_views.PeticionAnularView.as_view(), name="peticiones_anular"),
     path("correo/", administracion_views.enviar_correo_instructores, name="correo"),
-    path("error/<int:error_code>/", administracion_views.ErrorView.as_view(), name="errores")
+    path("error/<int:error_code>/", administracion_views.ErrorView.as_view(), name="errores"),
+    path("actividades/", administracion_views.ActividadesView.as_view(), name="actividades"),
+    path("actividades/<int:pk>/", administracion_views.ActividadEditarView.as_view, name="editar_actividad")
 ]

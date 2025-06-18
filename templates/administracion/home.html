@@ -34,7 +34,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-end align-items-center">
                                     <div class="btn-group">
-                                        <a href="{% url 'administracion:dojos' %}" class="btn btn-primary"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
+                                        <a href="{% url 'administracion:dojos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
                                     </div>
                                 </div>
                             </div>
@@ -51,7 +51,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-end align-items-center">
                                     <div class="btn-group">
-                                        <a href="{% url 'administracion:alumnos' %}" class="btn btn-primary"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
+                                        <a href="{% url 'administracion:alumnos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
                                     </div>
                                 </div>
                             </div>
@@ -68,30 +68,12 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-end align-items-center">
                                     <div class="btn-group">
-                                        <a href="{% url 'administracion:cursillos' %}" class="btn btn-primary"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
+                                        <a href="{% url 'administracion:cursillos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </article>
-
-                    {% comment %} <article class="col">
-                        <div class="card shadow-sm">
-                            <img src="{% static "img/peticiones.jpg" %}" class="card-img-top img-fluid" alt="Peticiones">
-                            <div class="m-3">
-                                <h3 class="card-title">Peticiones <span class="badge text-bg-dark fs-3">{{ peticiones }}</span></h3>
-                            </div>
-    
-                            <div class="card-body">
-                                <div class="d-flex justify-content-end align-items-center">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-primary">Acceder</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </article> {% endcomment %}
-
                 </div>
             </div>
         </section>
@@ -109,34 +91,25 @@
                         </li>
                     </ul>
                 </div>
-                <div class="row row-cols-1 mt-5">
-                    <h4>Actividades</h4>
-                    <div class="card mt-3">
-                        <div class="card-header">
-                          Campeonato
+                <div class="row row-cols-1 mt-3">
+                    {% if actividades %}
+                        <div class="row row-cols-1 mt-5">
+                            {% for actividad in actividades %}
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h4 class="color-texto"><i class="bi bi-card-text"></i> 
+                                        {{ actividad.titulo }}
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <p><i class="bi bi-calendar3"></i> {{ actividad.fecha }}</p>
+                                    <p class="card-text">{{ actividad.descripcion }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
-                        <div class="card-body">
-                            <h5 class="card-title color-texto">40 TROFEO NACIONAL OGKKE</h5>
-                            <p class="card-text">29/03/2025.</p>
-                            <p class="card-text">Polideportivo Municipal</p>
-                            <p class="card-text">Las Torres de Cotillas</p>
-                        </div>
-                    </div>
-
-                    <div class="card mt-3">
-                        <div class="card-header">
-                          Entrenamiento
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title color-texto">XVIII ENTRENAMIENTO ANUAL KARATE OGKKE VILLAJOYOSA</h5>
-                            <p class="card-text">29/03/2025.</p>
-                            <p class="card-text">IES La Malladeta</p>
-                            <p class="card-text">La Vila</p>
-                        </div>
-                    </div>
-
+                    {% endif %}
                 </div>
-
 
             </div>
         </section>

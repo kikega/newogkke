@@ -17,7 +17,7 @@ from django.contrib import messages
 from django.http import FileResponse
 
 # App administracion
-from .models import Alumno, Cursillo, Dojo, Peticion, Examen
+from .models import Alumno, Cursillo, Dojo, Peticion, Examen, Actividad
 
 # Formularios
 from .forms import EmailInstructoresForm
@@ -34,14 +34,15 @@ def home(request):
     - El total de cinturones negros, dojos, cursillos tanto nacionales como internacionales
     - La cantidad de alumnos por danes
     """
+
+    hoy = datetime.date.today()
+    actividades = Actividad.objects.filter(fecha__gte=hoy).order_by('fecha')
     cn = Alumno.objects.all().count()
     cursos = Cursillo.objects.all().count()
     nacional = Cursillo.objects.filter(pais='España').count()
     internacional = Cursillo.objects.filter(internacional=True).count()
     extranjero = Cursillo.objects.exclude(pais='España').count()
-    # peticiones = Peticion.objects.filter(finalizada=False).count()
     dojos = Dojo.objects.all().count()
-    hoy = datetime.date.today()
     data = Alumno.objects.values('grado').annotate(total=Count('id')).order_by('grado')
     labels = [item['grado'] for item in data]
     values = [item['total'] for item in data]
@@ -57,11 +58,10 @@ def home(request):
         'nacional': nacional,
         'internacional': internacional,
         'extranjero': extranjero,
-        # 'peticiones': peticiones,
         'dojos': dojos,
         'hoy': hoy,
+        'actividades': actividades,
         'data_json': data_json,
-        # 'usuario_foto': usuario_foto.foto,
     })
 
 
@@ -416,7 +416,7 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
             'dojo__nombre'  # Agrupa por el nombre del Dojo
         ).annotate(
             total_asistentes=Count('id') # Cuenta los alumnos (id) en cada grupo de dojo
-        ).order_by('-total_asistentes') 
+        ).order_by('-total_asistentes')
         context['estadisticas_asistentes_por_dojo'] = asistentes_por_dojo
 
         # Preparar datos para el gráfico
@@ -434,7 +434,7 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
         })
 
         return context
-    
+
 
 @login_required
 def descargar_circular(request, pk):
@@ -448,20 +448,12 @@ def descargar_circular(request, pk):
         response = FileResponse(open(circular_path, 'rb'), as_attachment=True, filename=cursillo.circular.name)
         # as_attachment=True: Fuerza la descarga.
         # filename=cursillo.circular.name: Sugiere el nombre original del archivo al navegador.
-        # Django se encarga de las cabeceras Content-Type, Content-Disposition, 
+        # Django se encarga de las cabeceras Content-Type, Content-Disposition,
         if not settings.DEBUG: # Solo añadir en producción
             response['Connection'] = 'close'
         return response
     else:
         return redirect("administracion:error", error_code=404, error_message="No se encontró el archivo circular")
-
-class PeticionCreateView(LoginRequiredMixin, CreateView):
-    """
-    Introducimos los datos de una petición nueva en la BBDD
-    """
-
-    model = Peticion
-    fields = ['titulo', 'tipo', 'dojo', 'descripcion']
 
 
 class PeticionView(LoginRequiredMixin, TemplateView):
@@ -655,8 +647,30 @@ def enviar_correo_instructores(request):
     return render(request, 'administracion/correo.html', {'form': form})
 
 
-@login_required
-def Cursillos_View(request):
-    cursillo = Cursillo.objects.all().order_by('-fecha')
-    hoy = datetime.date.today()
-    return render(request, 'administracion/cursillos.html', {'cursillo': cursillo, 'hoy': hoy})
+class ActividadesView(LoginRequiredMixin, TemplateView):
+    """
+    Gestión de actividades
+    """
+
+    template_name = "administracion/actividades.html"
+
+    def get_context_data(self, **kwargs):
+        """
+        Obtenemos todas las actividades
+        """
+
+        context = super().get_context_data(**kwargs)
+
+        # Obtenemos la fecha actual
+        hoy = datetime.date.today()
+        context["actividades"] = Actividad.objects.filter(fecha__gte=hoy).order_by('fecha')
+
+        return context
+
+
+class ActividadEditarView(LoginRequiredMixin, DetailView):
+    """
+    Editar una actividad
+    """
+
+    pass

@@ -31,10 +31,14 @@
                 </label>
             </div>
             <div class="mb-4">
-                <a href="#" class="mb-4">¿Olvidé la contraseña?</a>
+                <a href="#" class="mb-2">¿Olvidé la contraseña?</a>
             </div>
             <button class="btn btn-primary w-100 py-2" type="submit">Login</button>
         </form>
+        <div class="mt-3 mb-2">
+            <p>¿No eres usuario registrado?</p>
+            <a href="{% url 'registro' %}" role="button" class="btn btn-primary w-100 py-2">Registro</a>
+        </div>
     </main>
 
 {% endblock container %}

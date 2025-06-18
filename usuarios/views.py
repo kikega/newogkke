@@ -81,3 +81,14 @@ def cambio_password(request):
                 'error': 'Contraseña incorrecta',
                 'usuario_foto': usuario_foto.foto,
             })
+
+def reset_password(request):
+    """
+    Vista para resetear la contraseña
+    """
+    
+    if request.method == 'POST':
+        email = request.POST["email"]
+        if Usuario.objects.filter(email=email).exists():
+            pass
+            return redirect('login')

@@ -57,13 +57,18 @@
 
                     <!-- Opciones de menú si el usuario es staff -->
                     {% if user.is_staff %}
-                        <li class="nav-item">
-                        {%  if request.resolver_match.url_name == "correo" %} 
-                            <a class="nav-link active" aria-current="page" href="{% url "administracion:correo" %}">Correo</a></li>                                         </li>
-                        {% else %}
-                            <a class="nav-link" href="{% url "administracion:correo" %}">Correo</a></li>                     
-                        {% endif %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Administración</a></li>
+                        <li class="nav-item dropdown">
+                            {%  if request.resolver_match.url_name == "correo" or request.resolver_match.url_name == "actividades"%}
+                                <a class="nav-link active dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdownStaff" role="button" data-bs-toggle="dropdown" aria-expanded="false">Staff</a>
+                            {% else %}
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdownStaff" role="button" data-bs-toggle="dropdown" aria-expanded="false">Staff</a>
+                            {% endif %}
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownStaff">
+                                <li><a class="dropdown-item" href="{% url 'administracion:correo' %}">Correo</a></li>
+                                <li><a class="dropdown-item" href="{% url 'administracion:actividades' %}">Actividades</a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">Administración</a></li>
+                            </ul>
+                        </li>
                     {% endif %}
                     <!-- Fin de las opciones del usuario staff -->
                 </ul>

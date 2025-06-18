@@ -25,12 +25,16 @@
                     Paso 1: Identifícate
                 </div>
                 <div class="card-body">
+                    <p>
+                        Si no eres usuario registrado, eres cinto negro y perteneces a algún dojo de la asociacioón OGKKE, puedes proceder con el registro
+                    </p>
                     <form action="" method="post">
                         {% csrf_token %}
                         <div class="form-group">
                             {{ form }}
                         </div>
-                        <button type="submit" name="submit_seleccion_dojo" class="btn btn-primary mt-5">Siguiente: Seleccionar Alumno</button>
+                        <button type="submit" name="submit_seleccion_dojo" class="btn btn-outline-warning mt-5" data-target={% url 'registro' %}>
+                            <i class="bi bi-forward-fill"></i> Siguiente: Seleccionar Alumno</button>
                     </form>
                 </div>
             </div>

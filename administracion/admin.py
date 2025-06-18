@@ -29,6 +29,15 @@ class PeticionAdmin(admin.ModelAdmin):
     list_display = ('fecha', 'dojo', 'titulo', 'finalizada')
     list_filter = ('dojo', 'finalizada')
 
+class ActividadAdmin(admin.ModelAdmin):
+    list_display = ('fecha', 'titulo', 'lugar', 'ciudad', 'pais')
+    list_filter = ('fecha', 'lugar', 'ciudad', 'pais')
+
+class TablonAdmin(admin.ModelAdmin):
+    list_display = ('fecha', 'dojo', 'titulo')
+    list_filter = ('dojo',)
+
+
 
 admin.site.site_header = 'Panel de control OGKKE'
 admin.site.index_title = 'Administración OGKKE'
@@ -39,3 +48,5 @@ admin.site.register(Alumno, AlumnoAdmin)
 admin.site.register(Cursillo, CursilloAdmin)
 admin.site.register(Examen, ExamenAdmin)
 admin.site.register(Peticion, PeticionAdmin)
+admin.site.register(Actividad, ActividadAdmin)
+admin.site.register(Tablon, TablonAdmin)

@@ -121,3 +121,48 @@ class Peticion(models.Model):
 
     def __str__(self):
         return f'{self.fecha}: {self.titulo} - {self.finalizada}'
+
+class Tablon(models.Model):
+    """
+    Tablón de anuncions para cada Dojo
+    """
+    objects = models.Manager()
+
+    dojo = models.ForeignKey(Dojo, on_delete=models.CASCADE)
+    tipo = models.CharField(max_length=50)
+    titulo = models.CharField(max_length=250)
+    descripcion = models.TextField()
+    fecha = models.DateField(auto_now=False, auto_now_add=False)
+    lugar = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Tablon"
+        verbose_name_plural = "Tablones"
+        ordering = ['fecha']
+
+    def __str__(self):
+        return f'{self.fecha}: {self.titulo}'
+
+class Actividad(models.Model):
+    """
+    Actividades de la asociación OGKKE
+    """
+    
+    objects = models.Manager()
+
+    tipo = models.CharField(max_length=50)
+    titulo = models.CharField(max_length=250)
+    descripcion = models.TextField()
+    fecha = models.DateField(auto_now=False, auto_now_add=False)
+    lugar = models.CharField(max_length=100, blank=True, null=True)
+    ciudad = models.CharField(max_length=50, blank=True, null=True)
+    provincia = models.CharField(max_length=50, blank=True, null=True)
+    pais = models.CharField(max_length=50, default='España')
+
+    class Meta:
+        verbose_name = "Actividad"
+        verbose_name_plural = "Actividades"
+        ordering = ['fecha']
+
+    def __str__(self): 
+        return f'{self.fecha}: {self.titulo}'
