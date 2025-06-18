@@ -53,4 +53,26 @@
       </div>
     {% endif %}
 
+    <!-- Modal Alta de cursillo nuevo -->
+    <div class="modal fade" id="modalActividadNueva" tabindex="-1" aria-labelledby="modalActividadNuevaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="modalActividadNuevaLabel">Creación de una Actividad</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="needs-validation"action="{% url "administracion:actividades" %}" method='post' enctype="multipart/form-data" id="actividadNueva" novalidate>
+                        {% csrf_token %}
+                        {{ form }}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" form= "cursoNuevo" class="btn btn-outline-warning">Crear Actividad</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock container %}

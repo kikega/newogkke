@@ -20,7 +20,7 @@ from django.http import FileResponse
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen, Actividad
 
 # Formularios
-from .forms import EmailInstructoresForm
+from .forms import EmailInstructoresForm, ActividadNuevaForm
 
 # Utilidades
 from .utils import enviar_correo_html, validar_cadena
@@ -664,8 +664,38 @@ class ActividadesView(LoginRequiredMixin, TemplateView):
         # Obtenemos la fecha actual
         hoy = datetime.date.today()
         context["actividades"] = Actividad.objects.filter(fecha__gte=hoy).order_by('fecha')
+        context['form'] = ActividadNuevaForm()
 
         return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Procesa el formulario de nueva actividad
+        """
+
+        # Obtenemos los datos del formulario
+        form = ActividadNuevaForm(request.POST)
+        if form.is_valid():
+            titulo = form.cleaned_data['titulo']
+            descripcion = form.cleaned_data['descripcion']
+            fecha = form.cleaned_data['fecha']
+            lugar = form.cleaned_data['lugar']
+            ciudad = form.cleaned_data['ciudad']
+            provincia = form.cleaned_data['provincia']
+            pais = form.cleaned_data['pais']
+
+            # Creamos la nueva actividad
+            Actividad.objects.create(
+                titulo = titulo,
+                descripcion = descripcion,
+                fecha = fecha,
+                lugar = lugar,
+                ciudad = ciudad,
+                provincia = provincia,
+                pais = pais,
+            )
+
+        return redirect('administracion:actividades')
 
 
 class ActividadEditarView(LoginRequiredMixin, DetailView):

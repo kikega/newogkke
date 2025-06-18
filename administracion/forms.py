@@ -50,3 +50,52 @@ class EmailInstructoresForm(forms.Form):
         self.fields['instructores'].queryset = Alumno.objects.filter(instructor=True).select_related('usuario')
         # Personalizar el texto que se muestra en el widget para cada alumno
         self.fields['instructores'].label_from_instance = lambda obj: f"{obj.nombre} {obj.apellidos} ({obj.usuario.email if obj.usuario else 'Sin email'})"
+
+class ActividadNuevaForm(forms.Form):
+    """
+    Formulario para la creción de una nueva actividad
+    """
+
+    tipo = forms.CharField(
+        max_length=50,
+        label = "Tipo de actividad",
+        widget = forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = True
+    )
+    titulo = forms.CharField(
+        max_length=250,
+        label = "Título",
+        widget = forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = True
+    )
+    descripcion = forms.CharField(
+        label = "Descripción",
+        widget = forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 5}),
+        required = True
+    )
+
+    fecha = forms.DateField(
+        label = "Fecha",
+        widget = forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}),
+        required = True
+    )
+    lugar = forms.CharField(
+        label="Lugar",
+        max_length=100,
+        widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+    )
+    ciudad = forms.CharField(
+        label="Ciudad",
+        max_length=50,
+        widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+    )
+    provincia = forms.CharField(
+        label="Provincia",
+        max_length=50,
+        widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+    ),
+    pais = forms.CharField(
+        label="País",
+        max_length=50,
+        widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+    )
