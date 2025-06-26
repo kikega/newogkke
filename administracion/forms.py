@@ -59,7 +59,7 @@ class ActividadNuevaForm(forms.Form):
     tipo = forms.CharField(
         max_length=50,
         label = "Tipo de actividad",
-        widget = forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        widget = forms.TextInput(attrs={"class": "form-control mt-2 mb-3","id": "tipoActividad"}),
         required = True
     )
     titulo = forms.CharField(
@@ -71,7 +71,7 @@ class ActividadNuevaForm(forms.Form):
     descripcion = forms.CharField(
         label = "Descripción",
         widget = forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 5}),
-        required = True
+        required = False
     )
 
     fecha = forms.DateField(
@@ -83,19 +83,23 @@ class ActividadNuevaForm(forms.Form):
         label="Lugar",
         max_length=100,
         widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = True
     )
     ciudad = forms.CharField(
         label="Ciudad",
         max_length=50,
         widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = True
     )
     provincia = forms.CharField(
         label="Provincia",
         max_length=50,
         widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = False
     )
     pais = forms.CharField(
         label="País",
         max_length=50,
         widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = False
     )

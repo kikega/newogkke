@@ -676,24 +676,30 @@ class ActividadesView(LoginRequiredMixin, TemplateView):
         # Obtenemos los datos del formulario
         form = ActividadNuevaForm(request.POST)
         if form.is_valid():
-            titulo = form.cleaned_data['titulo']
-            descripcion = form.cleaned_data['descripcion']
-            fecha = form.cleaned_data['fecha']
-            lugar = form.cleaned_data['lugar']
-            ciudad = form.cleaned_data['ciudad']
-            provincia = form.cleaned_data['provincia']
-            pais = form.cleaned_data['pais']
+            try:
+                titulo = form.cleaned_data['titulo']
+                descripcion = form.cleaned_data['descripcion']
+                fecha = form.cleaned_data['fecha']
+                lugar = form.cleaned_data['lugar']
+                ciudad = form.cleaned_data['ciudad']
+                provincia = form.cleaned_data['provincia']
+                pais = form.cleaned_data['pais']
 
-            # Creamos la nueva actividad
-            Actividad.objects.create(
-                titulo = titulo,
-                descripcion = descripcion,
-                fecha = fecha,
-                lugar = lugar,
-                ciudad = ciudad,
-                provincia = provincia,
-                pais = pais,
-            )
+                # Creamos la nueva actividad
+                Actividad.objects.create(
+                    titulo = titulo,
+                    descripcion = descripcion,
+                    fecha = fecha,
+                    lugar = lugar,
+                    ciudad = ciudad,
+                    provincia = provincia,
+                    pais = pais,
+                )
+                messages.success(self.request, "¡Actividad creada exitosamente!")
+            except Exception as e:
+                messages.error(self.request, f"Ocurrió un error al crear la actividad: {e}")
+        else:
+            messages.error(self.request, f'Ocurrió un error al crear la actividad: {form.errors}')
 
         return redirect('administracion:actividades')
 

@@ -90,7 +90,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="needs-validation"action="{% url "administracion:curso_nuevo" %}" method='post' enctype="multipart/form-data" id="cursoNuevo" novalidate>
+                    <form class="needs-validation" action="{% url "administracion:curso_nuevo" %}" method='post' enctype="multipart/form-data" id="cursoNuevo" novalidate>
                         {% csrf_token %}
                         <div class="row input-group">
                             <div class="col mb-3">
@@ -125,25 +125,25 @@
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
-                                <label class="form-label" for="pais">País</label>
-                                <input type="text" class="form-control" id="pais" name="pais">
-                            </div>
-                            <div class="col mb-3">
                                 <label class="form-label" for="evento">Ciudad</label>
                                 <input type="text" class="form-control" id="ciudad" name="ciudad" required>
                                 <div class="invalid-feedback">
                                     Introduzca una ciudad válida.
+                                </div>
+                                <div class="col mb-3">
+                                    <label class="form-label" for="pais">País</label>
+                                    <input type="text" class="form-control" id="pais" name="pais">
                                 </div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col ms-2 mb-3 form-check form-switch">
                                 <label class="form-check-label" for="switchInternacional">Curso internacional</label>
-                                <input class="form-check-input" type="checkbox" role="switch" id="switchInternacional">
+                                <input class="form-check-input" type="checkbox" role="switch" name="internacional" id="switchInternacional">
                             </div>
                             <div class="col mb-3 form-check form-switch">
                                 <label class="form-check-label" for="switchExamenes">Exámenes</label>
-                                <input class="form-check-input" type="checkbox" role="switch" id="switchExamenes">
+                                <input class="form-check-input" type="checkbox" role="switch" name="examenes" id="switchExamenes">
                             </div>
                         </div>
                         <div class="row input-group mb-2">
@@ -153,8 +153,8 @@
                             </div>
                         </div>  
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" form= "cursoNuevo" class="btn btn-primary">Crear curso</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
+                            <button type="submit" form= "cursoNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Crear curso</button>
                         </div>
                     </form>
                 </div>

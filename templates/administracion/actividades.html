@@ -53,7 +53,7 @@
       </div>
     {% endif %}
 
-    <!-- Modal Alta de cursillo nuevo -->
+    <!-- Modal Alta de actividad nuevo -->
     <div class="modal fade" id="modalActividadNueva" tabindex="-1" aria-labelledby="modalActividadNuevaLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -62,12 +62,65 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="needs-validation"action="{% url "administracion:actividades" %}" method='post' enctype="multipart/form-data" id="actividadNueva" novalidate>
+                    <form class="needs-validation" action="{% url "administracion:actividades" %}" method='post' enctype="multipart/form-data" id="actividadNueva" novalidate>
                         {% csrf_token %}
-                        {{ form }}
+                        <div class="row input-group">
+                            <div class="col mb3">
+                                {{ form.tipo.label}}
+                                {{ form.tipo }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca el típo de actividad.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb3">
+                                {{ form.titulo.label}}
+                                {{ form.titulo }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca un nombre para la actividad.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb3">
+                                {{ form.descripcion.label}}
+                                {{ form.descripcion }}
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                {{ form.fecha.label}}
+                                {{ form.fecha }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca la fecha.
+                                </div>
+                            </div>
+                            <div class="col mb-3">
+                                {{ form.lugar.label }}
+                                {{ form.lugar }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca el lugar dónde se desarrollará.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                {{ form.ciudad.label}}
+                                {{ form.ciudad }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca la ciudad.
+                                </div>
+                            </div>
+                            <div class="col mb-3">
+                                {{ form.pais.label }}
+                                {{ form.pais }}
+                            </div>  
+
+                        </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" form= "actividadNueva" class="btn btn-outline-warning">Crear Actividad</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
+                            <button type="submit" form= "actividadNueva" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Crear Actividad</button>
                         </div>
                     </form>
                 </div>
@@ -76,3 +129,29 @@
     </div>
 
 {% endblock container %}
+
+{% block script_js %}
+<script>
+    // Validación del formulario Nuevo curso
+    (function () {
+        'use strict'
+      
+        // Obtén todos los formularios a los que quieres aplicar estilos de validación de Bootstrap personalizados
+        var forms = document.querySelectorAll('.needs-validation')
+      
+        // Bucle sobre ellos y evita el envío
+        Array.prototype.slice.call(forms)
+          .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+              if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+              }
+      
+              form.classList.add('was-validated')
+            }, false)
+          })
+      })()
+
+</script>
+{% endblock script_js %}
