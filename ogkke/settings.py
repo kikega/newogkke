@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
-
+from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from decouple import config, Csv
 
@@ -188,15 +188,21 @@ LOGGING = {
     # Define dónde se guardarán los archivos
     'handlers': {
         'file_db': {
-            'level': 'DEBUG',  # Nivel mínimo de eventos para registrar
-            'class': 'logging.FileHandler',
+            'level': 'WARNING',  # Nivel medio de eventos para registrar
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/db.log'),
+            'when': 'midnight',         # Rota cada día
+            'backupCount': 7,
+            'utc': True, 
             'formatter': 'verbose',  # Usa el formato definido arriba
         },
         'file_access': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/access.log'),
+            'when': 'midnight',         # Rota cada día
+            'backupCount': 7,
+            'utc': True, 
             'formatter': 'verbose',
         },
     },
