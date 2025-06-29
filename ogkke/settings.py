@@ -169,6 +169,8 @@ EMAIL_DEFAULT_STAFF = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de logging
+USE_X_FORWARDED_HOST = True
+
 LOGGING = {
     # Versión del esquema, siempre es 1
     "version": 1,
