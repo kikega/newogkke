@@ -1,4 +1,6 @@
-import pprint
+"""
+Middleware para el registro de logs
+"""
 import logging
 from datetime import datetime
 
@@ -20,7 +22,6 @@ class AccessLogMiddleware:
 
     def get_client_ip(self, request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        pprint.pprint(request.META)
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
         else:
