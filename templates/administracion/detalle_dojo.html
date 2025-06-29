@@ -130,42 +130,22 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{% url "administracion:peticiones" %}" method='post'>
+                    <form class="needs-validation" action="{% url "administracion:tablon" %}" method='post'>
                         {% csrf_token %}
-                        <div class="form-floating mb-3">
-                            <input type="password" class="form-control" id="oldPassword" name="old_password" placeholder="Contraseña">
-                            <label for="oldPassword">Contraseña actual</label>
-                        </div>
-                        <div class="input-group mb-3">
-                            <button class="input-group-text view-password" data-target="newPassword" type="button" >
-                                <i class="bi bi-eye-slash-fill" id="icono1"></i>
-                            </button>
-                            <div class="form-floating">
-                                <input type="password" class="form-control" name="new_password" id="newPassword" placeholder="Contraseña">
-                                <label for="newPassword">Contraseña</label>
-                            </div>     
-                        </div>    
-                        <div class="input-group mb-3">
-                            <button class="input-group-text view-password" data-target="newPasswordConf" type="button">
-                                <i class="bi bi-eye-slash-fill" id="icono2"></i>
-                            </button>
-                            <div class="form-floating">
-                                <input type="password" class="form-control" name="new_password_conf" id="newPasswordConf" placeholder="Confirmar contraseña">
-                                <label for="newPasswordConf">Confirmar contraseña</label>
-                            </div>     
-                        </div>
+                        
                     </form>
                     <div class="alert alert-danger alert-dismissible fade show d-none" role="alert" id="alertPassword">
                         Las contraseñas no coinciden
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" form= "cambioPassword" class="btn btn-primary">Enviar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
+                    <button type="submit" form= "cambioPassword" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Crear</button>
                 </div>
             </div>
         </div>
     </div>
+
     <!-- Modal Peticiones -->
     <div class="modal fade" id="modalPeticiones" tabindex="-1" aria-labelledby="modalPeticionesLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -175,7 +155,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="form" action="{% url "administracion:peticiones" %}" method='post' id="peticionesForm">
+                    <form class="form" action="{% url "administracion:peticiones" %}" method='post' id="tablonForm" enctype="multipart/form-data" id="actividadNueva" novalidate>
                         {% csrf_token %}
                         <input type="hidden" value="{{ dojo.id }}" name="dojo">
                         <div class="mb-3">
@@ -202,11 +182,10 @@
                             </div>
                         </div>
                     </form>
-                    
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" form= "peticionesForm" class="btn btn-primary">Enviar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cerrar</button>
+                    <button type="submit" form= "peticionesForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Enviar</button>
                 </div>
             </div>
         </div>

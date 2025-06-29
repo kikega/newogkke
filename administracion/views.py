@@ -574,6 +574,13 @@ class PeticionAnularView(LoginRequiredMixin, View):
         return redirect('administracion:peticiones')
 
 
+class TablonView(LoginRequiredMixin, TemplateView):
+    """
+    Creación de información en el tablón de anuncios de cada dojo
+    """
+
+    pass
+
 class ErrorView(LoginRequiredMixin, TemplateView):
     """
     Página donde se definen los errores que se procuden

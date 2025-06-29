@@ -22,6 +22,7 @@ urlpatterns = [
     path("cursillos/<int:pk>/circular", administracion_views.descargar_circular, name="descargar_circular"),
     path("curso/nuevo/", administracion_views.CursoNuevoView.as_view(), name="curso_nuevo"),
     path("peticiones/", administracion_views.PeticionView.as_view(), name="peticiones"),
+    path("tablon/", administracion_views.TablonView.as_view(), name="tablon"),
     path("peticiones/anular/<int:pk>/", administracion_views.PeticionAnularView.as_view(), name="peticiones_anular"),
     path("correo/", administracion_views.enviar_correo_instructores, name="correo"),
     path("error/<int:error_code>/", administracion_views.ErrorView.as_view(), name="errores"),

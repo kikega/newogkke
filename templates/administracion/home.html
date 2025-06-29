@@ -5,115 +5,112 @@
     
     {% include "administracion/header.html" %}
 
-    <main class="mb-5 mt-5">
-        <div class="mb-5 color-texto">
-            <div class="text-center">
-                <img class="my-4 img-fluid" src={% static "img/logo.png" %} alt="Logo OGKKE">
-            </div>
-            <div class="text-center">
-                <div class="container py-3">
-                    <h1>Okinawa Goju-Ryu Karate-Do Kyokai España<h1>
-                    <h2 class="col-lg-8 mx-auto lead">
-                        Sensei Ryoichi Onaga, Hanshi 10º Dan. Director Técnico OGKKE
-                    </h2>
-                </div>
+    <section class="mb-5 color-texto">
+        <div class="text-center">
+            <img class="my-4 img-fluid" src={% static "img/logo.png" %} alt="Logo OGKKE">
+        </div>
+        <div class="text-center">
+            <div class="container py-3">
+                <h1>Okinawa Goju-Ryu Karate-Do Kyokai España<h1>
+                <h2 class="col-lg-8 mx-auto lead">
+                    Sensei Ryoichi Onaga, Hanshi 10º Dan. Director Técnico OGKKE
+                </h2>
             </div>
         </div>
+    </section>
 
-        <section class="album py-5">
-            <div class="container">
-                
-                <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xl-3 g-3">
-                    <article class="col">
-                        <div class="card shadow-sm">
-                            <img src="{% static "img/dojos.jpg" %}" class="card-img-top img-fluid" alt="Dojos">
-                            <div class="m-3">
-                                <h3 class="card-title"><i class="bi bi-houses"></i> Dojos <span class="badge text-bg-dark fs-3">{{ dojos }}</span></h3>
-                            </div>
-    
-                            <div class="card-body">
-                                <div class="d-flex justify-content-end align-items-center">
-                                    <div class="btn-group">
-                                        <a href="{% url 'administracion:dojos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
-                                    </div>
+    <section class="album py-5">
+        <div class="container">
+            
+            <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xl-3 g-3">
+                <article class="col">
+                    <div class="card shadow-sm">
+                        <img src="{% static "img/dojos.jpg" %}" class="card-img-top img-fluid" alt="Dojos">
+                        <div class="m-3">
+                            <h3 class="card-title"><i class="bi bi-houses"></i> Dojos <span class="badge text-bg-dark fs-3">{{ dojos }}</span></h3>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="d-flex justify-content-end align-items-center">
+                                <div class="btn-group">
+                                    <a href="{% url 'administracion:dojos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
                                 </div>
                             </div>
                         </div>
-                    </article>
+                    </div>
+                </article>
 
-                    <article class="col">
-                        <div class="card shadow-sm">
-                            <img src="{% static "img/cn.jpg" %}" class="card-img-top img-fluid" alt="DojosCintos negros">
-                            <div class="m-3">
-                                <h3 class="card-title"><i class="bi bi-person"></i> Cintos Negros <span class="badge text-bg-dark fs-3">{{ cn }}</span></h3>
-                            </div>
-    
-                            <div class="card-body">
-                                <div class="d-flex justify-content-end align-items-center">
-                                    <div class="btn-group">
-                                        <a href="{% url 'administracion:alumnos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
-                                    </div>
+                <article class="col">
+                    <div class="card shadow-sm">
+                        <img src="{% static "img/cn.jpg" %}" class="card-img-top img-fluid" alt="DojosCintos negros">
+                        <div class="m-3">
+                            <h3 class="card-title"><i class="bi bi-person"></i> Cintos Negros <span class="badge text-bg-dark fs-3">{{ cn }}</span></h3>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="d-flex justify-content-end align-items-center">
+                                <div class="btn-group">
+                                    <a href="{% url 'administracion:alumnos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
                                 </div>
                             </div>
                         </div>
-                    </article>
+                    </div>
+                </article>
 
-                    <article class="col">
-                        <div class="card shadow-sm">
-                            <img src="{% static "img/gassukus.jpg" %}" class="card-img-top img-fluid" alt="Gasshukus">
-                            <div class="m-3">
-                                <h3 class="card-title"><i class="bi bi-people"></i> Gasshukus <span class="badge text-bg-dark fs-3">{{ cursos }}</span></h3>
-                            </div>
-    
-                            <div class="card-body">
-                                <div class="d-flex justify-content-end align-items-center">
-                                    <div class="btn-group">
-                                        <a href="{% url 'administracion:cursillos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
-                                    </div>
+                <article class="col">
+                    <div class="card shadow-sm">
+                        <img src="{% static "img/gassukus.jpg" %}" class="card-img-top img-fluid" alt="Gasshukus">
+                        <div class="m-3">
+                            <h3 class="card-title"><i class="bi bi-people"></i> Gasshukus <span class="badge text-bg-dark fs-3">{{ cursos }}</span></h3>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="d-flex justify-content-end align-items-center">
+                                <div class="btn-group">
+                                    <a href="{% url 'administracion:cursillos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
                                 </div>
                             </div>
                         </div>
-                    </article>
-                </div>
+                    </div>
+                </article>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="album py-5">
-            <div class="container">
-                
-                <div class="row row-cols-1">
-                    <ul class="nav nav-tabs">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active">Actividades</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">Tablón Anuncios</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="row row-cols-1 mt-3">
-                    {% if actividades %}
-                        <div class="row row-cols-1 mt-5">
-                            {% for actividad in actividades %}
-                            <div class="card mt-3">
-                                <div class="card-header">
-                                    <h4 class="color-texto"><i class="bi bi-card-text"></i> 
-                                        {{ actividad.titulo }}
-                                    </h4>
-                                </div>
-                                <div class="card-body">
-                                    <p><i class="bi bi-calendar3"></i> {{ actividad.fecha }}</p>
-                                    <p class="card-text">{{ actividad.descripcion }}</p>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-
+    <section class="album py-5">
+        <div class="container">
+            
+            <div class="row row-cols-1">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active">Actividades</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">Tablón Anuncios</a>
+                    </li>
+                </ul>
             </div>
-        </section>
+            <div class="row row-cols-1 mt-3">
+                {% if actividades %}
+                    <div class="row row-cols-1 mt-5">
+                        {% for actividad in actividades %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h4 class="color-texto"><i class="bi bi-card-text"></i> 
+                                    {{ actividad.titulo }}
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <p><i class="bi bi-calendar3"></i> {{ actividad.fecha }}</p>
+                                <p class="card-text">{{ actividad.descripcion }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
 
-    </main>
+        </div>
+    </section>
 
     {% endblock container %}

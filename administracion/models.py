@@ -134,6 +134,7 @@ class Tablon(models.Model):
     descripcion = models.TextField()
     fecha = models.DateField(auto_now=False, auto_now_add=False)
     lugar = models.CharField(max_length=100, blank=True, null=True)
+    informacion = models.FileField(upload_to='pdf', max_length=100, blank=True, null=True, default=None)
 
     class Meta:
         verbose_name = "Tablon"
