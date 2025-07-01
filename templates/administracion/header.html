@@ -81,7 +81,7 @@
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
                                 id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <span class="me-2 text-warning"> {{ user.username|capfirst }} </span>
-                                {% if user.foto.url != none %}
+                                {% if usuario_foto.url %}
                                     <img src="{{ usuario_foto.url }}" alt="foto usuario" width="32" height="32" class="rounded-circle">
                                 {% else %}
                                     <img src="{% static "img/foto.png" %}" width="32" height="32" alt="Imagen de foto" class="rounded-circle">
