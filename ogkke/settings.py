@@ -190,7 +190,7 @@ LOGGING = {
     # Define dónde se guardarán los archivos
     'handlers': {
         'file_db': {
-            'level': 'WARNING',  # Nivel medio de eventos para registrar
+            'level': 'DEBUG',  # Nivel medio de eventos para registrar
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/db.log'),
             'when': 'midnight',         # Rota cada día

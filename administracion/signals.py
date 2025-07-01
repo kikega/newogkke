@@ -9,6 +9,9 @@ from django.dispatch import receiver
 logger = logging.getLogger('access_logger')
 
 def get_ip(request):
+    """
+    Obtenemos la dirección IP del request
+    """
     return request.META.get('REMOTE_ADDR', '')
 
 @receiver(user_logged_in)

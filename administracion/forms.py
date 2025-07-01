@@ -103,3 +103,42 @@ class ActividadNuevaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
         required = False
     )
+
+class TablonNuevoForm(forms.Form):
+    """
+    Formulario para crear un nuevo anuncio en el tablón
+    """
+
+    tipo = forms.CharField(
+        max_length=50,
+        label = "Tipo de actividad",
+        widget = forms.TextInput(attrs={"class": "form-control mt-2 mb-3","id": "tipoActividad"}),
+        required = True
+    )
+    titulo = forms.CharField(
+        max_length=250,
+        label = "Título",
+        widget = forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = True
+    )
+    descripcion = forms.CharField(
+        label = "Descripción",
+        widget = forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 5}),
+        required = False
+    )
+    fecha = forms.DateField(
+        label = "Fecha",
+        widget = forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}),
+        required = True
+    )
+    lugar = forms.CharField(
+        label="Lugar",
+        max_length=100,
+        widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        required = True
+    )
+    informacion = forms.FileField(
+        label="Información",
+        widget=forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file"}),
+        required = False
+    )

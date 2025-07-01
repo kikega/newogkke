@@ -17,10 +17,10 @@ from django.contrib import messages
 from django.http import FileResponse
 
 # App administracion
-from .models import Alumno, Cursillo, Dojo, Peticion, Examen, Actividad
+from .models import Alumno, Cursillo, Dojo, Peticion, Examen, Actividad, Tablon
 
 # Formularios
-from .forms import EmailInstructoresForm, ActividadNuevaForm
+from .forms import EmailInstructoresForm, ActividadNuevaForm, TablonNuevoForm
 
 # Utilidades
 from .utils import enviar_correo_html, validar_cadena
@@ -260,6 +260,7 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
         numero_peticiones = peticiones.count()
         context['peticiones'] = peticiones
         context['numero_peticiones'] = numero_peticiones
+        context["form"] = TablonNuevoForm()
 
         return context
 
@@ -516,13 +517,15 @@ class PeticionView(LoginRequiredMixin, TemplateView):
         dojo_id = request.POST.get('dojo')
         descripcion = request.POST.get('descripcion')
         destinatario = settings.EMAIL_DEFAULT_STAFF
+        print(titulo)
+        print(descripcion)
 
         # Validar que los campos no estén vacíos
-        if not all([titulo, tipo, dojo_id, descripcion]):
-            return render(request, self.template_name, {
-                'error': 'Por favor, complete todos los campos.',
-                'dojos': Dojo.objects.all()
-            })
+        # if not all([titulo, tipo, dojo_id, descripcion]):
+        #     return render(request, self.template_name, {
+        #         'error': 'Por favor, complete todos los campos.',
+        #         'dojos': Dojo.objects.all()
+        #     })
 
         # Obtenemos las plantillas HTML y TXT para el correo
         template_name_html='administracion/emails/notificacion_peticion.html',
@@ -532,12 +535,13 @@ class PeticionView(LoginRequiredMixin, TemplateView):
         dojo = get_object_or_404(Dojo, pk=dojo_id)
 
         # Crear la petición
-        Peticion.objects.create(
+        resultado = Peticion.objects.create(
             titulo=titulo,
             tipo=tipo,
             dojo=dojo,
             descripcion=descripcion
         )
+        print(resultado)
         # Convertimos el objeto creado un un diccionario
         peticion = {
             'titulo': titulo,
@@ -578,8 +582,23 @@ class TablonView(LoginRequiredMixin, TemplateView):
     """
     Creación de información en el tablón de anuncios de cada dojo
     """
+    template_name = 'administracion/home-tablon.html'
 
-    pass
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Obtenemos los datos del usuario logado
+        user = self.request.user
+
+        # Obtenemos el dojo del usuario logado
+        alumno = Alumno.objects.select_related('dojo').get(usuario=user)
+        dojo = alumno.dojo
+
+        context["dojo_usuario"] = dojo
+        context["tablon"] = Tablon.objects.filter(dojo_id = dojo)
+
+        return context
+
 
 class ErrorView(LoginRequiredMixin, TemplateView):
     """
@@ -590,7 +609,7 @@ class ErrorView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Obtenemos el codifgo de error
+        # Obtenemos el codigo de error
         error_code = self.kwargs.get('error_code')
 
         if error_code == 403:

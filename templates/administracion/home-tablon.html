@@ -83,26 +83,27 @@
             <div class="row row-cols-1">
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
-                        <a href="#" class="nav-link active">Actividades</a>
+                        <a href="{% url 'home' %}" class="nav-link">Actividades</a>
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'administracion:tablon' %}" class="nav-link">Tablón Anuncios</a>
+                        <a href="#" class="nav-link active">Tablón Anuncios</a>
                     </li>
                 </ul>
             </div>
             <div class="row row-cols-1 mt-3">
-                {% if actividades %}
+                {% if tablon %}
                     <div class="row row-cols-1 mt-5">
-                        {% for actividad in actividades %}
+                        <h3 class="mb-3">Dojo: {{ dojo_usuario }}</h3>
+                        {% for tab in tablon %}
                         <div class="card mt-3">
                             <div class="card-header">
                                 <h4 class="color-texto"><i class="bi bi-card-text"></i> 
-                                    {{ actividad.titulo }}
+                                    {{ tab.titulo }}
                                 </h4>
                             </div>
                             <div class="card-body">
-                                <p><i class="bi bi-calendar3"></i> {{ actividad.fecha }}</p>
-                                <p class="card-text">{{ actividad.descripcion }}</p>
+                                <p><i class="bi bi-calendar3"></i> {{ tab.fecha }}</p>
+                                <p class="card-text">{{ tab.descripcion }}</p>
                             </div>
                         </div>
                         {% endfor %}

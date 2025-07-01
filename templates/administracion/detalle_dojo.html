@@ -126,21 +126,63 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalTablonLabel">Tablón de anuncios {{dojo.nombre}}</h1>
+                    <h1 class="modal-title fs-5 color-texto" id="modalTablonLabel">Tablón de anuncios {{dojo.nombre}}</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="needs-validation" action="{% url "administracion:tablon" %}" method='post'>
+                    <form class="needs-validation" action="{% url "administracion:tablon" %}" method='post' enctype="multipart/form-data" id="tablonNuevo" novalidate>
                         {% csrf_token %}
-                        
+                        <div class="row input-group">
+                            <div class="col mb3">
+                                {{ form.tipo.label}}
+                                {{ form.tipo }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca el típo de actividad.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb3">
+                                {{ form.titulo.label}}
+                                {{ form.titulo }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca un nombre para la actividad.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb3">
+                                {{ form.descripcion.label}}
+                                {{ form.descripcion }}
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                {{ form.fecha.label}}
+                                {{ form.fecha }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca la fecha.
+                                </div>
+                            </div>
+                            <div class="col mb-3">
+                                {{ form.lugar.label }}
+                                {{ form.lugar }}
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca el lugar dónde se desarrollará.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                {{ form.informacion.label}}
+                                {{ form.informacion }}
+                            </div>
+                        </div>
                     </form>
-                    <div class="alert alert-danger alert-dismissible fade show d-none" role="alert" id="alertPassword">
-                        Las contraseñas no coinciden
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
-                    <button type="submit" form= "cambioPassword" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Crear</button>
+                    <button type="submit" form= "tablonNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Crear</button>
                 </div>
             </div>
         </div>
@@ -151,11 +193,11 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalPeticionesLabel">Peticiones {{dojo.nombre}}</h1>
+                    <h1 class="modal-title fs-5 color-texto" id="modalPeticionesLabel">Peticiones {{dojo.nombre}}</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="form" action="{% url "administracion:peticiones" %}" method='post' id="tablonForm" enctype="multipart/form-data" id="actividadNueva" novalidate>
+                    <form class="form needs-validation" action="{% url "administracion:peticiones" %}" method='post' id="peticionesForm" novalidate>
                         {% csrf_token %}
                         <input type="hidden" value="{{ dojo.id }}" name="dojo">
                         <div class="mb-3">
@@ -168,17 +210,22 @@
                               </select>-->
                               <p>Se va a crear una nueva petición, describa exactamente lo que necesita</p>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="titulo">Titulo</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Titulo..." id="titulo" name="titulo">
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                <label class="form-label" for="titulo">Titulo</label>
+                                <input type="text" class="form-control" placeholder="Titulo..." id="titulo" name="titulo" required>
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca el título de la petición
+                                </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <div class="input-group">
-                                <textarea class="form-control" id="descripcion" rows="5" name="descripcion">
-                                </textarea>
+                        <div class="row input-group">
+                            <div class="col mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" rows="5" name="descripcion" required></textarea>
+                                <div class="invalid-feedback">
+                                    Este campo no puede estar vacío, introduzca lo que necesita
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -259,6 +306,27 @@
                     },
                 }
             });
+
+            // Validación del formulario Nuevo curso
+            (function () {
+                'use strict'
+            
+                // Obtén todos los formularios a los que quieres aplicar estilos de validación de Bootstrap personalizados
+                var forms = document.querySelectorAll('.needs-validation')
+            
+                // Bucle sobre ellos y evita el envío
+                Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+            
+                    form.classList.add('was-validated')
+                    }, false)
+                })
+            })()
         </script>
 
 {% endblock script_js %}

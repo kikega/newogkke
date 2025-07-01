@@ -1,0 +1,181 @@
+[2025-06-29 22:11:05,922] DEBUG django.db.backends - (0.004) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:11:05,926] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:16:38,756] DEBUG django.db.backends - (0.003) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:16:38,761] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:17:24,164] DEBUG django.db.backends - (0.007) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:17:24,169] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:17:35,684] DEBUG django.db.backends - (0.005) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:17:35,687] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:18:19,017] DEBUG django.db.backends - (0.003) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:18:19,021] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:18:27,793] DEBUG django.db.backends - (0.003) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:18:27,796] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:19:28,566] DEBUG django.db.backends - (0.003) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:19:28,570] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:25:09,678] DEBUG django.db.backends - (0.004) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:25:09,682] DEBUG django.db.backends - (0.001) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:25:17,565] DEBUG django.db.backends - (0.003) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+[2025-06-29 22:25:17,568] DEBUG django.db.backends - (0.000) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+[2025-06-29 22:25:24,968] DEBUG django.db.backends - (0.002) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."expire_date" > '2025-06-29T20:25:24.959156+00:00'::timestamptz AND "django_session"."session_key" = 'gvu588q5r4ws52f8m5j5s4sb421bi5th') LIMIT 21; args=(datetime.datetime(2025, 6, 29, 20, 25, 24, 959156, tzinfo=datetime.timezone.utc), 'gvu588q5r4ws52f8m5j5s4sb421bi5th'); alias=default
+[2025-06-29 22:25:24,970] DEBUG django.db.backends - (0.002) SELECT "usuarios_usuario"."id", "usuarios_usuario"."password", "usuarios_usuario"."last_login", "usuarios_usuario"."is_superuser", "usuarios_usuario"."username", "usuarios_usuario"."first_name", "usuarios_usuario"."last_name", "usuarios_usuario"."date_joined", "usuarios_usuario"."email", "usuarios_usuario"."numero_telefono", "usuarios_usuario"."verificado", "usuarios_usuario"."is_active", "usuarios_usuario"."is_staff" FROM "usuarios_usuario" WHERE "usuarios_usuario"."id" = 1 LIMIT 21; args=(1,); alias=default
+[2025-06-29 22:25:24,976] DEBUG django.db.backends - (0.002) SELECT COUNT(*) AS "__count" FROM "administracion_alumno"; args=(); alias=default
+[2025-06-29 22:25:24,979] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo"; args=(); alias=default
+[2025-06-29 22:25:24,981] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo" WHERE "administracion_cursillo"."pais" = 'España'; args=('España',); alias=default
+[2025-06-29 22:25:24,982] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo" WHERE "administracion_cursillo"."internacional"; args=(); alias=default
+[2025-06-29 22:25:24,984] DEBUG django.db.backends - (0.000) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo" WHERE NOT ("administracion_cursillo"."pais" = 'España'); args=('España',); alias=default
+[2025-06-29 22:25:24,985] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_dojo"; args=(); alias=default
+[2025-06-29 22:25:24,988] DEBUG django.db.backends - (0.001) SELECT "administracion_alumno"."grado", COUNT("administracion_alumno"."id") AS "total" FROM "administracion_alumno" GROUP BY "administracion_alumno"."grado" ORDER BY "administracion_alumno"."grado" ASC; args=(); alias=default
+[2025-06-29 22:25:24,995] DEBUG django.db.backends - (0.001) SELECT "administracion_alumno"."id", "administracion_alumno"."usuario_id", "administracion_alumno"."nombre", "administracion_alumno"."apellidos", "administracion_alumno"."fecha_nacimiento", "administracion_alumno"."dojo_id", "administracion_alumno"."instructor", "administracion_alumno"."grado", "administracion_alumno"."rango", "administracion_alumno"."fecha_rango", "administracion_alumno"."foto", "administracion_alumno"."activo", "usuarios_usuario"."id", "usuarios_usuario"."password", "usuarios_usuario"."last_login", "usuarios_usuario"."is_superuser", "usuarios_usuario"."username", "usuarios_usuario"."first_name", "usuarios_usuario"."last_name", "usuarios_usuario"."date_joined", "usuarios_usuario"."email", "usuarios_usuario"."numero_telefono", "usuarios_usuario"."verificado", "usuarios_usuario"."is_active", "usuarios_usuario"."is_staff" FROM "administracion_alumno" INNER JOIN "usuarios_usuario" ON ("administracion_alumno"."usuario_id" = "usuarios_usuario"."id") WHERE "usuarios_usuario"."email" = 'kikega@gmail.com' LIMIT 21; args=('kikega@gmail.com',); alias=default
+[2025-06-29 22:25:24,996] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_peticion" WHERE NOT "administracion_peticion"."finalizada"; args=(); alias=default
+[2025-06-29 22:25:25,030] DEBUG django.db.backends - (0.001) SELECT "administracion_actividad"."id", "administracion_actividad"."tipo", "administracion_actividad"."titulo", "administracion_actividad"."descripcion", "administracion_actividad"."fecha", "administracion_actividad"."lugar", "administracion_actividad"."ciudad", "administracion_actividad"."provincia", "administracion_actividad"."pais" FROM "administracion_actividad" WHERE "administracion_actividad"."fecha" >= '2025-06-29'::date ORDER BY "administracion_actividad"."fecha" ASC; args=(datetime.date(2025, 6, 29),); alias=default
+[2025-06-29 22:25:28,913] DEBUG django.db.backends - (0.005) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."expire_date" > '2025-06-29T20:25:28.889763+00:00'::timestamptz AND "django_session"."session_key" = 'gvu588q5r4ws52f8m5j5s4sb421bi5th') LIMIT 21; args=(datetime.datetime(2025, 6, 29, 20, 25, 28, 889763, tzinfo=datetime.timezone.utc), 'gvu588q5r4ws52f8m5j5s4sb421bi5th'); alias=default
+[2025-06-29 22:25:28,917] DEBUG django.db.backends - (0.002) SELECT "usuarios_usuario"."id", "usuarios_usuario"."password", "usuarios_usuario"."last_login", "usuarios_usuario"."is_superuser", "usuarios_usuario"."username", "usuarios_usuario"."first_name", "usuarios_usuario"."last_name", "usuarios_usuario"."date_joined", "usuarios_usuario"."email", "usuarios_usuario"."numero_telefono", "usuarios_usuario"."verificado", "usuarios_usuario"."is_active", "usuarios_usuario"."is_staff" FROM "usuarios_usuario" WHERE "usuarios_usuario"."id" = 1 LIMIT 21; args=(1,); alias=default
+[2025-06-29 22:25:28,920] DEBUG django.db.backends - (0.001) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE "django_session"."session_key" = 'gvu588q5r4ws52f8m5j5s4sb421bi5th' LIMIT 21; args=('gvu588q5r4ws52f8m5j5s4sb421bi5th',); alias=default
+[2025-06-29 22:25:28,926] DEBUG django.db.backends - (0.005) DELETE FROM "django_session" WHERE "django_session"."session_key" IN ('gvu588q5r4ws52f8m5j5s4sb421bi5th'); args=('gvu588q5r4ws52f8m5j5s4sb421bi5th',); alias=default
+[2025-06-29 22:25:36,203] DEBUG django.db.backends - (0.006) SELECT "usuarios_usuario"."id", "usuarios_usuario"."password", "usuarios_usuario"."last_login", "usuarios_usuario"."is_superuser", "usuarios_usuario"."username", "usuarios_usuario"."first_name", "usuarios_usuario"."last_name", "usuarios_usuario"."date_joined", "usuarios_usuario"."email", "usuarios_usuario"."numero_telefono", "usuarios_usuario"."verificado", "usuarios_usuario"."is_active", "usuarios_usuario"."is_staff" FROM "usuarios_usuario" WHERE "usuarios_usuario"."email" = 'kikega@gmail.com' LIMIT 21; args=('kikega@gmail.com',); alias=default
+[2025-06-29 22:25:36,672] DEBUG django.db.backends - (0.001) SELECT 1 AS "a" FROM "django_session" WHERE "django_session"."session_key" = '0bc7tpqev3liaqpf3lbph9y1e8cmof61' LIMIT 1; args=(1, '0bc7tpqev3liaqpf3lbph9y1e8cmof61'); alias=default
+[2025-06-29 22:25:36,673] DEBUG django.db.backends - (0.000) BEGIN; args=None; alias=default
+[2025-06-29 22:25:36,677] DEBUG django.db.backends - (0.004) INSERT INTO "django_session" ("session_key", "session_data", "expire_date") VALUES ('0bc7tpqev3liaqpf3lbph9y1e8cmof61', 'e30:1uVyam:METJaogX8H6RAMgRkp2MOhzve1G_5S5n3lAK0HRqHnU', '2025-07-13T20:25:36.673235+00:00'::timestamptz); args=('0bc7tpqev3liaqpf3lbph9y1e8cmof61', 'e30:1uVyam:METJaogX8H6RAMgRkp2MOhzve1G_5S5n3lAK0HRqHnU', datetime.datetime(2025, 7, 13, 20, 25, 36, 673235, tzinfo=datetime.timezone.utc)); alias=default
+[2025-06-29 22:25:36,679] DEBUG django.db.backends - (0.001) COMMIT; args=None; alias=default
+[2025-06-29 22:25:36,682] DEBUG django.db.backends - (0.003) UPDATE "usuarios_usuario" SET "last_login" = '2025-06-29T20:25:36.679627+00:00'::timestamptz WHERE "usuarios_usuario"."id" = 1; args=(datetime.datetime(2025, 6, 29, 20, 25, 36, 679627, tzinfo=datetime.timezone.utc), 1); alias=default
+[2025-06-29 22:25:36,683] DEBUG django.db.backends - (0.000) BEGIN; args=None; alias=default
+[2025-06-29 22:25:36,684] DEBUG django.db.backends - (0.001) UPDATE "django_session" SET "session_data" = '.eJxVjDsOwjAQBe_iGlnY8ZeSPmewdtdrHECOFCcV4u4QKQW0b2beSyTY1pq2zkuasrgIJU6_GwI9uO0g36HdZklzW5cJ5a7Ig3Y5zpmf18P9O6jQ67d2rIni2VrwAShGT2ZwQRlGKp6DcY5R64iKBzNgIOt9yb4AWhMyohHvD-boOE4:1uVyam:_0yJ7hJFJjqU5Bci-BTZtm_TmJ2RAtc1q5pWCD44Cu8', "expire_date" = '2025-07-13T20:25:36.683319+00:00'::timestamptz WHERE "django_session"."session_key" = '0bc7tpqev3liaqpf3lbph9y1e8cmof61'; args=('.eJxVjDsOwjAQBe_iGlnY8ZeSPmewdtdrHECOFCcV4u4QKQW0b2beSyTY1pq2zkuasrgIJU6_GwI9uO0g36HdZklzW5cJ5a7Ig3Y5zpmf18P9O6jQ67d2rIni2VrwAShGT2ZwQRlGKp6DcY5R64iKBzNgIOt9yb4AWhMyohHvD-boOE4:1uVyam:_0yJ7hJFJjqU5Bci-BTZtm_TmJ2RAtc1q5pWCD44Cu8', datetime.datetime(2025, 7, 13, 20, 25, 36, 683319, tzinfo=datetime.timezone.utc), '0bc7tpqev3liaqpf3lbph9y1e8cmof61'); alias=default
+[2025-06-29 22:25:36,686] DEBUG django.db.backends - (0.001) COMMIT; args=None; alias=default
+[2025-06-29 22:25:36,697] DEBUG django.db.backends - (0.001) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."expire_date" > '2025-06-29T20:25:36.690258+00:00'::timestamptz AND "django_session"."session_key" = '0bc7tpqev3liaqpf3lbph9y1e8cmof61') LIMIT 21; args=(datetime.datetime(2025, 6, 29, 20, 25, 36, 690258, tzinfo=datetime.timezone.utc), '0bc7tpqev3liaqpf3lbph9y1e8cmof61'); alias=default
+[2025-06-29 22:25:36,700] DEBUG django.db.backends - (0.001) SELECT "usuarios_usuario"."id", "usuarios_usuario"."password", "usuarios_usuario"."last_login", "usuarios_usuario"."is_superuser", "usuarios_usuario"."username", "usuarios_usuario"."first_name", "usuarios_usuario"."last_name", "usuarios_usuario"."date_joined", "usuarios_usuario"."email", "usuarios_usuario"."numero_telefono", "usuarios_usuario"."verificado", "usuarios_usuario"."is_active", "usuarios_usuario"."is_staff" FROM "usuarios_usuario" WHERE "usuarios_usuario"."id" = 1 LIMIT 21; args=(1,); alias=default
+[2025-06-29 22:25:36,702] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_alumno"; args=(); alias=default
+[2025-06-29 22:25:36,703] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo"; args=(); alias=default
+[2025-06-29 22:25:36,704] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo" WHERE "administracion_cursillo"."pais" = 'España'; args=('España',); alias=default
+[2025-06-29 22:25:36,706] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo" WHERE "administracion_cursillo"."internacional"; args=(); alias=default
+[2025-06-29 22:25:36,707] DEBUG django.db.backends - (0.000) SELECT COUNT(*) AS "__count" FROM "administracion_cursillo" WHERE NOT ("administracion_cursillo"."pais" = 'España'); args=('España',); alias=default
+[2025-06-29 22:25:36,708] DEBUG django.db.backends - (0.001) SELECT COUNT(*) AS "__count" FROM "administracion_dojo"; args=(); alias=default
+[2025-06-29 22:25:36,709] DEBUG django.db.backends - (0.001) SELECT "administracion_alumno"."grado", COUNT("administracion_alumno"."id") AS "total" FROM "administracion_alumno" GROUP BY "administracion_alumno"."grado" ORDER BY "administracion_alumno"."grado" ASC; args=(); alias=default
+[2025-06-29 22:25:36,711] DEBUG django.db.backends - (0.001) SELECT "administracion_alumno"."id", "administracion_alumno"."usuario_id", "administracion_alumno"."nombre", "administracion_alumno"."apellidos", "administracion_alumno"."fecha_nacimiento", "administracion_alumno"."dojo_id", "administracion_alumno"."instructor", "administracion_alumno"."grado", "administracion_alumno"."rango", "administracion_alumno"."fecha_rango", "administracion_alumno"."foto", "administracion_alumno"."activo", "usuarios_usuario"."id", "usuarios_usuario"."password", "usuarios_usuario"."last_login", "usuarios_usuario"."is_superuser", "usuarios_usuario"."username", "usuarios_usuario"."first_name", "usuarios_usuario"."last_name", "usuarios_usuario"."date_joined", "usuarios_usuario"."email", "usuarios_usuario"."numero_telefono", "usuarios_usuario"."verificado", "usuarios_usuario"."is_active", "usuarios_usuario"."is_staff" FROM "administracion_alumno" INNER JOIN "usuarios_usuario" ON ("administracion_alumno"."usuario_id" = "usuarios_usuario"."id") WHERE "usuarios_usuario"."email" = 'kikega@gmail.com' LIMIT 21; args=('kikega@gmail.com',); alias=default
+[2025-06-29 22:25:36,712] DEBUG django.db.backends - (0.000) SELECT COUNT(*) AS "__count" FROM "administracion_peticion" WHERE NOT "administracion_peticion"."finalizada"; args=(); alias=default
+[2025-06-29 22:25:36,717] DEBUG django.db.backends - (0.001) SELECT "administracion_actividad"."id", "administracion_actividad"."tipo", "administracion_actividad"."titulo", "administracion_actividad"."descripcion", "administracion_actividad"."fecha", "administracion_actividad"."lugar", "administracion_actividad"."ciudad", "administracion_actividad"."provincia", "administracion_actividad"."pais" FROM "administracion_actividad" WHERE "administracion_actividad"."fecha" >= '2025-06-29'::date ORDER BY "administracion_actividad"."fecha" ASC; args=(datetime.date(2025, 6, 29),); alias=default
