@@ -228,7 +228,15 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
             instructor=True
         ).first()
         context['instructor'] = instructor_obj
-        print(instructor_obj)
+
+        # Obtenemos datos del usuario logado para añadirlo al contexto
+        user = self.request.user
+        # Obtenemos el dato si es instructor
+        es_instructor = False
+        if user.is_authenticated:
+            es_instructor = user.groups.filter(name='instructor').exists()
+        # Añades la variable booleana al contexto
+        context['usuario_es_instructor'] = es_instructor
 
         # Obtenemos todos los cintos negros del dojo
         cintos_negros_dojo_obj = Alumno.objects.filter(dojo = dojo_actual, instructor=False).order_by("apellidos")
@@ -517,8 +525,6 @@ class PeticionView(LoginRequiredMixin, TemplateView):
         dojo_id = request.POST.get('dojo')
         descripcion = request.POST.get('descripcion')
         destinatario = settings.EMAIL_DEFAULT_STAFF
-        print(titulo)
-        print(descripcion)
 
         # Validar que los campos no estén vacíos
         # if not all([titulo, tipo, dojo_id, descripcion]):
@@ -535,13 +541,13 @@ class PeticionView(LoginRequiredMixin, TemplateView):
         dojo = get_object_or_404(Dojo, pk=dojo_id)
 
         # Crear la petición
-        resultado = Peticion.objects.create(
+        Peticion.objects.create(
             titulo=titulo,
             tipo=tipo,
             dojo=dojo,
             descripcion=descripcion
         )
-        print(resultado)
+
         # Convertimos el objeto creado un un diccionario
         peticion = {
             'titulo': titulo,
@@ -598,6 +604,53 @@ class TablonView(LoginRequiredMixin, TemplateView):
         context["tablon"] = Tablon.objects.filter(dojo_id = dojo)
 
         return context
+
+    def post(self, request, **kwargs):
+        """
+        Procesa el formulario para la creación de una notificación el el Tablon de un dojo
+        """
+
+        # Obtenemos los datos del formulario
+        form = TablonNuevoForm(request.POST)
+
+        if form.is_valid():
+            print(f'DEBUG: Formulario valido')
+            try:
+                dojo_id = request.POST.get('dojo')
+                print(f'DEBUG: dojo_id: {dojo_id}')
+                fecha = form.cleaned_data['fecha']
+                tipo = form.cleaned_data['tipo']
+                titulo = form.cleaned_data['titulo']
+                descripcion = form.cleaned_data['descripcion']
+                lugar = form.cleaned_data['lugar']
+                if request.FILES.get('informacion'):
+                    informacion = request.FILES["informacion"]
+                else:
+                    informacion = None
+
+                # Obtener el Dojo
+                dojo = get_object_or_404(Dojo, pk=dojo_id)
+                print(F'debug: dojo: {dojo}')
+
+                # Creamos la nueva notificación
+                Tablon.objects.create(
+                    dojo = dojo,
+                    fecha = fecha,
+                    tipo = tipo,
+                    titulo = titulo,
+                    descripcion = descripcion,
+                    lugar = lugar,
+                    informacion = informacion
+                )
+
+                messages.success(self.request, "¡Notificación creada exitosamente!")
+            except Exception as e:
+                messages.error(self.request, f"Ocurrió un error al crear la notificación: {e}")
+                print(e)
+        else:
+            messages.error(self.request, f'Ocurrió un error al crear la notificación: {form.errors}')
+
+        return redirect('administracion:tablon')
 
 
 class ErrorView(LoginRequiredMixin, TemplateView):
