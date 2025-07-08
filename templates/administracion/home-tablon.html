@@ -98,12 +98,18 @@
                         <div class="card mt-3">
                             <div class="card-header">
                                 <h4 class="color-texto"><i class="bi bi-card-text"></i> 
-                                    {{ tab.titulo }}
+                                {{ tab.titulo }} 
                                 </h4>
                             </div>
                             <div class="card-body">
                                 <p><i class="bi bi-calendar3"></i> {{ tab.fecha }}</p>
                                 <p class="card-text">{{ tab.descripcion }}</p>
+                                {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
+                                    <div class="text-end">
+                                        <a href="#" class="btn btn-primary btn-sm"><i class="bi bi-pencil-fill"></i> Editar</a>
+                                        <a href="#" class="btn btn-danger btn-sm"><i class="bi bi-trash-fill"></i> Eliminar</a>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
@@ -115,3 +121,6 @@
     </section>
 
     {% endblock container %}
+
+
+    

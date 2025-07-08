@@ -73,7 +73,7 @@
 
     <!-- Seccion de botones para Tablon de anuncios y peticiones-->
     <!-- Solo si eres staff, superuser o instructor -->
-    {% if usuario_es_instructor %}
+    {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
         <div class="container col-md-4 justify-content-center mt-5">
             <div class="row">
                 <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">

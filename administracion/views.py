@@ -307,6 +307,16 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         curso_actual = self.get_object()
+
+        # Obtenemos datos del usuario logado para añadirlo al contexto
+        user = self.request.user
+        # Obtenemos el dato si es instructor
+        es_instructor = False
+        if user.is_authenticated:
+            es_instructor = user.groups.filter(name='instructor').exists()
+        # Añades la variable booleana al contexto
+        context['usuario_es_instructor'] = es_instructor
+
         # Obtenemos todos los asistentes a un cursillo
         # asistentes_obj = Cursillo.objects.select_related('alumnos').get(pk=curso_actual.id)
         context["asistentes"] = curso_actual.alumnos.all().order_by('apellidos')
@@ -342,11 +352,11 @@ class CursoNuevoView(LoginRequiredMixin, ListView):
         evento = request.POST.get('evento')
         descripcion = request.POST.get('descripcion')
         lugar = request.POST.get('lugar')
-        pais = request.POST.get('pais')
+        pais = 'España' if request.POST.get('pais') == "" else request.POST.get("pais")
         ciudad = request.POST.get('ciudad')
         fecha = request.POST.get('fecha')
-        internacional = request.POST.get('internacional')
-        examenes = request.POST.get('examenes')
+        internacional = True if request.POST.get('internacional') == 'on' else False
+        examenes = True if request.POST.get('examenes') == 'on' else False
         if request.FILES.get('circular'):
             circular = request.FILES["circular"]
         else:
@@ -443,6 +453,26 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
         })
 
         return context
+
+
+class CursilloInscripcionView(LoginRequiredMixin, TemplateView):
+    """
+    Inscripcion al cursillo
+    """
+
+    template_name = 'administracion/inscripcion_instructor.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        return context
+
+
+    def post(self, request, *args, **kwargs):
+
+        return redirect("administracion:cursillo_detalle", pk=cursillo.pk)
+    
+
 
 
 @login_required

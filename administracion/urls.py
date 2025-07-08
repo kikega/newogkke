@@ -20,6 +20,7 @@ urlpatterns = [
     path("cursillos/<int:pk>/examinados", administracion_views.CursilloExaminaListView.as_view(), name="cursillo_examinados"),
     path("cursillos/<int:pk>/estadisticas", administracion_views.CursilloEstadisticasView.as_view(), name="cursillo_estadisticas"),
     path("cursillos/<int:pk>/circular", administracion_views.descargar_circular, name="descargar_circular"),
+    path("cursillos/<int:pk>/inscripcion", administracion_views.CursilloInscripcionView.as_view(), name="cursillo_inscripcion_instructor"),
     path("curso/nuevo/", administracion_views.CursoNuevoView.as_view(), name="curso_nuevo"),
     path("peticiones/", administracion_views.PeticionView.as_view(), name="peticiones"),
     path("tablon/", administracion_views.TablonView.as_view(), name="tablon"),

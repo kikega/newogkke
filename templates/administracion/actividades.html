@@ -40,11 +40,12 @@
         <div class="card-body">
             <p><i class="bi bi-calendar3"></i> {{ actividad.fecha }}</p>
             <p class="card-text">{{ actividad.descripcion }}</p>
-            <div class="text-end">
-                <form method="post" action="#" style="display: inline;">
+            <div class="text-end">    
+                <form method="post" action="#" style="display: inline;" id="formActividad">
                     {% csrf_token %}
                     <input type="hidden" name="actividad" value="{{ actividad.id }}">
-                    <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-fill"></i> Editar</button>
+                    <button type="submit" class="btn btn-primary btn-sm" enviarFormulario="#"><i class="bi bi-pencil-fill"></i> Editar</button>
+                    <button type="submit" class="btn btn-danger btn-sm" enviarFormulario="#"><i class="bi bi-trash-fill"></i> Eliminar</button>
                 </form>
             </div>
           </div>
@@ -58,7 +59,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalActividadNuevaLabel">Creación de una Actividad</h1>
+                    <h1 class="modal-title fs-5 color-texto" id="modalActividadNuevaLabel">Creación de una Actividad</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -152,6 +153,12 @@
             }, false)
           })
       })()
+
+      // Selección de editar o eliminar por actividad
+    function enviarFormulario(action) {
+        document.getElementById('formActividad').action = action;
+        document.getElementById('formActividad').submit();
+    }
 
 </script>
 {% endblock script_js %}
