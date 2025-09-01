@@ -142,3 +142,45 @@ class TablonNuevoForm(forms.Form):
         widget=forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file"}),
         required = False
     )
+
+
+class InscripcionAlumnosForm(forms.Form):
+    """
+    Formulario para la inscripción de alumnos a un cursillo por parte de un instructor.
+    """
+
+    # ModelMultipleChoiceField permite seleccionar múltiples alumnos.
+    alumnos = forms.ModelMultipleChoiceField(
+        queryset=Alumno.objects.none(),  # El queryset se establecerá dinámicamente en __init__
+        widget=FilteredSelectMultiple("Alumnos", is_stacked=False),
+        label="Seleccionar Alumnos",
+        required=False, # Puede que no se seleccione a nadie
+        help_text="Selecciona los alumnos de tu dojo para inscribirlos al cursillo."
+    )
+
+    class Media:
+        """
+        Esta clase Media es CRUCIAL para que el widget FilteredSelectMultiple funcione.
+        """
+        css = {
+            'all': ('/static/admin/css/widgets.css',),
+        }
+        js = ('/admin/jsi18n/', '/static/admin/js/core.js', '/static/admin/js/SelectBox.js', '/static/admin/js/SelectFilter2.js')
+
+    def __init__(self, *args, **kwargs):
+        # Extraemos el usuario (que debe ser un instructor) que se pasa desde la vista.
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        if user and user.is_authenticated:
+            try:
+                instructor = Alumno.objects.get(usuario=user)
+                dojo_instructor = instructor.dojo
+                self.fields['alumnos'].queryset = Alumno.objects.filter(
+                    dojo=dojo_instructor,
+                    instructor=False,
+                    activo=True
+                ).order_by('apellidos', 'nombre')
+                self.fields['alumnos'].label_from_instance = lambda obj: f"{obj.apellidos}, {obj.nombre}"
+            except Alumno.DoesNotExist:
+                self.fields['alumnos'].queryset = Alumno.objects.none()

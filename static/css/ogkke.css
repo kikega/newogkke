@@ -167,15 +167,14 @@
 }
 
 .selector .selector-filter {
-    border: var(--bs-border-width) solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius);
-    font-size: 1rem;
-    line-height: 1.5;
-    margin-bottom: 30px;
+    border: var(--bs-border-width) solid var(--bs-border-color) !important;
+    border-radius: var(--bs-border-radius) !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 30px !important;
 }
 
 .selector select {
-    height: 17.2em;
     flex: 1 0 auto;
     overflow: scroll;
     width: 100%;
@@ -184,7 +183,7 @@
     background-color: var(--bs-body-bg);
     font-size: 1rem;
     margin-bottom: 30px;
-    height: 20em;
+    height: 35.7em !important; /* Aumentado y forzado para sobreescribir widgets.css */
 }
 
 .selector-available, .selector-chosen {

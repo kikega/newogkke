@@ -5,45 +5,52 @@
     
     {% include "administracion/header.html" %}
 
-        <!-- Breadcrumb -->
-        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-                <!-- Puedes añadir más niveles si es necesario -->
-                <li class="breadcrumb-item active text-warning" aria-current="page">Inscripción</li>
-            </ol>
-        </nav>
-        <!-- Fin Breadcrumb -->
+    <!-- Breadcrumb -->
+    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:cursillos' %}">Cursillos</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></li>
+            <li class="breadcrumb-item active text-warning" aria-current="page">Inscripción de Alumnos</li>
+        </ol>
+    </nav>
+    <!-- Fin Breadcrumb -->
 
-        <!-- Título Principal -->
-        <h1 class="text-center mb-5 color-texto">Inscripción a cursillo</h1>
-                
-        {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-        {% endif %}
+    <!-- Título Principal -->
+    <h1 class="text-center mb-4 mt-5 color-texto">Inscribir Alumnos al Cursillo</h1>
+    <h3 class="text-center mb-5 color-texto">{{ cursillo.evento }}</h3>
 
-    <form method="post" novalidate>
+    <p class="lead text-center mb-5">
+        Como instructor, puedes seleccionar a los alumnos de tu dojo que deseas inscribir en este cursillo.
+        <br>
+        Utiliza el filtro para encontrar alumnos rápidamente y muévelos a la caja de la derecha para seleccionarlos.
+    </p>
+
+    <form method="post" class="form">
         {% csrf_token %}
-
-        {# El widget FilteredSelectMultiple #}
-        <fieldset class="mt-5 form-select module aligned color-texto">
-            <div class="mt-3 form-row field-{{ form.instructores.name }}">
+        
+        {# El widget FilteredSelectMultiple con el estilo de la página de correo #}
+        <fieldset class="mt-5 module aligned color-texto form-select">
+            <div class="mt-3 form-row field-{{ form.alumnos.name }}">
                 <div>
-                    <!--<label for="{{ form.instructores.id_for_label }}">{{ form.instructores.label }}:</label>
-                    <p class="help">{{ form.instructores.help_text }}</p>-->
-                    {{ form.instructores }} {# Esto renderizará el widget #}
-                    {% if form.instructores.errors %}<ul class="errorlist">{% for error in form.instructores.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    {{ form.alumnos }} {# Esto renderizará el widget #}
+                    {% if form.alumnos.errors %}<ul class="errorlist">{% for error in form.alumnos.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                 </div>
             </div>
         </fieldset>
-        
-        <button type="submit" class="btn btn-outline-warning mt-5"><i class="bi bi-envelope-arrow-up-fill"></i> Enviar Correos</button>
+        <div class="d-flex justify-content-end mt-4">
+            <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-outline-warning">
+                <i class="bi bi-check-circle"></i> Inscribir Seleccionados
+            </button>
+        </div>
     </form>
 
 {% endblock container %}
+
+{% block script_js %}
+    {# Esta línea es CRUCIAL para cargar el CSS y JS del widget FilteredSelectMultiple #}
+    {{ form.media }}
+{% endblock script_js %}

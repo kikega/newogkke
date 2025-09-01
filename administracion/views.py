@@ -20,7 +20,7 @@ from django.http import FileResponse
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen, Actividad, Tablon
 
 # Formularios
-from .forms import EmailInstructoresForm, ActividadNuevaForm, TablonNuevoForm
+from .forms import EmailInstructoresForm, ActividadNuevaForm, TablonNuevoForm, InscripcionAlumnosForm
 
 # Utilidades
 from .utils import enviar_correo_html, validar_cadena
@@ -462,35 +462,60 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
 
 class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
     """
-    Inscripcion al cursillo
+    Inscripción al cursillo.
+    - Si el usuario es instructor/staff, muestra un formulario para inscribir a sus alumnos.
+    - Si el usuario es un alumno normal, lo inscribe a él mismo directamente.
     """
-
     template_name = 'administracion/inscripcion_instructor.html'
-    
 
-    def get(self, request, *args, **kwargs):
-        context = super().get(request, *args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Maneja la lógica de inscripción directa para no-instructores antes de
+        llegar a los métodos GET o POST.
+        """
         user = self.request.user
-        # Obtenemos el cursillo pasado como parametro
         cursillo = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
-        # Obtenemos el objeto alumno del usuario logueado
-        alumno = Alumno.objects.select_related('usuario').get(usuario=user)
-        # Obtenemos todos los alumnos del dojo al que pertenece el instructor
-        if (user.is_staff or alumno.instructor):
-            dojo_actual = alumno.dojo
-            alumnos_dojo = Alumno.objects.filter(dojo = dojo_actual, instructor=False).order_by("apellidos")
-            context['alumnos_dojo'] = alumnos_dojo
-            return context
-        else:
-            print(f'DEBUG:, Add {Alumno} a {cursillo}')
-            cursillo.alumnos.add(alumno)
-            cursillo.save()
-            print(f"DEBUG: {alumno} {user} no es staff o instructor")
+        
+        try:
+            alumno = Alumno.objects.get(usuario=user)
+        except Alumno.DoesNotExist:
+            messages.error(request, "No tienes un perfil de alumno para inscribirte.")
             return redirect('administracion:cursillo_detalle', pk=cursillo.id)
 
+        # Si el usuario no es instructor ni staff, se inscribe a sí mismo y se redirige.
+        if not (user.is_staff or alumno.instructor):
+            cursillo.alumnos.add(alumno)
+            cursillo.save()
+            messages.success(request, f"Te has inscrito correctamente en {cursillo.evento}.")
+            return redirect('administracion:cursillo_detalle', pk=cursillo.id)
+        
+        # Si es instructor o staff, continúa con el flujo normal (GET o POST).
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """
+        Prepara el contexto para la plantilla, incluyendo el formulario.
+        """
+        context = super().get_context_data(**kwargs)
+        context['cursillo'] = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
+        # Pasamos el usuario al formulario para que filtre por su dojo.
+        context['form'] = InscripcionAlumnosForm(user=self.request.user)
+        return context
 
     def post(self, request, *args, **kwargs):
+        """
+        Procesa el formulario de inscripción de alumnos.
+        """
+        cursillo = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
+        form = InscripcionAlumnosForm(request.POST, user=request.user)
 
+        if form.is_valid():
+            alumnos_a_inscribir = form.cleaned_data['alumnos']
+            cursillo.alumnos.add(*alumnos_a_inscribir)
+            messages.success(request, f"Se han inscrito {alumnos_a_inscribir.count()} alumno(s) correctamente.")
+        else:
+            messages.error(request, "Hubo un error con el formulario. Por favor, inténtalo de nuevo.")
+        
         return redirect("administracion:cursillo_detalle", pk=cursillo.id)
     
 
