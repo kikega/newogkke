@@ -159,10 +159,10 @@
 
 /* Ajustar el CSS del widget Admin */
 .selector {
-    display: flex;
+    display: flex !important;
     flex-grow: 1;
     gap: 0 10px;
-    width: auto;
+    width: auto !important;
     float: none;
 }
 
