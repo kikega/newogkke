@@ -175,9 +175,9 @@
 }
 
 .selector select {
-    flex: 1 0 auto;
+    flex: 1 0 auto !important;
     overflow: scroll;
-    width: 100%;
+    width: 100% !important;
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-radius: var(--bs-border-radius);
     background-color: var(--bs-body-bg);
