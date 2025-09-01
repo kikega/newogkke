@@ -16,7 +16,10 @@ def get_ip(request):
 
 @receiver(user_logged_in)
 def log_login_success(sender, request, user, **kwargs):
-    logger.info(f"LOGIN SUCCESS - {user.username} - IP: {get_ip(request)}")
+    # Las funciones f-string no es la forma de trabajar mas eficiente
+    # con funciones de registro
+    # logger.info(f"LOGIN SUCCESS - {user.username} - IP: {get_ip(request)}")
+    logger.info("LOGIN SUCCESS - %s - IP: %s", user.username, get_ip(request))
 
 @receiver(user_login_failed)
 def log_login_failure(sender, credentials, request, **kwargs):

@@ -34,10 +34,15 @@
                     {% if cursillo.fecha > hoy %}
                     <div class="d-flex justify-content-end">
                         {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
-                            <a href="{% url 'administracion:inscripcion_alumno' pk=cursillo.id %}" class="btn btn-outline-warning ms-4"><i class="bi bi-list-ul"></i> Inscripción</a>
+                            <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning ms-4"><i class="bi bi-list-ul"></i> Inscripción</a>
                         {% else %}
-                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalInscripcionAlumno">
-                            <i class="bi bi-list-ul"></i> Inscripción</button>
+                            {% if alumno_cursillo_inscrito %}
+                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalInscripcionAlumno">
+                                <i class="bi bi-list-ul"></i> Eliminar</button>
+                            {% else %}
+                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalInscripcionAlumno">
+                                <i class="bi bi-list-ul"></i> Inscripción</button>
+                            {% endif %}
                         {% endif %}
                         {% if cursillo.circular != '' %}
                             <a href="{% url 'administracion:descargar_circular' pk=cursillo.id %}" class="btn btn-outline-warning ms-4"><i class="bi bi-download"></i> Circular</a>
@@ -82,7 +87,6 @@
                                     <tbody>
                                     {% for alm in asistentes %}
                                         <tr>
-                                            <!--<td>{{ alm.apellidos }}, {{ alm.nombre }}</td>-->
                                             <td><a href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
                                             <td>{{ alm.dojo }}</td>
                                             <td>{{ alm.grado }}</td>
@@ -100,19 +104,20 @@
         <!-- Fin listado de alumnos asistentes -->
 
         <!-- Modal Inscripción Alumno -->
-        <div class="modal fade" id="modalPeticiones" tabindex="-1" aria-labelledby="modalPeticionesLabel" aria-hidden="true">
+        <div class="modal fade" id="modalInscripcionAlumno" tabindex="-1" aria-labelledby="modalInscripcionAlumnoLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5 color-texto" id="modalPeticionesLabel">Inscripcion alumno</h1>
+                        <h1 class="modal-title fs-5 color-texto" id="modalInscripcionAlumnoLabel">Inscripcion alumno</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <h3>Te vas a inscribir en el curso {{ cursillo.evento }} de {{ cursillo.fecha|date:"d-m-Y" }}</h3>
+                        <h3>Te vas a inscribir en el curso</h3>
+                        <p>{{ cursillo.descripcion }}</p>
+                        <p>De fecha {{ cursillo.fecha|date:"d-m-Y" }}</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cerrar</button>
-                        <button type="submit" form= "peticionesForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Inscribirse</button>
+                        <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning ms-4"><i class="bi bi-list-ul"></i> Inscripción</a>
                     </div>
                 </div>
             </div>

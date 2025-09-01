@@ -308,8 +308,13 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         curso_actual = self.get_object()
 
-        # Obtenemos datos del usuario logado para añadirlo al contexto
+        # Obtenemos datos del usuario logado 
         user = self.request.user
+        # Obtenemos datos del alumno para ver si ya está inscrito
+        alumno = Alumno.objects.select_related('usuario').get(usuario=user)
+        alumno_cursillo = curso_actual.alumnos.filter(pk=alumno.id).exists()
+        context['alumno_cursillo_inscrito'] = alumno_cursillo
+
         # Obtenemos el dato si es instructor
         es_instructor = False
         if user.is_authenticated:
@@ -455,22 +460,38 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
         return context
 
 
-class CursilloInscripcionView(LoginRequiredMixin, TemplateView):
+class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
     """
     Inscripcion al cursillo
     """
 
     template_name = 'administracion/inscripcion_instructor.html'
+    
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        return context
+    def get(self, request, *args, **kwargs):
+        context = super().get(request, *args, **kwargs)
+        user = self.request.user
+        # Obtenemos el cursillo pasado como parametro
+        cursillo = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
+        # Obtenemos el objeto alumno del usuario logueado
+        alumno = Alumno.objects.select_related('usuario').get(usuario=user)
+        # Obtenemos todos los alumnos del dojo al que pertenece el instructor
+        if (user.is_staff or alumno.instructor):
+            dojo_actual = alumno.dojo
+            alumnos_dojo = Alumno.objects.filter(dojo = dojo_actual, instructor=False).order_by("apellidos")
+            context['alumnos_dojo'] = alumnos_dojo
+            return context
+        else:
+            print(f'DEBUG:, Add {Alumno} a {cursillo}')
+            cursillo.alumnos.add(alumno)
+            cursillo.save()
+            print(f"DEBUG: {alumno} {user} no es staff o instructor")
+            return redirect('administracion:cursillo_detalle', pk=cursillo.id)
 
 
     def post(self, request, *args, **kwargs):
 
-        return redirect("administracion:cursillo_detalle", pk=cursillo.pk)
+        return redirect("administracion:cursillo_detalle", pk=cursillo.id)
     
 
 
@@ -518,7 +539,7 @@ class PeticionView(LoginRequiredMixin, TemplateView):
         dojo_usuario = None
         peticiones_pendientes = Peticion.objects.none()
 
-        # Obtenemos los datos deldojo y sus peticiones pendientes
+        # Obtenemos los datos del dojo y sus peticiones pendientes
         if user.is_authenticated:
             try:
                 # Obtiene una instancia de alumno para el usuario actual
