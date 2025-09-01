@@ -160,12 +160,16 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
             else:
                 anios.append(examenes[idx + 1].evento.fecha.year - exam.evento.fecha.year)
 
+        # Preparamos el contexto para la plantilla
         context['examen'] = examen
         context['examenes'] = examenes
         context['hoy'] = hoy
-
         context['anios'] = anios
         context['total_anios'] = sum(anios)
+        # Combinamos dos listas para poder sber los años de cada grado en el timeline de la plantilla
+        # Este enfoque permite recorrer dos listas de forma sincronizada
+        anios_danes = list(zip(examenes, anios))
+        context['examenes_anios'] = anios_danes
 
         # Calculamos la edad del alumno
         if alumno.fecha_nacimiento is None:

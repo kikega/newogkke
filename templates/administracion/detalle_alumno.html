@@ -87,7 +87,7 @@
                 <h2 class="text-center mb-5 color-texto">Exámenes realizados</h2>
                 <div class="timeline">
                     <!-- ... (Items del Timeline van aquí, como en el ejemplo anterior) ... -->
-                    {% for exm in examenes %}
+                    {% for exm, a in examenes_anios %}
                     <div class="timeline-item exam">
                         <div class="timeline-marker"></div>
                         <div class="timeline-content mb-3">
@@ -97,6 +97,7 @@
                                 <div class="card-body">
                                     <h4 class="card-text mb-1">{{ exm.evento.evento }}</h4>
                                     <span class="timeline-date text-muted">Fecha: {{ exm.evento.fecha }}</span>
+                                    <p>Años de {{ exm.grado }}º DAN: {{ a }}</p>
                                 </div>
                             </div>
                         </div>
