@@ -156,6 +156,7 @@ EMAIL_PORT = 465
 EMAIL_HOST_USER = config('EMAIL_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_PASSWORD')
 EMAIL_USE_SSL = True
+EMAIL_FROM = config('EMAIL_FROM')
 
 # Correo de personal staff
 EMAIL_DEFAULT_STAFF = [
@@ -227,3 +228,10 @@ LOGGING = {
         },
     },
 }
+
+# --- AÑADE ESTAS LÍNEAS AL FINAL DEL ARCHIVO ---
+print("="*50)
+print("DEBUG DE RUTAS DE PLANTILLAS:")
+print(f"   El valor de BASE_DIR es: {BASE_DIR}")
+print(f"   La ruta que se está intentando usar en DIRS es: {os.path.join(BASE_DIR, 'templates')}")
+print("="*50)

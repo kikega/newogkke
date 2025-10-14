@@ -23,7 +23,6 @@ from django.contrib import messages
 
 import re
 
-
 logger = logging.getLogger(__name__)
 
 class StripTags(HTMLParser):
@@ -156,7 +155,7 @@ def validar_cadena(cadena):
     Devuelve False si contiene caracteres especiales
     """
 
-    patron_variable = re.compile(r'[a-zA-Z0-9\s]*$')
+    patron_variable = re.compile(r'[a-zA-Z0-9ñáéíóúÑÁÉÍÓÚ\s]*$')
     resultado_match = patron_variable.match(cadena)
 
     if resultado_match: # Usa el resultado del match que debería funcionar

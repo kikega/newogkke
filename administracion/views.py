@@ -278,7 +278,7 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
 
 
 class CursillosView(LoginRequiredMixin, ListView):
-    """Listado de gimnasios de la asociación"""
+    """Listado de cursillos realiozados"""
 
     template_name = 'administracion/cursillos.html'
     model = Cursillo
@@ -697,7 +697,6 @@ class TablonView(LoginRequiredMixin, TemplateView):
             print(f'DEBUG: Formulario valido')
             try:
                 dojo_id = request.POST.get('dojo')
-                print(f'DEBUG: dojo_id: {dojo_id}')
                 fecha = form.cleaned_data['fecha']
                 tipo = form.cleaned_data['tipo']
                 titulo = form.cleaned_data['titulo']
@@ -710,7 +709,6 @@ class TablonView(LoginRequiredMixin, TemplateView):
 
                 # Obtener el Dojo
                 dojo = get_object_or_404(Dojo, pk=dojo_id)
-                print(F'debug: dojo: {dojo}')
 
                 # Creamos la nueva notificación
                 Tablon.objects.create(

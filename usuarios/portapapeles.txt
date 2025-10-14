@@ -1,0 +1,19 @@
+views.py ->ResetPasswordView
+enviar_correo_html(
+                asunto="Restablecer contraseña",
+                template_name_html="usuarios/reset_password.html",
+                template_name_texto="usuarios/reset_password.txt",
+                contexto=f"Hola {alumno.nombre}, Se ha generado una nueva contraseña: ",
+                destinatarios = [email,]
+            )
+
+{% if error%}
+                                <div class="alert alert-danger" role="alert">
+                                    {{ error }}
+                                </div>           
+                            {% endif %}
+
+
+        {% endif %}
+
+action="{% url 'reset_password' %}"

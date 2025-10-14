@@ -1,11 +1,20 @@
 """Views de la app usuarios"""
+import logging
+
 from django.shortcuts import render, redirect
+from django.conf import settings
 
 # Autenticacion
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
+from django.views.generic import FormView
+
+# Django
+from django.contrib import messages
+from django.views.generic import TemplateView
+from django.urls import reverse_lazy
 
 # Modelos
 from administracion.models import Alumno, Dojo
@@ -14,6 +23,10 @@ from .models import Usuario
 # Formularios
 from .forms import CreaUsuarioForm, UsuarioSelectDojoForm
 
+# Utilidades
+from administracion.utils import enviar_correo_html, validar_cadena
+
+logger = logging.getLogger(__name__)
 
 def login_view(request):
     """Vista para hacer login en la aplicación"""
@@ -82,13 +95,40 @@ def cambio_password(request):
                 'usuario_foto': usuario_foto.foto,
             })
 
-def reset_password(request):
-    """
-    Vista para resetear la contraseña
-    """
+# class ResetPasswordView(FormView):
+#     """
+#     Vista para procesar la recuperacion de la contraseña
+#     """
+
+#     User = get_user_model()
+#     template_name = "usuarios/reset_password.html"
+#     form_class = ResetPasswordForm
+#     success_url = reverse_lazy("login")
+
+#     # Obtenemos las plantillas HTML y TXT para el correo
+#     template_name_html='administracion/emails/notificacion_peticion.html',
+#     template_name_texto='administracion/emails/notificacion_peticion.txt',
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         # Obtenemos todos los dojos
+#         dojos = Dojo.objects.all().order_by('nombre')
+#         context['dojos'] = dojos
+#         return context
     
-    if request.method == 'POST':
-        email = request.POST["email"]
-        if Usuario.objects.filter(email=email).exists():
-            pass
-            return redirect('login')
+#     def form_valid(self, form):
+#         """
+#         Si el formulario es válido, enviamos el correo con las instrucciones para restablecer la contraseña
+#         """
+#         email = form.cleaned_data['email']
+
+#         try:
+#             user = self.User.objects.get(email=email)
+#             alumno = Alumno.objects.select_related("usuario").get(usuario__email=email)
+            
+#             messages.success(self.request, "Se ha enviado un correo electrónico con las instrucciones para restablecer la contraseña.")
+#         except Exception as e:
+#             logger.exception("Error al enviar el correo de recuperacion: %s", e)
+#             form.add_error(None, "Ocurrió un error al enviar el correo electrónico")
+#         return super().form_valid(form)
+    

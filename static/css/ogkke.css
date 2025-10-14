@@ -1,3 +1,8 @@
+.color-background {
+    /*background-color: #2a2926;*/
+    background-color: var(--bs-tertiary-bg);
+}
+
 .color-texto {
     color: #ffc107;
 }
@@ -87,7 +92,7 @@
 }
 
 .breadcrumb-item.active {
-    color: yellow !important;
+    color: #ffc107 !important;
 }
 
 .card:hover {
@@ -205,4 +210,24 @@
 
 a.selector-chooseall, a.selector-clearall {
     margin-bottom: 30px;
+}
+
+/* Reset de la contraseña */
+#id_new_password1, #id_new_password2 {
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem !important;
+    margin-top: .25rem !important;
+    display: block;
+    width: 100%;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    background-color: var(--bs-body-bg);
+    background-clip: padding-box;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
 }
