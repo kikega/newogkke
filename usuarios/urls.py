@@ -18,8 +18,6 @@ urlpatterns = [
     path("logout/", usuarios_views.logout_view, name="logout"),
     path("cambio_password/", usuarios_views.cambio_password, name="cambio_password"),
     path("registro/", usuarios_views.registro_view, name="registro"),
-    # Olvido contraseña
-    #path("reset_password/", usuarios_views.ResetPasswordView.as_view(), name="reset_password"),
     # Olvido contraseña. Paso 1: usuario introduce s email
     path("password_reset/", auth_views.PasswordResetView.as_view(
         template_name="usuarios/password_reset.html",

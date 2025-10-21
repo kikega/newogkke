@@ -167,3 +167,19 @@ class Actividad(models.Model):
 
     def __str__(self): 
         return f'{self.fecha}: {self.titulo}'
+
+class Proverbio(models.Model):
+    """
+        Proverbios de la filosofía japonesa
+    """
+    objects = models.Manager()
+
+    texto = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Proverbio"
+        verbose_name_plural = "Proverbios"
+        ordering = ['texto']
+
+    def __str__(self):
+        return f'{self.texto}'

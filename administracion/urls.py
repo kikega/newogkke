@@ -30,8 +30,11 @@ urlpatterns = [
     # Actividades
     path("actividades/", administracion_views.ActividadesView.as_view(), name="actividades"),
     path("actividades/<int:pk>/", administracion_views.ActividadEditarView.as_view, name="editar_actividad"),
-    # Varios
+    # Tablon
     path("tablon/", administracion_views.TablonView.as_view(), name="tablon"),
+    path("tablon/editar/<int:pk>/", administracion_views.TablonEditarView.as_view(), name="editar_tablon"),
+    path("tablon/eliminar/<int:pk>/", administracion_views.TablonEliminarView.as_view(), name="eliminar_tablon"),
+    # Varios
     path("correo/", administracion_views.enviar_correo_instructores, name="correo"),
     path("error/<int:error_code>/", administracion_views.ErrorView.as_view(), name="errores"),
 ]

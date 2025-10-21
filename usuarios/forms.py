@@ -45,7 +45,7 @@ class CustomPasswordResetForm(PasswordResetForm):
         - dojo: relacionado con el usuario
     """
 
-    # Corre electrónico del usuario
+    # Correo electrónico del usuario
     email = forms.EmailField(
         widget=forms.TextInput(attrs={'class': 'form-control mt-1 mb-4'}),
         required=True,

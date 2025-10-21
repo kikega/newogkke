@@ -230,4 +230,9 @@ a.selector-chooseall, a.selector-clearall {
     background-clip: padding-box;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
+
+.card-img-horizontal {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* La propiedad mágica */
 }

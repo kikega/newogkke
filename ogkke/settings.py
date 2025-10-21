@@ -228,10 +228,3 @@ LOGGING = {
         },
     },
 }
-
-# --- AÑADE ESTAS LÍNEAS AL FINAL DEL ARCHIVO ---
-print("="*50)
-print("DEBUG DE RUTAS DE PLANTILLAS:")
-print(f"   El valor de BASE_DIR es: {BASE_DIR}")
-print(f"   La ruta que se está intentando usar en DIRS es: {os.path.join(BASE_DIR, 'templates')}")
-print("="*50)

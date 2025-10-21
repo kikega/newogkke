@@ -1,19 +1,98 @@
-views.py ->ResetPasswordView
-enviar_correo_html(
-                asunto="Restablecer contraseña",
-                template_name_html="usuarios/reset_password.html",
-                template_name_texto="usuarios/reset_password.txt",
-                contexto=f"Hola {alumno.nombre}, Se ha generado una nueva contraseña: ",
-                destinatarios = [email,]
-            )
+# De password_reset.html
+    <!--<div class="d-flex justify-content-center mt-5 mb-5">
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-4 d-none d-md-block">
+                    <img src="{% static 'img/password-error.png' %}" class="img-fluid d-block w-100 rounded-start" alt="Dibujo de olvido password">
+                </div>
+                <div class="col-md-8 px-3">
+                    <div class="card-body">
+                        <h5 class="card-title color-texto">Deberá introducior sus datos</h5>
+                        <p class="card-text">Recibira un correo electrónico con las instrucciones para restablecer su contraseña.</p>
+                        <form class="mt-5" method="post" id="resetPassword">
+                            {% csrf_token %}
+                            <div>
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                            </div>
+                            <div>
+                                <label for="{{ form.nombre.id_for_label }}" class="form-label">{{ form.nombre.label }}</label>
+                                {{ form.nombre }}
+                            </div>
+                            <div>
+                                <label for="{{ form.apellidos.id_for_label }}" class="form-label">{{ form.apellidos.label }}</label>
+                                {{ form.apellidos }}
+                            </div>
+                            <div>
+                                <label for="{{ form.dojo.id_for_label }}" class="form-label">{{ form.dojo.label }}</label>
+                                {{ form.dojo }}
+                            </div>
+                        </form> 
+                    </div>
+                    <div class="mt-3 px-3 d-flex justify-content-end">
+                        <button type="submit" form= "resetPassword" class="mt-3 mb-2 btn btn-outline-warning"><i class="bi bi-send-fill"></i> Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>-->
 
-{% if error%}
-                                <div class="alert alert-danger" role="alert">
-                                    {{ error }}
-                                </div>           
-                            {% endif %}
+#============================================================
+password_reset_hecho.html
 
+<div class="d-flex justify-content-center mt-5 mb-5">
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-4 d-none d-md-block">
+                    <img src="{% static 'img/password-error.png' %}" class="img-fluid d-block w-100 rounded-start" alt="Dibujo de olvido password">
+                </div>
+                <div class="col-md-8 px-3">
+                    <div class="card-body">
+                        <h5 class="card-title color-texto">Revise su correo electrónico</h5>
+                        <p class="card-text">Si existe una cuenta con ese correo, recibirás un email con instrucciones para restablecer tu contraseña</p>
+                        <p class="card-text">Si no existe una cuenta con ese correo, no habrá ningún problema, simplemente no se te enviará ningún email</p>
+                        <p class="card-text">Si no recibes el email, pide a tu instructor que genere una incidencia , anexe todos tus datos y nos pondremos en contacto con usted</p>               
+                    </div>
+                    <div class="mt-3 px-3 d-flex justify-content-end">
+                        <a href="{% url 'login' %}" class="mt-3 mb-2 btn btn-outline-warning"><i class="bi bi-signpost-fill"></i> Volver</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        {% endif %}
+#============================================================
+password_reset_confirm.html
 
-action="{% url 'reset_password' %}"
+<div class="d-flex justify-content-center mt-5 mb-5">
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-4 d-none d-md-block">
+                    <img src="{% static 'img/password-error.png' %}" class="img-fluid d-block w-100 rounded-start" alt="Dibujo de olvido password">
+                </div>
+                <div class="col-md-8 px-3">
+                    <div class="card-body">
+                        <h5 class="card-title color-texto">Formulario de cambio de contraseña</h5>
+                        <p class="card-text">Ingrese su nueva contraseña.</p>
+                        <form class="mt-5" method="post" id="resetPassword">
+                            {% csrf_token %}
+                            {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label_tag }}</label>
+                            </div>
+                            <div class="mb-3">
+                                {{ field }}                           
+                            </div>
+                                {% if field.errors %}
+                                    <small>{{ field.errors|striptags  }}</small> 
+                                {% endif %}
+                            {% endfor %}
+                        </form>  
+                    </div>
+                    <div class="mt-3 px-3 d-flex justify-content-end">
+                        <button type="submit" form= "resetPassword" class="mt-3 mb-2 btn btn-outline-warning"><i class="bi bi-key-fill"></i> Cambio Contraseña</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

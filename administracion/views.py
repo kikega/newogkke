@@ -9,7 +9,7 @@ from django.db.models.query import QuerySet
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
+from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.conf import settings
@@ -676,12 +676,20 @@ class TablonView(LoginRequiredMixin, TemplateView):
         # Obtenemos los datos del usuario logado
         user = self.request.user
 
+        # Obtenemos los datos de cantidad de dojos, alumnos y seminarios
+        cn = Alumno.objects.all().count()
+        cursos = Cursillo.objects.all().count()
+        dojos = Dojo.objects.all().count()
+
         # Obtenemos el dojo del usuario logado
         alumno = Alumno.objects.select_related('dojo').get(usuario=user)
         dojo = alumno.dojo
 
         context["dojo_usuario"] = dojo
         context["tablon"] = Tablon.objects.filter(dojo_id = dojo)
+        context['cn'] = cn
+        context['cursos'] = cursos
+        context['dojos'] = dojos
 
         return context
 
@@ -730,6 +738,46 @@ class TablonView(LoginRequiredMixin, TemplateView):
 
         return redirect('administracion:tablon')
 
+class TablonEditarView(LoginRequiredMixin, UpdateView):
+    """
+        Editamos el contenido de una entrada en el Tablón de anuncios de l dojo
+    """
+
+    model = Tablon
+    template_name = 'administracion/tablon.html'
+    context_object_name = 'tablon'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tablon = self.get_object()
+        context['tablon'] = tablon
+
+        return context
+    
+    def form_valid(self, form):
+        tablon = self.get_object()
+        tablon.fecha = form.cleaned_data['fecha']
+        tablon.tipo = form.cleaned_data['tipo']
+        tablon.titulo = form.cleaned_data['titulo']
+        tablon.descripcion = form.cleaned_data['descripcion']
+        tablon.lugar = form.cleaned_data['lugar']
+        tablon.informacion = form.cleaned_data['informacion']
+        tablon.save()
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('administracion:tablon')
+    
+class TablonEliminarView(LoginRequiredMixin, DeleteView):
+    """
+    Eliminación de un tablón de anuncios
+    """
+    model = Tablon
+    template_name='administradortablon'
+
+    def get_success_url(self):
+        return reverse('administracion:tablon')
+    
 
 class ErrorView(LoginRequiredMixin, TemplateView):
     """
