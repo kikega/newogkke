@@ -76,7 +76,6 @@
 
     <section class="album py-5">
         <div class="container">
-            
             <div class="row row-cols-1">
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
@@ -103,8 +102,14 @@
                                 <p class="card-text">{{ tab.descripcion }}</p>
                                 {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
                                     <div class="text-end">
-                                        <a href="#" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil-fill"></i> Editar</a>
-                                        <a href="{% url 'administracion:eliminar_tablon' pk=tab.id %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash-fill"></i> Eliminar</a>
+                                        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarTablon" data-update-url="{% url 'administracion:editar_tablon' tab.id %}">
+                                            <i class="bi bi-pencil-fill"></i> Editar
+                                        </button>
+                                        <!-- Generamos la URL de eliminación para cada elemento y la guardamos en un atributo data-*. Así, el botón "sabe" a qué elemento corresponde.-->
+                                        <button type="button" class="btn btn-outline-danger btn-sm edit-button" data-bs-toggle="modal" data-bs-target="#modalBorrarTablon" data-delete-url="{% url 'administracion:eliminar_tablon' tab.id %}">
+                                            <i class="bi bi-trash-fill"></i> Eliminar
+                                        </button>
+                                        <!-- <a href="{% url 'administracion:eliminar_tablon' pk=tab.id %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash-fill"></i> Eliminar</a>-->
                                     </div>
                                 {% endif %}
                             </div>
@@ -113,11 +118,158 @@
                     </div>
                 {% endif %}
             </div>
-
         </div>
     </section>
 
+    <!-- Modals -->
+    <!-- Modal eliminar entrada Tablón -->
+    <div class="modal fade" id="modalBorrarTablon" tabindex="-1" aria-labelledby="modalBorrarTablonLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 color-texto" id="modalBorrarTablonLabel">Eliminar {{tab.id}}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de querer eliminar la entrada del Tablón? Esta acción no se puede deshacer.</p>
+                    <!-- La 'action' se llenará con JavaScript -->
+                    <form class="form" method='post' id="deleteForm" action="">
+                        {% csrf_token %}
+                        <input type="hidden" value="{{ pk.id }}" name="pk">
+                        
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
+                    <button type="submit" form= "deleteForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal editar Tablón de anuncios -->
+    <div class="modal fade" id="modalEditarTablon" tabindex="-1" aria-labelledby="modalEditarTablonLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 color-texto" id="modalEditarTablonLabel">Tablón de anuncios {{dojo.nombre}}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalEditarTablonBody">
+                    <!-- El formulario para la edición -->
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Fin Modals -->
+
     {% endblock container %}
+
+    {% block script_js %}
+        <script>
+            // Script para la modal de ELIMINACION
+            // Este script se encarga de pasar la URL al formulario de la modal dinámicamente
+            const modalBorrarTablon = document.getElementById('modalBorrarTablon');
+            if (modalBorrarTablon) {
+                modalBorrarTablon.addEventListener('show.bs.modal', event => {
+                    // Identifica el botón que activó la modal
+                    const button = event.relatedTarget;
+                    // Extraer la URL del atributo data-delete-url
+                    const deleteUrl = button.getAttribute('data-delete-url');
+                    // Encontrar el formulario dentro de la modal y establecer su atributo 'action'
+                    const deleteForm = modalBorrarTablon.querySelector('#deleteForm');
+                    deleteForm.setAttribute('action', deleteUrl);
+                });
+            }
+
+            // Script para la modal de ACTUALIZACIóN
+            // Espera a que el DOM esté completamente cargado.
+            document.addEventListener('DOMContentLoaded', () => {
+
+                // Selecciona los elementos de la modal una sola vez.
+                const modalEditarTablon = document.getElementById('modalEditarTablon');
+                const modalBody = modalEditarTablon.querySelector('.modal-body');
+                
+                // Crea la instancia de la modal de Bootstrap para poder controlarla (ej. cerrarla).
+                const bootstrapModal = new bootstrap.Modal(modalEditarTablon);
+
+                // 1. Escucha el evento 'show.bs.modal'.
+                // Este evento se dispara justo antes de que la modal se muestre.
+                modalEditarTablon.addEventListener('show.bs.modal', event => {
+                    // 'event.relatedTarget' es el botón que disparó la modal.
+                    const button = event.relatedTarget;
+                    
+                    // Obtiene la URL para cargar el formulario desde el atributo 'data-update-url' del botón.
+                    const url = button.dataset.updateUrl;
+                    console.log('URL para cargar el formulario:', url);
+
+                    // Limpia el contenido anterior de la modal mientras se carga el nuevo.
+                    modalBody.innerHTML = 'Cargando...';
+
+                    // Realiza la petición GET para obtener el HTML del formulario.
+                    fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest' // Cabecera para que Django detecte que es AJAX.
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Error al cargar el formulario.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Inserta el HTML del formulario recibido en el cuerpo de la modal.
+                        modalBody.innerHTML = data.html_form;
+                    })
+                    .catch(error => {
+                        console.error('Error en fetch (GET):', error);
+                        modalBody.innerHTML = `<div class="alert alert-danger">No se pudo cargar el contenido. Por favor, inténtalo de nuevo.</div>`;
+                    });
+                });
+
+                // 2. Maneja el envío del formulario que está DENTRO de la modal.
+                // Usamos delegación de eventos en el cuerpo de la modal.
+                modalBody.addEventListener('submit', event => {
+                    // Nos aseguramos de que el evento fue disparado por nuestro formulario.
+                    if (event.target.matches('#form-editar-tablon')) {
+                        event.preventDefault(); // Previene el envío tradicional de la página.
+
+                        const form = event.target;
+                        const url = form.action;
+                        const formData = new FormData(form);
+
+                        fetch(url, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                                // No es necesario 'X-CSRFToken' aquí porque FormData lo incluye del input oculto.
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Si la actualización fue exitosa, cierra la modal.
+                                console.log('DEBUG: Formulario válido, cierra la modal');
+                                bootstrapModal.hide();
+                                // Opcional: Muestra una notificación de éxito.
+                                alert(data.message || 'Actualización completada.');
+                                // Recarga la página para ver los cambios. Es la opción más simple.
+                                window.location.reload();
+                            } else {
+                                // Si hay errores de validación, el servidor devuelve el formulario con los errores.
+                                // Reemplazamos el contenido para mostrar esos errores.
+                                modalBody.innerHTML = data.html_form;
+                            }
+                        })
+                        .catch(error => console.error('Error en fetch (POST):', error));
+                    }
+                });
+            });
+
+        </script>
+    {% endblock script_js %}
 
 
     

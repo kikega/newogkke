@@ -6,7 +6,7 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
 # Modelos
-from administracion.models import Alumno
+from administracion.models import Alumno, Tablon
 
 class EmailInstructoresForm(forms.Form):
     """
@@ -142,6 +142,20 @@ class TablonNuevoForm(forms.Form):
         widget=forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file"}),
         required = False
     )
+
+
+class TablonEditForm(forms.ModelForm):
+    """Formulario para editar un anuncio en el tablón de anuncios de un dojo"""
+
+    class Meta:
+        model = Tablon
+        fields = ['titulo', 'descripcion', 'lugar', 'informacion']
+        widgets = {
+            'titulo': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+            'descripcion': forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 5}),
+            'lugar': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+            'informacion': forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file"}),
+        }
 
 
 class InscripcionAlumnosForm(forms.Form):

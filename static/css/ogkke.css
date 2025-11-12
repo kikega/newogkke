@@ -97,6 +97,7 @@
 
 .card:hover {
     border-color: #ffc107;
+    transform: scale(1.01);
 }
 
 

@@ -96,3 +96,4 @@ password_reset_confirm.html
             </div>
         </div>
     </div>
+
