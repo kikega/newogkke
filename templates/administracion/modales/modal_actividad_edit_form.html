@@ -1,0 +1,51 @@
+<form id="editarActividadForm" method="post" action="{% url 'administracion:editar_actividad' actividad.id %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="row input-group">
+        <div class="col mb3">
+            {{ form.titulo.label}}
+            {{ form.titulo }}
+            <div class="invalid-feedback">
+                Este campo no puede estar vacío, introduzca un nombre para la actividad.
+            </div>
+        </div>
+    </div>
+    <div class="row input-group">
+        <div class="col mb3">
+            {{ form.descripcion.label}}
+            {{ form.descripcion }}
+        </div>
+    </div>
+    <div class="row input-group">
+        <div class="col mb-3">
+            {{ form.fecha.label}}
+            {{ form.fecha }}
+            <div class="invalid-feedback">
+                Este campo no puede estar vacío, introduzca la fecha.
+            </div>
+        </div>
+        <div class="col mb-3">
+            {{ form.lugar.label }}
+            {{ form.lugar }}
+            <div class="invalid-feedback">
+                Este campo no puede estar vacío, introduzca el lugar dónde se desarrollará.
+            </div>
+        </div>
+    </div>
+    <div class="row input-group">
+        <div class="col mb-3">
+            {{ form.ciudad.label}}
+            {{ form.ciudad }}
+            <div class="invalid-feedback">
+                Este campo no puede estar vacío, introduzca la ciudad.
+            </div>
+        </div>
+        <div class="col mb-3">
+            {{ form.pais.label }}
+            {{ form.pais }}
+        </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
+        <button type="submit" form= "editarActividadForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Actualizar</button>
+    </div>
+</form>

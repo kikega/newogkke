@@ -6,7 +6,7 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
 # Modelos
-from administracion.models import Alumno, Tablon
+from administracion.models import Alumno, Tablon, Actividad
 
 class EmailInstructoresForm(forms.Form):
     """
@@ -103,6 +103,22 @@ class ActividadNuevaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
         required = False
     )
+
+class ActividadEditForm(forms.ModelForm):
+    """Formulario para editar una actividad"""
+
+    class Meta:
+        model = Actividad
+        fields = ['titulo', 'descripcion', 'lugar', 'ciudad', 'provincia', 'pais', 'fecha']
+        widgets = {
+            'titulo': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+            'descripcion': forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 5}),
+            'fecha': forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}),
+            'lugar': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+            'ciudad': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+            'provincia': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+            'pais': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
+        }
 
 class TablonNuevoForm(forms.Form):
     """

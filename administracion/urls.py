@@ -29,7 +29,8 @@ urlpatterns = [
     path("peticiones/anular/<int:pk>/", administracion_views.PeticionAnularView.as_view(), name="peticiones_anular"),
     # Actividades
     path("actividades/", administracion_views.ActividadesView.as_view(), name="actividades"),
-    path("actividades/<int:pk>/", administracion_views.ActividadEditarView.as_view, name="editar_actividad"),
+    path("actividades/editar/<int:pk>/", administracion_views.ActividadEditarView.as_view(), name="editar_actividad"),
+    path("actividades/eliminar/<int:pk>/", administracion_views.ActividadEliminarView.as_view(), name="eliminar_actividad"),
     # Tablon
     path("tablon/", administracion_views.TablonView.as_view(), name="tablon"),
     path("tablon/editar/<int:pk>/", administracion_views.TablonEditarView.as_view(), name="editar_tablon"),

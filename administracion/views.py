@@ -22,7 +22,7 @@ from django.template.loader import render_to_string
 from .models import Alumno, Cursillo, Dojo, Peticion, Examen, Actividad, Tablon
 
 # Formularios
-from .forms import EmailInstructoresForm, ActividadNuevaForm, TablonNuevoForm, TablonEditForm, InscripcionAlumnosForm   
+from .forms import EmailInstructoresForm, ActividadNuevaForm, ActividadEditForm, TablonNuevoForm, TablonEditForm, InscripcionAlumnosForm   
 
 # Utilidades
 from .utils import enviar_correo_html, validar_cadena
@@ -949,9 +949,72 @@ class ActividadesView(LoginRequiredMixin, TemplateView):
         return redirect('administracion:actividades')
 
 
-class ActividadEditarView(LoginRequiredMixin, DetailView):
+class ActividadEditarView(LoginRequiredMixin, UpdateView):
     """
     Editar una actividad
     """
 
-    pass
+    model = Actividad
+    form_class = ActividadEditForm
+    template_name = 'administracion/actividades.html'
+    success_url = reverse_lazy("administracion:actividades")
+
+    # Sobrescribimos el método GET
+    def get(self, request, *args, **kwargs):
+        # Si la petición es AJAX, no devolvemos la página completa.
+        if is_ajax(request):
+            # Obtenemos el objeto que se está editando (UpdateView lo hace por nosotros)
+            self.object = self.get_object()
+            form = self.get_form()
+            context = {'form': form, 'actividad': self.object}
+            
+            # Renderizamos solo el formulario parcial y lo devolvemos en un JSON
+            html_form = render_to_string(
+                'administracion/modales/modal_actividad_edit_form.html',
+                context,
+                request=request
+            )
+            return JsonResponse({'html_form': html_form})
+        else:
+            # Si no es AJAX, dejamos que UpdateView haga su trabajo normal
+            return super().get(request, *args, **kwargs)
+        
+    # Sobrescribimos el método que se llama cuando el formulario es válido
+    def form_valid(self, form):
+        # Guardamos el objeto
+        print(f'DEBUG: Formulario válido, guardando objeto')
+        self.object = form.save()
+        
+        if is_ajax(self.request):
+            # Si es AJAX, devolvemos un JSON indicando que todo fue bien
+            return JsonResponse({'success': True, 'message': 'Actividad actualizada correctamente.'})
+        else:
+            # Si no, hacemos la redirección normal
+            return super().form_valid(form)
+        
+    # Sobrescribimos el método que se llama cuando el formulario tiene errores
+    def form_invalid(self, form):
+        print(f'DEBUG: Formulario inválido: {form.errors}')
+        if is_ajax(self.request):
+            # Si es AJAX, renderizamos de nuevo el formulario con los errores
+            # y lo devolvemos en un JSON para que el cliente lo muestre.
+            context = {'form': form, 'actividad': self.get_object()}
+            html_form = render_to_string(
+                'administracion/modales/modal_actividad_edit_form.html',
+                context,
+                request=self.request
+            )
+            return JsonResponse({'success': False, 'html_form': html_form}, status=400)
+        else:
+            # Si no, dejamos que se renderice la página con los errores del formulario
+            return super().form_invalid(form)
+    
+
+
+class ActividadEliminarView(LoginRequiredMixin, DeleteView):
+    """
+    Vista para eliminar una actividad
+    """
+
+    model = Actividad
+    success_url = reverse_lazy('administracion:actividades')
