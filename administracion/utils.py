@@ -162,3 +162,9 @@ def validar_cadena(cadena):
         return True
     else:
         return False
+
+def is_ajax(request):
+    """
+        Función de ayuda para detectar peticiones AJAX
+    """
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
