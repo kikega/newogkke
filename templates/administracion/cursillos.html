@@ -59,7 +59,9 @@
                         {% else %}
                             <tr>
                         {% endif %} 
-                        <td><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></td>
+                        <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}
+                            </a></td>
                         <td>{{ cursillo.fecha|date:"d-m-Y" }}</td>
                         <td>{{ cursillo.ciudad }}</td>
                         <td>{{ cursillo.pais }}</td>

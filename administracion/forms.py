@@ -198,19 +198,34 @@ class InscripcionAlumnosForm(forms.Form):
         js = ('/admin/jsi18n/', '/static/admin/js/core.js', '/static/admin/js/SelectBox.js', '/static/admin/js/SelectFilter2.js')
 
     def __init__(self, *args, **kwargs):
-        # Extraemos el usuario (que debe ser un instructor) que se pasa desde la vista.
+        # Extraemos los argumentos personalizados que pasaremos desde la vista
+        # Extraemos el usuario (que debe ser un instructor) y el cursillo.
         user = kwargs.pop('user', None)
+        cursillo = kwargs.pop('cursillo', None)
         super().__init__(*args, **kwargs)
 
         if user and user.is_authenticated:
             try:
+                # Obtenemos el queryset base: alumnos del dojo del instructor
                 instructor = Alumno.objects.get(usuario=user)
                 dojo_instructor = instructor.dojo
-                self.fields['alumnos'].queryset = Alumno.objects.filter(
+                alumnos_queryset = Alumno.objects.filter(
                     dojo=dojo_instructor,
                     instructor=False,
                     activo=True
                 ).order_by('apellidos', 'nombre')
+
+                self.fields['alumnos'].queryset = alumnos_queryset
+
+                # Obtenemos los ID de los alumnos ya inscritos en el cursillo
+                inscritos_ids = cursillo.alumnos.values_list('id', flat=True)
+
+                # Le decimos al campo que su valor inical son los alumnos del dojo
+                # que tambien se encuentran en la lista de inscritos
+                self.fields['alumnos'].initial = alumnos_queryset.filter(id__in=inscritos_ids)     
+                        
+                # Personalizar el texto que se muestra en el widget para cada alumno
                 self.fields['alumnos'].label_from_instance = lambda obj: f"{obj.apellidos}, {obj.nombre}"
+            
             except Alumno.DoesNotExist:
                 self.fields['alumnos'].queryset = Alumno.objects.none()

@@ -62,6 +62,7 @@
             </div>
         </div>
 
+        
         <!-- Listado de alumnos asistentes -->
         <section class="album py-5">
             <div class="container">
@@ -98,7 +99,9 @@
                                     <tbody>
                                     {% for alm in asistentes %}
                                         <tr>
-                                            <td><a href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}</a></td>
+                                            <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                                    href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}
+                                                </a></td>
                                             <td>{{ alm.dojo }}</td>
                                             <td>{{ alm.grado }}</td>
                                         </tr>		

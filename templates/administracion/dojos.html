@@ -39,7 +39,9 @@
                 <tbody>
                   {% for dojo in dojos %}
                     <tr>
-                      <td><a href="{% url 'administracion:dojo_detalle' pk=dojo.id %}">{{ dojo.nombre }}</a></td>
+                      <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover" 
+                            href="{% url 'administracion:dojo_detalle' pk=dojo.id %}">{{ dojo.nombre }}
+                          </a></td>
                       <td>{{ dojo.poblacion }}</td>
                       <td>{{ dojo.provincia }}</td>
                     </tr>		
