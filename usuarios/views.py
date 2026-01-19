@@ -26,7 +26,16 @@ from .forms import CreaUsuarioForm, UsuarioSelectDojoForm
 # Utilidades
 from administracion.utils import enviar_correo_html, validar_cadena
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('access_logger')
+
+def get_client_ip(request):
+    """Obtiene la IP del cliente desde el encabezado X-Forwarded-For o Remote-Addr"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def login_view(request):
     """Vista para hacer login en la aplicación"""
@@ -37,6 +46,8 @@ def login_view(request):
 
         if user:
             login(request, user)
+            # Registro en el log con datos del usuario
+            logger.info(f"Login exitoso - Usuario: {user.username} - {user.email}, IP: {get_client_ip(request)}")
             return redirect('home')
         else:
             return render(request, 'usuarios/login.html', {'error': 'Usuario o password incorrecto'})
@@ -86,6 +97,7 @@ def cambio_password(request):
             user = Usuario.objects.get(email=request.user.email)
             user.set_password(new_password)
             user.save()
+            logger.info(f"Cambio de contraseña exitoso - Usuario: {request.user.username} - {request.user.email}, IP: {get_client_ip(request)}")
             # Una vez salvada la nueva contraseña hacemos logout del usuario
             logout(request)
             return redirect('login')

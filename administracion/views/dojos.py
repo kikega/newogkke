@@ -58,10 +58,12 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
 
         # Obtenemos datos del usuario logado para añadirlo al contexto
         user = self.request.user
+        print(f"Usuario: {user}")
         # Obtenemos el dato si es instructor
         es_instructor = False
         if user.is_authenticated:
-            es_instructor = user.groups.filter(name='instructor').exists()
+            es_instructor = user.groups.filter(name='Instructor').exists()
+            print(f"Usuario: {user}, es_instructor: {es_instructor}")
         # Añades la variable booleana al contexto
         context['usuario_es_instructor'] = es_instructor
 

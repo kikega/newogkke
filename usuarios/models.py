@@ -55,6 +55,11 @@ class Usuario(AbstractUser, PermissionsMixin):
     is_active = models.BooleanField(default=True, verbose_name='Activo')
     is_staff = models.BooleanField(default=False, verbose_name='Staff')
     groups = models.ManyToManyField(Group, blank=True, related_name='custom_user_set')
+    externo = models.BooleanField(
+        default=False, 
+        verbose_name="Externo", 
+        help_text="Marque esta casilla para Presidentes o personal que no practica karate."
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

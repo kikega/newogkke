@@ -3,6 +3,7 @@ Modelos de administración
 """
 # Django
 from django.db import models
+from django.core.exceptions import ValidationError
 
 # Importamos el modelo de Usuario
 from usuarios.models import Usuario
@@ -57,6 +58,100 @@ class Alumno(models.Model):
 
     def __str__(self):
         return f'{self.apellidos}, {self.nombre}. {self.grado}'
+    
+
+class CargoDirectivo(models.Model):
+    nombre = models.CharField(max_length=50, unique=True, verbose_name="Nombre del Cargo")
+    orden_jerarquico = models.IntegerField(
+        default=10, 
+        help_text="Número menor para cargos superiores (ej. Presidente=1, Vicepresidente=2)"
+    )
+    class Meta:
+        verbose_name = "Configuración de Cargo"
+        verbose_name_plural = "Configuración de Cargos"
+        ordering = ['orden_jerarquico']
+
+    def __str__(self):
+        return self.nombre
+
+class MiembroDirectiva(models.Model):
+        """
+        Modelo para gestionar la Junta Directiva.
+        Permite vincular a un Alumno existente O crear un perfil para externos (ej. Presidente).
+        """
+        objects = models.Manager()
+
+        # Relación directa con Usuario (para el Presidente externo, por ejemplo)
+        usuario = models.OneToOneField(
+            Usuario, 
+            on_delete=models.SET_NULL, 
+            verbose_name="Cuenta de Usuario", 
+            blank=True, 
+            null=True,
+            related_name="perfil_directivo" # Nombre único para evitar conflictos
+        )
+
+        # Relación opcional con Alumno
+        alumno = models.ForeignKey(
+            Alumno,
+            on_delete=models.CASCADE,
+            null=True,
+            blank=True,
+            verbose_name="Alumno vinculado",
+            help_text="Si el directivo es alumno, selecciónalo aquí. Si no, déjalo vacío y rellena los datos externos."
+        )
+
+        # Campos para externos (Solo se usan si alumno es None)
+        nombre_externo = models.CharField(max_length=50, blank=True, verbose_name="Nombre (Externo)")
+        apellidos_externo = models.CharField(max_length=50, blank=True, verbose_name="Apellidos (Externo)")
+        foto_externa = models.ImageField(upload_to='directiva', blank=True, null=True, verbose_name="Foto (Externa)")
+
+        # Datos del cargo
+        cargo = models.ForeignKey(CargoDirectivo, on_delete=models.PROTECT, verbose_name="Cargo directivo")
+        orden = models.IntegerField(default=0, help_text="Para ordenar en la web (ej: Presidente=1, Vice=2...)")
+        activo = models.BooleanField(default=True)
+
+        class Meta:
+            verbose_name = "Miembro de Directiva"
+            verbose_name_plural = "Miembros de Directiva"
+            ordering = ['orden']
+
+        def clean(self):
+            """Validación para asegurar consistencia"""
+            if not self.alumno and not (self.nombre_externo and self.apellidos_externo):
+                raise ValidationError("Debes vincular un Alumno O rellenar Nombre y Apellidos externos.")
+
+        def save(self, *args, **kwargs):
+            self.full_clean() # Ejecuta la validación antes de guardar
+            super().save(*args, **kwargs)
+
+        # Propiedades dinámicas para facilitar el uso en Templates (Bootstrap)
+
+        def es_practicante(self):
+            """
+            Retorna True si el directivo es un alumno.
+            No necesita importar el modelo Alumno porque ya tiene el campo ForeignKey.
+            """
+            return self.alumno is not None
+
+        @property
+        def obtener_nombre_mostrable(self):
+            if self.es_practicante():
+                return f"{self.alumno.nombre} {self.alumno.apellidos}"
+            # Si no es alumno, usamos el nombre externo que definimos antes
+            return f"{self.nombre_externo} {self.apellidos_externo}"
+
+        @property
+        def get_foto_url(self):
+            if self.alumno and self.alumno.foto:
+                return self.alumno.foto.url
+            if self.foto_externa:
+                return self.foto_externa.url
+            # Puedes añadir lógica aquí para sacar la foto del modelo Usuario si tuviera
+            return "/static/img/default-avatar.png"
+
+        def __str__(self):
+            return f"{self.cargo}: {self.obtener_nombre_mostrable}"
 
 class Cursillo(models.Model):
     """
@@ -117,7 +212,7 @@ class Peticion(models.Model):
     class Meta:
         verbose_name = "Peticion"
         verbose_name_plural = "Peticiones"
-        ordering = ['dojo', 'fecha']
+        ordering = ['-fecha', 'dojo']
 
     def __str__(self):
         return f'{self.fecha}: {self.titulo} - {self.finalizada}'

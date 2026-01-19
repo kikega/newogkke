@@ -18,9 +18,9 @@
 
     <!-- Título Principal -->
     {% if user.is_staff or user.is_superuser %}
-        <h1 class="text-center mb-5 color-texto">Peticiones totales</h1>
+        <h1 class="text-center mt-5 mb-5 color-texto">Peticiones totales</h1>
     {% else %}
-        <h1 class="text-center mb-5 color-texto">Peticiones {{ dojo_usuario.nombre }}</h1>
+        <h1 class="text-center mt-5 mb-5 color-texto">Peticiones {{ dojo_usuario.nombre }}</h1>
     {% endif %}
 
     {% if peticiones_pendientes %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block container %}
+    
+    {% include "administracion/header.html" %}
+
+    <!-- Breadcrumb -->
+    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
+    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <!-- Puedes añadir más niveles si es necesario -->
+            <li class="breadcrumb-item active text-warning" aria-current="page">Organigrama</li>
+        </ol>
+    </nav>
+    <!-- Fin Breadcrumb -->
+
+    <!-- Título Principal -->
+    <h1 class="text-center mt-5 mb-5 color-texto">Equipo Directivo</h1>
+
+    {% if presidente%}
+        <div class="container col-md-4 justify-content-center mt-5">
+            <div class="row">
+                <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
+                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPresidente">
+                        <i class="bi bi-person-fill"></i> Presidente</button>
+                </div>
+            </div>  
+        </div>
+    {% endif %}
+
+    {% if ejecutiva %}
+        <div class="container col-md-4 justify-content-center mt-5">
+            <div class="row">
+                <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
+                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalEjecutiva">
+                        <i class="bi bi-person-fill"></i> Ejecutiva</button>
+                </div>
+            </div>  
+        </div>
+    {% endif %}
+
+{% endblock container %}

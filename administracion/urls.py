@@ -11,6 +11,7 @@ from administracion.views import cursillos as cursos_views
 from administracion.views import actividades as actividades_views
 from administracion.views import tablon as tablon_views
 from administracion.views import varios as varios_views
+from administracion.views import directiva as directiva_views
 
 # Asegúrate de tener un namespace
 app_name = 'administracion'
@@ -34,6 +35,8 @@ urlpatterns = [
     # Peticiones
     path("peticiones/", administracion_views.PeticionView.as_view(), name="peticiones"),
     path("peticiones/anular/<int:pk>/", administracion_views.PeticionAnularView.as_view(), name="peticiones_anular"),
+    # Directiva
+    #path("directiva/", directiva_views.DirectivaView.as_view(), name="directiva"),
     # Actividades
     path("actividades/", actividades_views.ActividadesView.as_view(), name="actividades"),
     path("actividades/editar/<int:pk>/", actividades_views.ActividadEditarView.as_view(), name="editar_actividad"),

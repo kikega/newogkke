@@ -37,7 +37,8 @@
                             <a class="nav-link active" aria-current="page" href="{% url "administracion:cursillos" %}">Cursillos</a></li>
                         {% else %}
                             <a class="nav-link" href="{% url "administracion:cursillos" %}">Cursillos</a></li>
-                        {% endif %}    
+                        {% endif %}
+                    </li>
                     <li class="nav-item">
                     {% if user.is_staff or user.is_superuser or usuario_es_instructor %}
                         {%  if request.resolver_match.url_name == "peticiones" %} 

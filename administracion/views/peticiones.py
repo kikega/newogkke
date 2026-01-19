@@ -30,6 +30,7 @@ class PeticionView(LoginRequiredMixin, TemplateView):
 
         # Obtenemos los datos del usuario logado
         user = self.request.user
+        print(user, user.externo)
 
         # Inicializamos las variables
         # Esto garantiza que estas variables de contexto siempre existan,

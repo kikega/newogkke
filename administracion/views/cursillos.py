@@ -26,7 +26,7 @@ from administracion.utils import enviar_correo_html, validar_cadena
 from administracion.forms import InscripcionAlumnosForm   
 
 class CursillosView(LoginRequiredMixin, ListView):
-    """Listado de cursillos realiozados"""
+    """Listado de cursillos realizados"""
 
     template_name = 'administracion/cursillos.html'
     model = Cursillo
@@ -62,17 +62,20 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
 
         # Obtenemos datos del usuario logado 
         user = self.request.user
-        # Obtenemos datos del alumno para ver si ya está inscrito
-        alumno = Alumno.objects.select_related('usuario').get(usuario=user)
-        alumno_cursillo = curso_actual.alumnos.filter(pk=alumno.id).exists()
-        context['alumno_cursillo_inscrito'] = alumno_cursillo
+        print(user, user.externo)
+        
+        if not user.externo:
+            # Obtenemos datos del alumno para ver si ya está inscrito
+            alumno = Alumno.objects.select_related('usuario').get(usuario=user)
+            alumno_cursillo = curso_actual.alumnos.filter(pk=alumno.id).exists()
+            context['alumno_cursillo_inscrito'] = alumno_cursillo
 
-        # Obtenemos el dato si es instructor
-        es_instructor = False
-        if user.is_authenticated:
-            es_instructor = user.groups.filter(name='instructor').exists()
-        # Añades la variable booleana al contexto
-        context['usuario_es_instructor'] = es_instructor
+            # Obtenemos el dato si es instructor
+            es_instructor = False
+            if user.is_authenticated:
+                es_instructor = user.groups.filter(name='Instructor').exists()
+            # Añades la variable booleana al contexto
+            context['usuario_es_instructor'] = es_instructor
 
         # Obtenemos todos los asistentes a un cursillo
         # asistentes_obj = Cursillo.objects.select_related('alumnos').get(pk=curso_actual.id)
