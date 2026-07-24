@@ -86,7 +86,7 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
 
         # Obtenemos todos los asistentes a un cursillo
         # asistentes_obj = Cursillo.objects.select_related('alumnos').get(pk=curso_actual.id)
-        context["asistentes"] = curso_actual.alumnos.all().order_by('apellidos')
+        context["asistentes"] = curso_actual.alumnos.select_related('dojo').all().order_by('apellidos')
         # Obtenemos la fecha actual
         context['hoy'] = datetime.date.today()
 

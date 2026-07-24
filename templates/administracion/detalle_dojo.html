@@ -249,7 +249,7 @@
     {% block script_js %}
         <script>
             // Gráfica cintos negros por dojo
-            const data = JSON.parse('{{ cinturon_negro_data_json|safe }}'); // Obtener los datos como objeto JavaScript
+            const data = JSON.parse('{{ cinturon_negro_data_json|escapejs }}'); // Obtener los datos como objeto JavaScript
 
             const ctx = document.getElementById('graficoCintosNegrosDojo');
             const config = {

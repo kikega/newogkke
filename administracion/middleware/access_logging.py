@@ -16,7 +16,7 @@ class AccessLogMiddleware:
         user = request.user if request.user.is_authenticated else 'Anonymous'
         path = request.path
         method = request.method
-        logger.info(f'{datetime.now()} - {ip} - {user} - {method} {path}')
+        logger.info("%s - %s - %s - %s %s", datetime.now(), ip, user, method, path)
         response = self.get_response(request)
         return response
 
