@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.template.loader import render_to_string
+from django.core.exceptions import PermissionDenied
 
 # App administracion
 from administracion.models import Alumno, Cursillo, Dojo, Tablon
@@ -38,11 +39,16 @@ class TablonView(LoginRequiredMixin, TemplateView):
         dojos = Dojo.objects.all().count()
 
         # Obtenemos el dojo del usuario logado
-        alumno = Alumno.objects.select_related('dojo').get(usuario=user)
-        dojo = alumno.dojo
+        try:
+            alumno = Alumno.objects.select_related('dojo').get(usuario=user)
+            dojo = alumno.dojo
+            tablon_qs = Tablon.objects.filter(dojo_id=dojo)
+        except Alumno.DoesNotExist:
+            dojo = None
+            tablon_qs = Tablon.objects.all() if (user.is_staff or user.is_superuser) else Tablon.objects.none()
 
         context["dojo_usuario"] = dojo
-        context["tablon"] = Tablon.objects.filter(dojo_id = dojo)
+        context["tablon"] = tablon_qs
         context['cn'] = cn
         context['cursos'] = cursos
         context['dojos'] = dojos
@@ -58,7 +64,6 @@ class TablonView(LoginRequiredMixin, TemplateView):
         form = TablonNuevoForm(request.POST)
 
         if form.is_valid():
-            print(f'DEBUG: Formulario valido')
             try:
                 dojo_id = request.POST.get('dojo')
                 fecha = form.cleaned_data['fecha']
@@ -74,6 +79,16 @@ class TablonView(LoginRequiredMixin, TemplateView):
                 # Obtener el Dojo
                 dojo = get_object_or_404(Dojo, pk=dojo_id)
 
+                # Verificar autorización:
+                # Solo administradores o el instructor de ese dojo pueden publicar
+                if not (request.user.is_staff or request.user.is_superuser):
+                    try:
+                        alumno = Alumno.objects.get(usuario=request.user)
+                        if not (alumno.instructor and alumno.dojo == dojo):
+                            raise PermissionDenied("No tienes permiso para publicar en este tablón de anuncios.")
+                    except Alumno.DoesNotExist:
+                        raise PermissionDenied("No tienes permiso para publicar en este tablón de anuncios.")
+
                 # Creamos la nueva notificación
                 Tablon.objects.create(
                     dojo = dojo,
@@ -86,9 +101,10 @@ class TablonView(LoginRequiredMixin, TemplateView):
                 )
 
                 messages.success(self.request, "¡Notificación creada exitosamente!")
+            except PermissionDenied as pe:
+                raise pe
             except Exception as e:
                 messages.error(self.request, f"Ocurrió un error al crear la notificación: {e}")
-                print(e)
         else:
             messages.error(self.request, f'Ocurrió un error al crear la notificación: {form.errors}')
 
@@ -104,6 +120,20 @@ class TablonEditarView(LoginRequiredMixin, UpdateView):
     form_class = TablonEditForm
     template_name = 'administracion/home-tablon.html'
     success_url = reverse_lazy("administracion:tablon")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        
+        # Verificar autorización:
+        if not (request.user.is_staff or request.user.is_superuser):
+            try:
+                alumno = Alumno.objects.get(usuario=request.user)
+                if not (alumno.instructor and alumno.dojo == self.object.dojo):
+                    raise PermissionDenied("No tienes permiso para editar este anuncio.")
+            except Alumno.DoesNotExist:
+                raise PermissionDenied("No tienes permiso para editar este anuncio.")
+                
+        return super().dispatch(request, *args, **kwargs)
 
     # Sobrescribimos el método GET
     def get(self, request, *args, **kwargs):
@@ -128,7 +158,6 @@ class TablonEditarView(LoginRequiredMixin, UpdateView):
     # Sobrescribimos el método que se llama cuando el formulario es válido
     def form_valid(self, form):
         # Guardamos el objeto
-        print(f'DEBUG: Formulario válido, guardando objeto')
         self.object = form.save()
         
         if is_ajax(self.request):
@@ -140,7 +169,6 @@ class TablonEditarView(LoginRequiredMixin, UpdateView):
         
     # Sobrescribimos el método que se llama cuando el formulario tiene errores
     def form_invalid(self, form):
-        print(f'DEBUG: Formulario inválido: {form.errors}')
         if is_ajax(self.request):
             # Si es AJAX, renderizamos de nuevo el formulario con los errores
             # y lo devolvemos en un JSON para que el cliente lo muestre.
@@ -164,4 +192,18 @@ class TablonEliminarView(LoginRequiredMixin, DeleteView):
     # URL a la que se redirigirá después de una eliminación exitosa.
     # Usamos reverse_lazy para que la URL se resuelva cuando sea necesario.
     success_url = reverse_lazy('administracion:tablon')
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        
+        # Verificar autorización:
+        if not (request.user.is_staff or request.user.is_superuser):
+            try:
+                alumno = Alumno.objects.get(usuario=request.user)
+                if not (alumno.instructor and alumno.dojo == self.object.dojo):
+                    raise PermissionDenied("No tienes permiso para eliminar este anuncio.")
+            except Alumno.DoesNotExist:
+                raise PermissionDenied("No tienes permiso para eliminar este anuncio.")
+                
+        return super().dispatch(request, *args, **kwargs)
  

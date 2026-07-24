@@ -24,5 +24,5 @@ def log_login_success(sender, request, user, **kwargs):
 @receiver(user_login_failed)
 def log_login_failure(sender, credentials, request, **kwargs):
     username = credentials.get('username', 'UNKNOWN')
-    logger.warning(f"LOGIN FAILED - {username} - IP: {get_ip(request)}")
+    logger.warning("LOGIN FAILED - %s - IP: %s", username, get_ip(request))
 

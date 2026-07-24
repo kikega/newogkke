@@ -4,6 +4,7 @@ Modelos de administración
 # Django
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 
 # Importamos el modelo de Usuario
 from usuarios.models import Usuario
@@ -33,7 +34,6 @@ class Alumno(models.Model):
     """
     objects = models.Manager()
 
-    username = None # No usamos el username
     usuario = models.OneToOneField(Usuario, on_delete=models.SET_NULL, verbose_name="Alumno", blank=True, null=True)
     nombre = models.CharField(max_length=50)
     apellidos = models.CharField(max_length=50)
@@ -48,7 +48,10 @@ class Alumno(models.Model):
     )
     rango = models.CharField(max_length=1, choices=RANGO_GRADO, blank=True, null=True)
     fecha_rango = models.DateField(auto_now=False, auto_now_add=False, blank=True, null=True)
-    foto = models.ImageField(upload_to='administracion', blank=True, null=True)
+    foto = models.ImageField(
+        upload_to='administracion/fotos/%Y/%m', blank=True, null=True,
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'gif', 'webp'])]
+    )
     activo = models.BooleanField(default=True)
 
     class Meta:
@@ -104,7 +107,10 @@ class MiembroDirectiva(models.Model):
         # Campos para externos (Solo se usan si alumno es None)
         nombre_externo = models.CharField(max_length=50, blank=True, verbose_name="Nombre (Externo)")
         apellidos_externo = models.CharField(max_length=50, blank=True, verbose_name="Apellidos (Externo)")
-        foto_externa = models.ImageField(upload_to='directiva', blank=True, null=True, verbose_name="Foto (Externa)")
+        foto_externa = models.ImageField(
+            upload_to='directiva', blank=True, null=True, verbose_name="Foto (Externa)",
+            validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'gif', 'webp'])]
+        )
 
         # Datos del cargo
         cargo = models.ForeignKey(CargoDirectivo, on_delete=models.PROTECT, verbose_name="Cargo directivo")
@@ -167,8 +173,11 @@ class Cursillo(models.Model):
     pais = models.CharField(max_length=50, default='España')
     fecha = models.DateField(auto_now=False, auto_now_add=False)
     examenes = models.BooleanField(default=False, blank=True, null=True)
-    alumnos = models.ManyToManyField(Alumno, blank=True, null=True)
-    circular = models.FileField(upload_to='pdf', max_length=100, blank=True, null=True, default=None)
+    alumnos = models.ManyToManyField(Alumno, blank=True)
+    circular = models.FileField(
+        upload_to='pdf', max_length=100, blank=True, null=True, default=None,
+        validators=[FileExtensionValidator(['pdf'])]
+    )
 
     class Meta:
         ordering = ['-fecha']
@@ -229,7 +238,10 @@ class Tablon(models.Model):
     descripcion = models.TextField()
     fecha = models.DateField(auto_now=False, auto_now_add=False)
     lugar = models.CharField(max_length=100, blank=True, null=True)
-    informacion = models.FileField(upload_to='pdf', max_length=100, blank=True, null=True, default=None)
+    informacion = models.FileField(
+        upload_to='pdf', max_length=100, blank=True, null=True, default=None,
+        validators=[FileExtensionValidator(['pdf'])]
+    )
 
     class Meta:
         verbose_name = "Tablon"

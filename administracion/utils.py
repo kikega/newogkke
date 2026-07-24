@@ -134,7 +134,7 @@ def enviar_correo_html(asunto, template_name_html, template_name_texto, contexto
                     mime_image.add_header('Content-ID', f'<{id_imagen_cid}>') # El < > es importante
                     msg.attach(mime_image)
             except IOError as e:
-                print(f"Error al leer o adjuntar imagen: {e}")
+                logger.error("Error al leer o adjuntar imagen: %s", e)
 
         # Enviar el correo
         msg.send(fail_silently=False)
@@ -143,9 +143,7 @@ def enviar_correo_html(asunto, template_name_html, template_name_texto, contexto
 
     except Exception as e:
         # Imprimir el error 'e' para depuración
-        print(f"Error al enviar correo con plantilla HTML: {e}")
-        # Para desarrollo
-        # logger.error(f"Error al enviar correo con plantilla HTML: {e}", exc_info=True) # Para producción
+        logger.error("Error al enviar correo con plantilla HTML: %s", e, exc_info=True)
         return False, f"Ocurrió un error al enviar el correo: {e}"
 
 

@@ -4,9 +4,10 @@
 # Django
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.core.validators import FileExtensionValidator
 
 # Modelos
-from administracion.models import Alumno, Tablon, Actividad
+from administracion.models import Alumno, Cursillo, Tablon, Actividad
 
 class EmailInstructoresForm(forms.Form):
     """
@@ -174,6 +175,36 @@ class TablonEditForm(forms.ModelForm):
         }
 
 
+class CursoForm(forms.ModelForm):
+    """Formulario para crear/editar un cursillo"""
+
+    class Meta:
+        model = Cursillo
+        fields = ['evento', 'descripcion', 'lugar', 'ciudad', 'pais', 'fecha', 'internacional', 'examenes', 'circular']
+        widgets = {
+            'evento': forms.TextInput(attrs={"class": "form-control mt-2 mb-3"}),
+            'descripcion': forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 4}),
+            'lugar': forms.TextInput(attrs={"class": "form-control mt-2 mb-3"}),
+            'ciudad': forms.TextInput(attrs={"class": "form-control mt-2 mb-3"}),
+            'pais': forms.TextInput(attrs={"class": "form-control mt-2 mb-3"}),
+            'fecha': forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}),
+            'internacional': forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            'examenes': forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            'circular': forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "accept": ".pdf"}),
+        }
+        labels = {
+            'evento': 'Nombre del evento',
+            'descripcion': 'Descripción',
+            'lugar': 'Lugar',
+            'ciudad': 'Ciudad',
+            'pais': 'País',
+            'fecha': 'Fecha',
+            'internacional': '¿Es internacional?',
+            'examenes': '¿Hay exámenes?',
+            'circular': 'Circular (PDF)',
+        }
+
+
 class InscripcionAlumnosForm(forms.Form):
     """
     Formulario para la inscripción de alumnos a un cursillo por parte de un instructor.
@@ -205,27 +236,43 @@ class InscripcionAlumnosForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         if user and user.is_authenticated:
-            try:
-                # Obtenemos el queryset base: alumnos del dojo del instructor
-                instructor = Alumno.objects.get(usuario=user)
-                dojo_instructor = instructor.dojo
+            if user.is_staff or user.is_superuser:
                 alumnos_queryset = Alumno.objects.filter(
-                    dojo=dojo_instructor,
                     instructor=False,
                     activo=True
-                ).order_by('apellidos', 'nombre')
+                ).select_related('dojo').order_by('dojo__nombre', 'apellidos', 'nombre')
 
                 self.fields['alumnos'].queryset = alumnos_queryset
 
                 # Obtenemos los ID de los alumnos ya inscritos en el cursillo
                 inscritos_ids = cursillo.alumnos.values_list('id', flat=True)
 
-                # Le decimos al campo que su valor inical son los alumnos del dojo
-                # que tambien se encuentran en la lista de inscritos
-                self.fields['alumnos'].initial = alumnos_queryset.filter(id__in=inscritos_ids)     
-                        
-                # Personalizar el texto que se muestra en el widget para cada alumno
-                self.fields['alumnos'].label_from_instance = lambda obj: f"{obj.apellidos}, {obj.nombre}"
-            
-            except Alumno.DoesNotExist:
-                self.fields['alumnos'].queryset = Alumno.objects.none()
+                self.fields['alumnos'].initial = alumnos_queryset.filter(id__in=inscritos_ids)
+                
+                # Personalizar el texto que se muestra en el widget para cada alumno (incluyendo el dojo)
+                self.fields['alumnos'].label_from_instance = lambda obj: f"[{obj.dojo.nombre}] {obj.apellidos}, {obj.nombre}"
+            else:
+                try:
+                    # Obtenemos el queryset base: alumnos del dojo del instructor
+                    instructor = Alumno.objects.get(usuario=user)
+                    dojo_instructor = instructor.dojo
+                    alumnos_queryset = Alumno.objects.filter(
+                        dojo=dojo_instructor,
+                        instructor=False,
+                        activo=True
+                    ).order_by('apellidos', 'nombre')
+
+                    self.fields['alumnos'].queryset = alumnos_queryset
+
+                    # Obtenemos los ID de los alumnos ya inscritos en el cursillo
+                    inscritos_ids = cursillo.alumnos.values_list('id', flat=True)
+
+                    # Le decimos al campo que su valor inical son los alumnos del dojo
+                    # que tambien se encuentran en la lista de inscritos
+                    self.fields['alumnos'].initial = alumnos_queryset.filter(id__in=inscritos_ids)     
+                            
+                    # Personalizar el texto que se muestra en el widget para cada alumno
+                    self.fields['alumnos'].label_from_instance = lambda obj: f"{obj.apellidos}, {obj.nombre}"
+                
+                except Alumno.DoesNotExist:
+                    self.fields['alumnos'].queryset = Alumno.objects.none()

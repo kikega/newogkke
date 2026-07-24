@@ -5,26 +5,22 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 
 # Autenticacion
-from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
-from django.views.generic import FormView
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 # Django
 from django.contrib import messages
-from django.views.generic import TemplateView
-from django.urls import reverse_lazy
 
 # Modelos
-from administracion.models import Alumno, Dojo
+from administracion.models import Alumno
 from .models import Usuario
 
 # Formularios
-from .forms import CreaUsuarioForm, UsuarioSelectDojoForm
-
-# Utilidades
-from administracion.utils import enviar_correo_html, validar_cadena
+from .forms import UsuarioSelectDojoForm
 
 logger = logging.getLogger('access_logger')
 
@@ -40,19 +36,15 @@ def get_client_ip(request):
 def login_view(request):
     """Vista para hacer login en la aplicación"""
     if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
-        user = authenticate(request, email=email, password=password)
-
-        if user:
-            login(request, user)
-            # Registro en el log con datos del usuario
-            logger.info(f"Login exitoso - Usuario: {user.username} - {user.email}, IP: {get_client_ip(request)}")
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            logger.info("Login exitoso - email: %s, IP: %s", user.email, get_client_ip(request))
             return redirect('home')
-        else:
-            return render(request, 'usuarios/login.html', {'error': 'Usuario o password incorrecto'})
+        return render(request, 'usuarios/login.html', {'form': form, 'error': 'Usuario o password incorrecto'})
 
-    return render(request, 'usuarios/login.html')
+    return render(request, 'usuarios/login.html', {'form': AuthenticationForm()})
 
 def registro_view(request):
     """Vista para hacer registro de un alumno en la aplicación"""
@@ -83,6 +75,8 @@ def cambio_password(request):
     except Alumno.DoesNotExist: # pylint: disable=no-member
         usuario_foto = None
 
+    foto_url = usuario_foto.foto if usuario_foto else None
+
     if request.method == 'POST':
         old_password = request.POST['old_password']
         # Check de la contraseña introducida con la del usuario logado
@@ -92,19 +86,27 @@ def cambio_password(request):
             if new_password != new_password_conf:
                 return render(request, 'usuarios/cambio_password.html', {
                     'error': 'Las contraseñas no coinciden',
-                    'usuario_foto': usuario_foto.foto,
+                    'usuario_foto': foto_url,
                 })
-            user = Usuario.objects.get(email=request.user.email)
-            user.set_password(new_password)
-            user.save()
-            logger.info(f"Cambio de contraseña exitoso - Usuario: {request.user.username} - {request.user.email}, IP: {get_client_ip(request)}")
+            # Validamos la nueva contraseña contra las políticas del sistema
+            try:
+                validate_password(new_password, user=request.user)
+            except ValidationError as e:
+                return render(request, 'usuarios/cambio_password.html', {
+                    'error': e.messages[0],
+                    'usuario_foto': foto_url,
+                })
+
+            request.user.set_password(new_password)
+            request.user.save(update_fields=['password'])
+            logger.info("Cambio de contraseña exitoso - Usuario: %s, IP: %s", request.user.email, get_client_ip(request))
             # Una vez salvada la nueva contraseña hacemos logout del usuario
             logout(request)
             return redirect('login')
         else:
             return render(request, 'usuarios/cambio_password.html', {
                 'error': 'Contraseña incorrecta',
-                'usuario_foto': usuario_foto.foto,
+                'usuario_foto': foto_url,
             })
 
 # class ResetPasswordView(FormView):

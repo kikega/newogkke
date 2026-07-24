@@ -9,6 +9,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 
 
 # Formularios
@@ -28,9 +29,12 @@ class ErrorView(LoginRequiredMixin, TemplateView):
 
         # Obtenemos el codigo de error
         error_code = self.kwargs.get('error_code')
+        error_message = "Ocurrió un error inesperado."
 
         if error_code == 403:
             error_message = "Se han introducido caracteres no validos en algún campo del formulario. Sólo se permiten caracteres alfanuméricos y espacios."
+        elif error_code == 404:
+            error_message = "El recurso solicitado no existe o no se encontró."
 
         context['error_message'] = error_message
         context['error_code'] = error_code
@@ -43,6 +47,8 @@ def enviar_correo_instructores(request):
     """
     Envío de correo a instructores
     """
+    if not (request.user.is_staff or request.user.is_superuser):
+        raise PermissionDenied("No tienes permiso para enviar correos a los instructores.")
 
     # Obtenemos las plantillas HTML y TXT para el correo
     template_name_html='administracion/emails/notificacion_peticion.html',
@@ -63,7 +69,7 @@ def enviar_correo_instructores(request):
                     emails_destinatarios.append(alumno_instructor.usuario.email)
                     # Personalizar el mensaje para cada instructor si es necesario
                     mensaje_personalizado = f"Hola {alumno_instructor.nombre},\n\n{mensaje_base}"
-                    datatuple.append((asunto, mensaje_personalizado, settings.DEFAULT_FROM_EMAIL, [alumno_instructor.usuario.email]))
+                    datatuple.append((asunto, mensaje_personalizado, settings.EMAIL_HOST_USER, [alumno_instructor.usuario.email]))
                 else:
                     messages.warning(request, f"El instructor {alumno_instructor.nombre} {alumno_instructor.apellidos} no tiene un email asociado y no se le enviará correo.")
 

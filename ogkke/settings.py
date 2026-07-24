@@ -34,6 +34,19 @@ CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
+# Seguridad en producción
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -83,9 +96,11 @@ WSGI_APPLICATION = 'ogkke.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+import sys
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
@@ -93,6 +108,12 @@ DATABASES = {
         'PORT': config('DB_PORT'),
     }
 }
+
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db_test.sqlite3',
+    }
 
 
 # Password validation
@@ -169,9 +190,22 @@ EMAIL_DEFAULT_STAFF = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Configuración de logging
-USE_X_FORWARDED_HOST = True
+# Configuración de caché
+if DEBUG:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/0'),
+        }
+    }
 
+# Configuración de logging
 LOGGING = {
     # Versión del esquema, siempre es 1
     "version": 1,

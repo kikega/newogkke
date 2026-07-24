@@ -92,13 +92,18 @@ class CustomPasswordResetForm(PasswordResetForm):
         dojo = cleaned_data.get('dojo')
 
         if email and nombre and apellidos and dojo:
-            # Obtenemos los datos de alumno relativos al usuario
-            alumno = Alumno.objects.select_related("usuario").get(usuario__email=email)
+            try:
+                # Obtenemos los datos de alumno relativos al usuario
+                alumno = Alumno.objects.select_related("usuario").get(usuario__email=email)
+            except Alumno.DoesNotExist:
+                self.add_error(None, "No existen datos de alumno asociados a este correo electrónico")
+                return cleaned_data
+
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 return cleaned_data
-            if alumno.nombre.lower() != nombre.lower() and alumno.apellidos.lower() != apellidos.lower():
+            if alumno.nombre.lower() != nombre.lower() or alumno.apellidos.lower() != apellidos.lower():
                 self.add_error(None, "Los datos de nombre y apellidos no coinciden con el usuario")
             if alumno.dojo != dojo:
                 self.add_error(None, "El usuario no pertenece al dojo seleccionado")

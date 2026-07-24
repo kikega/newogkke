@@ -7,6 +7,7 @@ import datetime
 
 # Django
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.views.generic import TemplateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.http import JsonResponse
@@ -48,6 +49,8 @@ class ActividadesView(LoginRequiredMixin, TemplateView):
         """
         Procesa el formulario de nueva actividad
         """
+        if not (request.user.is_staff or request.user.is_superuser):
+            raise PermissionDenied("No tienes permiso para crear actividades.")
 
         # Obtenemos los datos del formulario
         form = ActividadNuevaForm(request.POST)
@@ -90,6 +93,11 @@ class ActividadEditarView(LoginRequiredMixin, UpdateView):
     template_name = 'administracion/actividades.html'
     success_url = reverse_lazy("administracion:actividades")
 
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            raise PermissionDenied("No tienes permiso para editar actividades.")
+        return super().dispatch(request, *args, **kwargs)
+
     # Sobrescribimos el método GET
     def get(self, request, *args, **kwargs):
         # Si la petición es AJAX, no devolvemos la página completa.
@@ -113,7 +121,6 @@ class ActividadEditarView(LoginRequiredMixin, UpdateView):
     # Sobrescribimos el método que se llama cuando el formulario es válido
     def form_valid(self, form):
         # Guardamos el objeto
-        print(f'DEBUG: Formulario válido, guardando objeto')
         self.object = form.save()
         
         if is_ajax(self.request):
@@ -125,7 +132,6 @@ class ActividadEditarView(LoginRequiredMixin, UpdateView):
         
     # Sobrescribimos el método que se llama cuando el formulario tiene errores
     def form_invalid(self, form):
-        print(f'DEBUG: Formulario inválido: {form.errors}')
         if is_ajax(self.request):
             # Si es AJAX, renderizamos de nuevo el formulario con los errores
             # y lo devolvemos en un JSON para que el cliente lo muestre.
@@ -149,3 +155,8 @@ class ActividadEliminarView(LoginRequiredMixin, DeleteView):
 
     model = Actividad
     success_url = reverse_lazy('administracion:actividades')
+
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            raise PermissionDenied("No tienes permiso para eliminar actividades.")
+        return super().dispatch(request, *args, **kwargs)

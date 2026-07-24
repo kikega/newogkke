@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import View, TemplateView
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
 # App administracion
 from administracion.models import Alumno, Dojo, Peticion
@@ -30,7 +31,6 @@ class PeticionView(LoginRequiredMixin, TemplateView):
 
         # Obtenemos los datos del usuario logado
         user = self.request.user
-        print(user, user.externo)
 
         # Inicializamos las variables
         # Esto garantiza que estas variables de contexto siempre existan,
@@ -40,26 +40,29 @@ class PeticionView(LoginRequiredMixin, TemplateView):
 
         # Obtenemos los datos del dojo y sus peticiones pendientes
         if user.is_authenticated:
-            try:
-                # Obtiene una instancia de alumno para el usuario actual
-                alumno = Alumno.objects.select_related('dojo').get(usuario=user)
-                dojo_usuario = alumno.dojo
-                # Obtenemos todas las peticiones pendientes si el usuario es staff o superuser
-                # En caso sontrario las del dojo actual
-                if user.is_staff or user.is_superuser:
-                    peticiones_pendientes = Peticion.objects.filter(
-                        finalizada=False
-                    ).order_by('-fecha')
-                else:
+            if user.is_staff or user.is_superuser:
+                peticiones_pendientes = Peticion.objects.filter(
+                    finalizada=False
+                ).order_by('-fecha')
+                try:
+                    alumno = Alumno.objects.select_related('dojo').get(usuario=user)
+                    dojo_usuario = alumno.dojo
+                except Alumno.DoesNotExist:
+                    pass
+            else:
+                try:
+                    # Obtiene una instancia de alumno para el usuario actual
+                    alumno = Alumno.objects.select_related('dojo').get(usuario=user)
+                    dojo_usuario = alumno.dojo
                     peticiones_pendientes = Peticion.objects.filter(
                         dojo=dojo_usuario,
                         finalizada=False
                     ).order_by('-fecha')
-            except Alumno.DoesNotExist: # pylint: disable=no-member
-                redirect ('administracion:error', context={'error_code': 404, 'error_message': 'No se encontró el usuario'})
+                except Alumno.DoesNotExist:
+                    pass
 
         # Almacena el objeto dojo y sus peticiones pendientes
-        context ['dojo_usuario'] = dojo_usuario
+        context['dojo_usuario'] = dojo_usuario
         context['peticiones_pendientes'] = peticiones_pendientes
         context['user'] = user
 
@@ -76,19 +79,22 @@ class PeticionView(LoginRequiredMixin, TemplateView):
         descripcion = request.POST.get('descripcion')
         destinatario = settings.EMAIL_DEFAULT_STAFF
 
-        # Validar que los campos no estén vacíos
-        # if not all([titulo, tipo, dojo_id, descripcion]):
-        #     return render(request, self.template_name, {
-        #         'error': 'Por favor, complete todos los campos.',
-        #         'dojos': Dojo.objects.all()
-        #     })
+        # Obtener el Dojo
+        dojo = get_object_or_404(Dojo, pk=dojo_id)
+
+        # Verificar autorización:
+        # Solo administradores o el instructor correspondiente del dojo pueden crear peticiones
+        if not (request.user.is_staff or request.user.is_superuser):
+            try:
+                alumno = Alumno.objects.get(usuario=request.user)
+                if not (alumno.instructor and alumno.dojo == dojo):
+                    raise PermissionDenied("No tienes permiso para crear peticiones en este dojo.")
+            except Alumno.DoesNotExist:
+                raise PermissionDenied("No tienes permiso para crear peticiones.")
 
         # Obtenemos las plantillas HTML y TXT para el correo
         template_name_html='administracion/emails/notificacion_peticion.html',
         template_name_texto='administracion/emails/notificacion_peticion.txt',
-
-        # Obtener el Dojo
-        dojo = get_object_or_404(Dojo, pk=dojo_id)
 
         # Crear la petición
         Peticion.objects.create(
@@ -123,12 +129,28 @@ class PeticionView(LoginRequiredMixin, TemplateView):
 
 class PeticionAnularView(LoginRequiredMixin, View):
     """
-    Anula una petición
+    Anula o elimina una petición
     """
 
     def post(self, request, pk):
         peticion = get_object_or_404(Peticion, pk=pk)
-        peticion.finalizada = True
-        peticion.save()
+
+        # Verificar autorización:
+        # Administradores pueden anular/borrar cualquier petición.
+        # Instructores del dojo asociado pueden anular/borrar.
+        if not (request.user.is_staff or request.user.is_superuser):
+            try:
+                alumno = Alumno.objects.get(usuario=request.user)
+                if not (alumno.instructor and alumno.dojo == peticion.dojo):
+                    raise PermissionDenied("No tienes permiso para gestionar esta petición.")
+            except Alumno.DoesNotExist:
+                raise PermissionDenied("No tienes permiso para gestionar esta petición.")
+
+        action = request.POST.get('action')
+        if action == 'borrar':
+            peticion.delete()
+        else:
+            peticion.finalizada = True
+            peticion.save()
 
         return redirect('administracion:peticiones')

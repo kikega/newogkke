@@ -97,12 +97,10 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
         alumno = self.get_object()
 
         # Obtenemos la lista de examenes de ese alumno
-        examenes = Examen.objects.filter(alumno=alumno.id)
+        examenes = Examen.objects.filter(alumno=alumno.id).select_related('evento')
 
         for idx, exam in enumerate(examenes):
             examen.append(str(exam.grado) + " DAN")
-            print(exam.evento.evento)
-            print(exam.evento.fecha)
             # Verificamos si el indica actual es el último de la lista
             if idx == len(examenes) - 1:
                 anios.append(hoy.year - exam.evento.fecha.year)

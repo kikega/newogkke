@@ -73,3 +73,8 @@ class Usuario(AbstractUser, PermissionsMixin):
 
     def __str__(self):
         return str(self.email)
+
+    def save(self, *args, **kwargs):
+        if not self.username:
+            self.username = self.email
+        super().save(*args, **kwargs)

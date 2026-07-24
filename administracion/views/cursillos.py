@@ -5,25 +5,30 @@ Vistas relacionadas con la gestión de cursillos
 # Python
 import datetime
 import json
+import os
+
+# Django
+from django.core.exceptions import PermissionDenied
 
 # Django
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic import View, TemplateView, ListView, DetailView, CreateView
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.conf import settings
 from django.contrib import messages
 from django.http import FileResponse
+from django.urls import reverse_lazy
 
 # App administracion
 from administracion.models import Alumno, Cursillo, Examen
 
 # Utilidades
-from administracion.utils import enviar_correo_html, validar_cadena
+from administracion.utils import enviar_correo_html
 
 # Formularios
-from administracion.forms import InscripcionAlumnosForm   
+from administracion.forms import InscripcionAlumnosForm, CursoForm
 
 class CursillosView(LoginRequiredMixin, ListView):
     """Listado de cursillos realizados"""
@@ -62,13 +67,15 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
 
         # Obtenemos datos del usuario logado 
         user = self.request.user
-        print(user, user.externo)
         
         if not user.externo:
             # Obtenemos datos del alumno para ver si ya está inscrito
-            alumno = Alumno.objects.select_related('usuario').get(usuario=user)
-            alumno_cursillo = curso_actual.alumnos.filter(pk=alumno.id).exists()
-            context['alumno_cursillo_inscrito'] = alumno_cursillo
+            try:
+                alumno = Alumno.objects.select_related('usuario').get(usuario=user)
+                alumno_cursillo = curso_actual.alumnos.filter(pk=alumno.id).exists()
+                context['alumno_cursillo_inscrito'] = alumno_cursillo
+            except Alumno.DoesNotExist:
+                context['alumno_cursillo_inscrito'] = False
 
             # Obtenemos el dato si es instructor
             es_instructor = False
@@ -86,72 +93,25 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class CursoNuevoView(LoginRequiredMixin, ListView):
+class CursoNuevoView(LoginRequiredMixin, CreateView):
     """
     Creamos un curso nuevo
     """
     template_name = 'administracion/cursillos.html'
     model = Cursillo
-    context_object_name = 'cursillos'
+    form_class = CursoForm
+    success_url = reverse_lazy('administracion:cursillos')
+
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            raise PermissionDenied("No tienes permiso para crear cursos.")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        """
-        Obtenemos la cantidad de seminarios realizados
-        """
         context = super().get_context_data(**kwargs)
-        context['cantidad'] = self.get_queryset().count()
-
+        context['cursillos'] = Cursillo.objects.all()
+        context['cantidad'] = Cursillo.objects.count()
         return context
-
-    def post(self, request, *args, **kwargs):
-        """
-        Procesa el formulario de creación de un nuevo curso
-        """
-
-        # Obtenemos los datos del formulario
-        evento = request.POST.get('evento')
-        descripcion = request.POST.get('descripcion')
-        lugar = request.POST.get('lugar')
-        pais = 'España' if request.POST.get('pais') == "" else request.POST.get("pais")
-        ciudad = request.POST.get('ciudad')
-        fecha = request.POST.get('fecha')
-        internacional = True if request.POST.get('internacional') == 'on' else False
-        examenes = True if request.POST.get('examenes') == 'on' else False
-        if request.FILES.get('circular'):
-            circular = request.FILES["circular"]
-        else:
-            circular = None
-
-        # Validar que los campos que son obligatorios, no contengan caracteres especiales
-        if not validar_cadena(evento):
-            error_producido = 403
-            return redirect ('administracion:errores', error_producido)
-
-        if not validar_cadena(lugar):
-            error_producido = 403
-            return redirect ('administracion:errores', error_producido)
-
-        if not validar_cadena(ciudad):
-            error_producido = 403
-            return redirect ('administracion:errores', error_producido)
-
-        # Creamos el nuevo curso
-        try:
-            Cursillo.objects.get_or_create(
-                evento = evento,
-                descripcion = descripcion,
-                lugar = lugar,
-                pais = pais,
-                ciudad = ciudad,
-                fecha = fecha,
-                internacional = internacional,
-                examenes = examenes,
-                circular = circular
-            )
-        except Exception as e:
-            print(f'Ha habido un error: {e}')
-
-        return redirect('administracion:cursillos')
 
 
 class CursilloExaminaListView(LoginRequiredMixin, DetailView):
@@ -171,7 +131,6 @@ class CursilloExaminaListView(LoginRequiredMixin, DetailView):
         context['examinan'] = Examen.objects.filter(evento=curso_actual).select_related('alumno').order_by('alumno__apellidos')
         context['curso'] = curso_actual
         context['hoy'] = datetime.date.today()
-        print(curso_actual)
 
         return context
 
@@ -233,14 +192,18 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         self.cursillo = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
         
+        # Si el usuario es administrador/staff, no se auto-inscribe y gestiona alumnos
+        if user.is_staff or user.is_superuser:
+            return super().dispatch(request, *args, **kwargs)
+        
         try:
             alumno = Alumno.objects.get(usuario=user)
         except Alumno.DoesNotExist:
             messages.error(request, "No tienes un perfil de alumno para inscribirte.")
             return redirect('administracion:cursillo_detalle', pk=self.cursillo.id)
 
-        # Si el usuario no es instructor ni staff, se inscribe a sí mismo y se redirige.
-        if not (user.is_staff or alumno.instructor):
+        # Si el usuario no es instructor, se inscribe a sí mismo y se redirige.
+        if not alumno.instructor:
             # Comprobación adicional si ya está inscrito
             if not self.cursillo.alumnos.filter(pk=alumno.id).exists():
                 self.cursillo.alumnos.add(alumno)
@@ -250,7 +213,7 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
                 messages.info(request, "Ya estás inscrito en este cursillo.")
             return redirect('administracion:cursillo_detalle', pk=self.cursillo.id)
         
-        # Si es instructor o staff, continúa con el flujo normal (GET o POST).
+        # Si es instructor, continúa con el flujo normal (GET o POST).
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -282,14 +245,20 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
             # Obtenemos la lista de alumnos que el instructor quiere que queden inscritos
             # Obtiene todos los alumnos seleccionados
             alumnos_a_inscribir = form.cleaned_data['alumnos']
-            # Alumnos que no son del dojo del instructor
-            instructor = Alumno.objects.get(usuario=request.user)
-            alumnos_externos_inscritos = self.cursillo.alumnos.exclude(dojo=instructor.dojo)
-            # Lista final de alumnos en el cursillo
-            # los externos que ya estaban + los que el instructor acaba de seleccionar de su dojo.
-            lista_final_pks = list(alumnos_externos_inscritos.values_list('pk', flat=True)) + \
-                              list(alumnos_a_inscribir.values_list('pk', flat=True))
-            # Sincronizacimos la relación con la lista final de IDs
+            
+            try:
+                # Alumnos que no son del dojo del instructor
+                instructor = Alumno.objects.get(usuario=request.user)
+                alumnos_externos_inscritos = self.cursillo.alumnos.exclude(dojo=instructor.dojo)
+                # Lista final de alumnos en el cursillo
+                # los externos que ya estaban + los que el instructor acaba de seleccionar de su dojo.
+                lista_final_pks = list(alumnos_externos_inscritos.values_list('pk', flat=True)) + \
+                                  list(alumnos_a_inscribir.values_list('pk', flat=True))
+            except Alumno.DoesNotExist:
+                # Si el usuario es administrador sin perfil de alumno, realiza la inscripción global
+                lista_final_pks = list(alumnos_a_inscribir.values_list('pk', flat=True))
+
+            # Sincronizamos la relación con la lista final de IDs
             self.cursillo.alumnos.set(lista_final_pks)
 
             messages.success(request, f"Se han inscrito {alumnos_a_inscribir.count()} alumno(s) correctamente.")
@@ -314,14 +283,15 @@ def descargar_circular(request, pk):
         # Obtener la ruta absoluta al archivo
         # cursillo.circular.path te da la ruta absoluta si MEDIA_ROOT está bien configurado
         circular_path = cursillo.circular.path
-        # Abrir el archivo en modo binario para lectura
-        response = FileResponse(open(circular_path, 'rb'), as_attachment=True, filename=cursillo.circular.name)
-        # as_attachment=True: Fuerza la descarga.
-        # filename=cursillo.circular.name: Sugiere el nombre original del archivo al navegador.
-        # Django se encarga de las cabeceras Content-Type, Content-Disposition,
-        if not settings.DEBUG: # Solo añadir en producción
-            response['Connection'] = 'close'
-        return response
-    else:
-        return redirect("administracion:error", error_code=404, error_message="No se encontró el archivo circular")
+        if os.path.exists(circular_path):
+            # Abrir el archivo en modo binario para lectura
+            response = FileResponse(open(circular_path, 'rb'), as_attachment=True, filename=cursillo.circular.name)
+            # as_attachment=True: Fuerza la descarga.
+            # filename=cursillo.circular.name: Sugiere el nombre original del archivo al navegador.
+            # Django se encarga de las cabeceras Content-Type, Content-Disposition,
+            if not settings.DEBUG: # Solo añadir en producción
+                response['Connection'] = 'close'
+            return response
+        
+    return redirect("administracion:errores", error_code=404)
 
