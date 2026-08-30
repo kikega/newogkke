@@ -9,6 +9,8 @@ from django.views.generic import View, TemplateView
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
+from django.core.cache import cache
+
 # App administracion
 from administracion.models import Alumno, Dojo, Peticion
 
@@ -93,8 +95,8 @@ class PeticionView(LoginRequiredMixin, TemplateView):
                 raise PermissionDenied("No tienes permiso para crear peticiones.")
 
         # Obtenemos las plantillas HTML y TXT para el correo
-        template_name_html='administracion/emails/notificacion_peticion.html',
-        template_name_texto='administracion/emails/notificacion_peticion.txt',
+        template_name_html = 'administracion/emails/notificacion_peticion.html'
+        template_name_texto = 'administracion/emails/notificacion_peticion.txt'
 
         # Crear la petición
         Peticion.objects.create(
@@ -103,6 +105,9 @@ class PeticionView(LoginRequiredMixin, TemplateView):
             dojo=dojo,
             descripcion=descripcion
         )
+
+        # Invalidamos la caché de peticiones pendientes
+        cache.delete('peticiones_totales')
 
         # Convertimos el objeto creado un un diccionario
         peticion = {
@@ -153,4 +158,8 @@ class PeticionAnularView(LoginRequiredMixin, View):
             peticion.finalizada = True
             peticion.save()
 
+        # Invalidamos la caché de peticiones pendientes
+        cache.delete('peticiones_totales')
+
         return redirect('administracion:peticiones')
+

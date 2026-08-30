@@ -3,38 +3,41 @@
 
 {% block container %}
     
-    <main class="container form-signin w-100 m-auto">
-        <form action="" method="POST">
+    <div class="form-signin w-100 m-auto">
+        <form action="" method="POST" autocomplete="on">
             {% csrf_token %}
-            <div class="text-center">
-                <img class="m-2" src={% static "img/goju-logo.png" %} alt="Logo OGKKE" width="150" height="150">
+            <div class="text-center mb-3">
+                <img class="m-2" src="{% static 'img/goju-logo.png' %}" alt="Logo OGKKE" width="130" height="130">
             </div>
-            <h1 class="h1 mb-5 fw-normal text-center">OGKKE</h1>
-            <h2 class="h6 mb-4 fw-normal">Introduzca sus credenciales</h2>
-            <div class="form-floating">
-                <input type="email" class="form-control" id="id_username" name="username" placeholder="name@example.com" value="{{ form.username.value|default:'' }}">
-                <label for="id_username">Dirección de correo</label>
+            <h1 class="h2 mb-2 fw-bold text-center color-texto">OGKKE</h1>
+            <h2 class="h6 mb-4 text-center text-muted">Acceso a la plataforma de gestión</h2>
+            
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="id_username" name="username" placeholder="name@example.com" value="{{ form.username.value|default:'' }}" required autocomplete="username">
+                <label for="id_username">Usuario o Correo electrónico</label>
             </div>
-            <div class="form-floating">
-                <input type="password" class="form-control" id="id_password" name="password" placeholder="Password">
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="id_password" name="password" placeholder="Contraseña" required autocomplete="current-password">
                 <label for="id_password">Contraseña</label>
             </div>
+            
             {% if form.errors %}
-                <div class="alert alert-danger" role="alert">
-                    Usuario o password incorrecto.
+                <div class="alert alert-danger py-2" role="alert">
+                    Usuario o contraseña incorrectos.
                 </div>           
             {% endif %}
             {% if error %}
-                <div class="alert alert-danger" role="alert">
-                {{ error }}
+                <div class="alert alert-danger py-2" role="alert">
+                    {{ error }}
                 </div>           
             {% endif %}
-            <div class="mb-4">
-                <a href="{% url "password_reset" %}" class="mb-2">Olvidé la contraseña</a>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="{% url 'password_reset' %}" class="small text-warning text-decoration-none">¿Olvidó su contraseña?</a>
             </div>
-            <button class="btn btn-primary w-100 py-2" type="submit">Login</button>
+            
+            <button class="btn btn-warning w-100 py-2 fw-semibold" type="submit"><i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión</button>
         </form>
-    </main>
-
+    </div>
 {% endblock container %}
 

@@ -51,8 +51,8 @@ def enviar_correo_instructores(request):
         raise PermissionDenied("No tienes permiso para enviar correos a los instructores.")
 
     # Obtenemos las plantillas HTML y TXT para el correo
-    template_name_html='administracion/emails/notificacion_peticion.html',
-    template_name_texto='administracion/emails/notificacion_peticion.txt',
+    template_name_html = 'administracion/emails/correo_instructores.html'
+    template_name_texto = 'administracion/emails/correo_instructores.txt'
 
     if request.method == 'POST':
         form = EmailInstructoresForm(request.POST)
@@ -62,28 +62,26 @@ def enviar_correo_instructores(request):
             mensaje_base = form.cleaned_data['mensaje']
 
             emails_destinatarios = []
-            datatuple = [] # Para send_mass_mail
-
             for alumno_instructor in instructores_seleccionados:
                 if alumno_instructor.usuario and alumno_instructor.usuario.email:
                     emails_destinatarios.append(alumno_instructor.usuario.email)
-                    # Personalizar el mensaje para cada instructor si es necesario
-                    mensaje_personalizado = f"Hola {alumno_instructor.nombre},\n\n{mensaje_base}"
-                    datatuple.append((asunto, mensaje_personalizado, settings.EMAIL_HOST_USER, [alumno_instructor.usuario.email]))
                 else:
                     messages.warning(request, f"El instructor {alumno_instructor.nombre} {alumno_instructor.apellidos} no tiene un email asociado y no se le enviará correo.")
 
-            if datatuple:
+            if emails_destinatarios:
                 try:
+                    contexto = {
+                        'asunto': asunto,
+                        'mensaje': mensaje_base,
+                    }
                     enviar_correo_html(
-                        asunto = asunto,
+                        asunto=asunto,
                         template_name_html=template_name_html,
                         template_name_texto=template_name_texto,
-                        contexto = mensaje_base,
-                        destinatarios = emails_destinatarios,
+                        contexto=contexto,
+                        destinatarios=emails_destinatarios,
                     )
-                    #send_mass_mail(datatuple, fail_silently=False)
-                    messages.success(request, f"Correo enviado exitosamente a {len(datatuple)} instructor(es).")
+                    messages.success(request, f"Correo enviado exitosamente a {len(emails_destinatarios)} instructor(es).")
                 except Exception as e:
                     messages.error(request, f"Ocurrió un error al enviar los correos: {e}")
             else:

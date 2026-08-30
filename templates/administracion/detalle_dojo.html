@@ -2,16 +2,11 @@
 {% load static %}
 
 {% block container %}
-    
-    {% include "administracion/header.html" %}
-
     <!-- Breadcrumb -->
-    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'administracion:dojos' %}">Dojos</a></li>
-            <!-- Puedes añadir más niveles si es necesario -->
             <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Dojo</li> 
         </ol>
     </nav>
@@ -34,21 +29,25 @@
 
                     <!-- Contenedor para la Foto o Icono -->
                     <div class="profile-picture-container mt-2">
-                        <!-- ** LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO ** -->
-                        {% if instructor.foto.url != none %}
+                        <!-- LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO -->
+                        {% if instructor and instructor.foto %}
                             <img src="{{ instructor.foto.url }}" alt="Foto instructor" class="rounded-circle img-thumbnail profile-picture">
                         {% else %}
                             <i class="bi bi-person-circle text-secondary profile-icon"></i>
                         {% endif %}
                     </div>
 
-                    <!-- Detalles del alumno (centrados por card-body text-center) -->
+                    <!-- Detalles del dojo e instructor -->
                     <h3 class="card-title mb-3">{{ dojo.direccion }}</h3>
                     <p class="card-text mb-1"><strong>{{ dojo.poblacion }}</strong>, {{ dojo.provincia }}, {{ dojo.codigo_postal }}</p>
-                    <p class="card-text"><strong>Instructor: </strong> {{ instructor.nombre }} {{ instructor.apellidos }}, {{ instructor.grado }}º DAN</p>
+                    {% if instructor %}
+                        <p class="card-text"><strong>Instructor: </strong> {{ instructor.nombre }} {{ instructor.apellidos }}{% if instructor.grado %}, {{ instructor.grado }}º DAN{% endif %}</p>
+                    {% else %}
+                        <p class="card-text text-muted"><em>Sin instructor asignado</em></p>
+                    {% endif %}
                 </div>
                 <div class="card-footer text-muted text-center">
-                    Email: {{ instructor.usuario.email }}
+                    Email: {% if instructor and instructor.usuario %}{{ instructor.usuario.email }}{% else %}No disponible{% endif %}
                 </div>
             </div>
         </div>
@@ -138,7 +137,7 @@
                         {% csrf_token %}
                         <input type="hidden" value="{{ dojo.id }}" name="dojo">
                         <div class="row input-group">
-                            <div class="col mb3">
+                            <div class="col mb-3">
                                 {{ form.tipo.label}}
                                 {{ form.tipo }}
                                 <div class="invalid-feedback">
@@ -147,7 +146,7 @@
                             </div>
                         </div>
                         <div class="row input-group">
-                            <div class="col mb3">
+                            <div class="col mb-3">
                                 {{ form.titulo.label}}
                                 {{ form.titulo }}
                                 <div class="invalid-feedback">
@@ -156,7 +155,7 @@
                             </div>
                         </div>
                         <div class="row input-group">
-                            <div class="col mb3">
+                            <div class="col mb-3">
                                 {{ form.descripcion.label}}
                                 {{ form.descripcion }}
                             </div>

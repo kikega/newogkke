@@ -166,3 +166,16 @@ def is_ajax(request):
         Función de ayuda para detectar peticiones AJAX
     """
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+
+
+def get_client_ip(request):
+    """
+    Obtiene la dirección IP del cliente de forma segura.
+    Prioriza X-Forwarded-For si existe y está detrás de proxy, o REMOTE_ADDR.
+    """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR', '')
+    return ip

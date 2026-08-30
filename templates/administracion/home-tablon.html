@@ -3,17 +3,15 @@
 
 {% block container %}
     
-    {% include "administracion/header.html" %}
-
     {% include "administracion/hero.html" %}
 
-    <section class="album py-5">
+    <section class="album py-4">
         <div class="container">
             
             <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xl-3 g-3">
                 <article class="col">
-                    <div class="card shadow-sm color-background">
-                        <img src="{% static "img/dojos.jpg" %}" class="card-img-top img-fluid" alt="Dojos">
+                    <div class="card shadow-sm color-background h-100">
+                        <img src="{% static 'img/dojos.jpg' %}" class="card-img-top img-fluid" alt="Dojos">
                         <div class="m-3">
                             <h3 class="card-title"><i class="bi bi-houses"></i> Dojos <span class="badge text-bg-tertiary fs-3">{{ dojos }}</span></h3>
                         </div>
@@ -32,8 +30,8 @@
                 </article>
 
                 <article class="col">
-                    <div class="card shadow-sm color-background">
-                        <img src="{% static "img/cn.jpg" %}" class="card-img-top img-fluid" alt="DojosCintos negros">
+                    <div class="card shadow-sm color-background h-100">
+                        <img src="{% static 'img/cn.jpg' %}" class="card-img-top img-fluid" alt="Cintos negros">
                         <div class="m-3">
                             <h3 class="card-title"><i class="bi bi-person"></i> Cintos Negros <span class="badge text-bg-tertiary fs-3">{{ cn }}</span></h3>
                         </div>
@@ -52,8 +50,8 @@
                 </article>
 
                 <article class="col">
-                    <div class="card shadow-sm color-background">
-                        <img src="{% static "img/gassukus.jpg" %}" class="card-img-top img-fluid" alt="Gasshukus">
+                    <div class="card shadow-sm color-background h-100">
+                        <img src="{% static 'img/gassukus.jpg' %}" class="card-img-top img-fluid" alt="Gasshukus">
                         <div class="m-3">
                             <h3 class="card-title"><i class="bi bi-people"></i> Gasshukus <span class="badge text-bg-tertiary fs-3">{{ cursos }}</span></h3>
                         </div>
@@ -74,7 +72,7 @@
         </div>
     </section>
 
-    <section class="album py-5">
+    <section class="album py-4">
         <div class="container">
             <div class="row row-cols-1">
                 <ul class="nav nav-tabs">
@@ -88,34 +86,36 @@
             </div>
             <div class="row row-cols-1 mt-3">
                 {% if tablon %}
-                    <div class="row row-cols-1 mt-5">
-                        <h3 class="mb-3">Dojo: {{ dojo_usuario }}</h3>
+                    <div class="row row-cols-1 mt-2">
+                        {% if dojo_usuario %}
+                            <h3 class="mb-3 color-texto"><i class="bi bi-pin-angle me-2"></i>Dojo: {{ dojo_usuario.nombre }}</h3>
+                        {% endif %}
                         {% for tab in tablon %}
-                        <div class="card mt-3">
+                        <div class="card mt-3 shadow-sm">
                             <div class="card-header">
-                                <h4 class="color-texto"><i class="bi bi-card-text"></i> 
+                                <h4 class="color-texto mb-0"><i class="bi bi-card-text me-2"></i> 
                                 {{ tab.titulo }} 
                                 </h4>
                             </div>
                             <div class="card-body">
-                                <p><i class="bi bi-calendar3"></i> {{ tab.fecha }}</p>
+                                <p class="text-muted mb-2"><i class="bi bi-calendar3"></i> {{ tab.fecha|date:"d-m-Y" }}</p>
                                 <p class="card-text">{{ tab.descripcion }}</p>
                                 {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
                                     <div class="text-end">
                                         <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarTablon" data-update-url="{% url 'administracion:editar_tablon' tab.id %}">
                                             <i class="bi bi-pencil-fill"></i> Editar
                                         </button>
-                                        <!-- Generamos la URL de eliminación para cada elemento y la guardamos en un atributo data-*. Así, el botón "sabe" a qué elemento corresponde.-->
                                         <button type="button" class="btn btn-outline-danger btn-sm edit-button" data-bs-toggle="modal" data-bs-target="#modalBorrarTablon" data-delete-url="{% url 'administracion:eliminar_tablon' tab.id %}">
                                             <i class="bi bi-trash-fill"></i> Eliminar
                                         </button>
-                                        <!-- <a href="{% url 'administracion:eliminar_tablon' pk=tab.id %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash-fill"></i> Eliminar</a>-->
                                     </div>
                                 {% endif %}
                             </div>
                         </div>
                         {% endfor %}
                     </div>
+                {% else %}
+                    <div class="alert alert-info mt-4">No hay anuncios publicados en el tablón actualmente.</div>
                 {% endif %}
             </div>
         </div>

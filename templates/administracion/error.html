@@ -2,62 +2,43 @@
 {% load static %}
 
 {% block container %}
-    
-    {% include "administracion/header.html" %}
-    
     <!-- Breadcrumb -->
-    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <!-- Puedes añadir más niveles si es necesario -->
             <li class="breadcrumb-item active text-warning" aria-current="page">Error</li>
         </ol>
     </nav>
     <!-- Fin Breadcrumb -->
 
     <!-- Título Principal -->
-    <h1 class="text-center mt-5 mb-5 color-texto">Se ha producido un error</h1>
+    <h1 class="text-center mt-4 mb-4 color-texto">Se ha producido un error</h1>
 
-    <div class="container mt-5">
+    <div class="container mt-4">
         <div class="row justify-content-center">
-            <div class="col-lg-12 col-md-10"> <!-- Hacemos la card un poco más ancha en escritorio -->
-
+            <div class="col-lg-10 col-md-10">
                 <!-- CARD -->
-                <!-- La clase 'overflow-hidden' es crucial para que la imagen no rompa los bordes redondeados -->
                 <div class="card shadow-sm overflow-hidden">
-                    
-                    <!-- Usamos el sistema de rejilla (Grid) de Bootstrap DENTRO de la card -->
-                    <!-- g-0 elimina los gutters (espacios) entre las columnas para un look limpio -->
                     <div class="row g-0">
-
-                        <!-- 1. COLUMNA DE LA IMAGEN (IZQUIERDA) -->
                         <div class="col-lg-5 d-none d-lg-block">
                             <img src="{% static 'img/password-error.png' %}" 
                                 class="img-fluid rounded-start card-img-horizontal"
-                                alt="Imagen de recuperación de contraseña">
+                                alt="Imagen de error">
                         </div>
 
-                        <!-- 2. COLUMNA DEL CONTENIDO (DERECHA) -->
                         <div class="col-lg-7">
-                            <!-- 'h-100' asegura que el card-body ocupe toda la altura de la columna -->
-                            <div class="card-body d-flex flex-column h-100">
-
-                                <h5 class="card-title color-texto">Error de procesamiento {{ error_code}}</h5>
-                                <p class="card-text">Se ha producido un error inesperado al procesar la solicitud. Por favor, vuelvalo a intentar.</p>
-                                <p class="card-text">Descripción del error: {{ error_message }}.</p>
-                                <!-- Botón -->
-                                <!-- 'mt-auto' sigue funcionando para empujar el botón al final -->
-                                  <div class="mt-auto">
-                                      <a class="mt-auto w-100 mb-2 btn btn-outline-warning" onclick="history.back()"><i class="bi bi-arrow-left"></i> Volver</a>
-                                  </div>
-                                
+                            <div class="card-body d-flex flex-column h-100 p-4">
+                                <h5 class="card-title color-texto mb-3">Error de procesamiento {{ error_code }}</h5>
+                                <p class="card-text">Se ha producido un error al procesar su solicitud.</p>
+                                <p class="card-text text-muted"><strong>Detalle:</strong> {{ error_message|default:"Operación no disponible o recurso no encontrado." }}</p>
+                                <div class="mt-auto pt-4">
+                                    <a class="w-100 btn btn-outline-warning" onclick="history.back()"><i class="bi bi-arrow-left"></i> Volver a la página anterior</a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <!-- FIN DE LA CARD -->
-
             </div>
         </div>
     </div>

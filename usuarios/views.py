@@ -15,6 +15,9 @@ from django.core.exceptions import ValidationError
 # Django
 from django.contrib import messages
 
+# Utilidades
+from administracion.utils import get_client_ip
+
 # Modelos
 from administracion.models import Alumno
 from .models import Usuario
@@ -23,15 +26,6 @@ from .models import Usuario
 from .forms import UsuarioSelectDojoForm
 
 logger = logging.getLogger('access_logger')
-
-def get_client_ip(request):
-    """Obtiene la IP del cliente desde el encabezado X-Forwarded-For o Remote-Addr"""
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
 
 def login_view(request):
     """Vista para hacer login en la aplicación"""
@@ -78,11 +72,18 @@ def cambio_password(request):
     foto_url = usuario_foto.foto if usuario_foto else None
 
     if request.method == 'POST':
-        old_password = request.POST['old_password']
+        old_password = request.POST.get('old_password', '')
+        new_password = request.POST.get('new_password', '')
+        new_password_conf = request.POST.get('new_password_conf', '')
+
+        if not old_password or not new_password or not new_password_conf:
+            return render(request, 'usuarios/cambio_password.html', {
+                'error': 'Todos los campos son obligatorios',
+                'usuario_foto': foto_url,
+            })
+
         # Check de la contraseña introducida con la del usuario logado
         if check_password(old_password, request.user.password):
-            new_password = request.POST['new_password']
-            new_password_conf = request.POST['new_password_conf']
             if new_password != new_password_conf:
                 return render(request, 'usuarios/cambio_password.html', {
                     'error': 'Las contraseñas no coinciden',
@@ -105,7 +106,7 @@ def cambio_password(request):
             return redirect('login')
         else:
             return render(request, 'usuarios/cambio_password.html', {
-                'error': 'Contraseña incorrecta',
+                'error': 'Contraseña actual incorrecta',
                 'usuario_foto': foto_url,
             })
 

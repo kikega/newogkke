@@ -2,22 +2,17 @@
 {% load static %}
 
 {% block container %}
-    
-    {% include "administracion/header.html" %}
-    
     <!-- Breadcrumb -->
-    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <!-- Puedes añadir más niveles si es necesario -->
             <li class="breadcrumb-item active text-warning" aria-current="page">Cursillos</li>
         </ol>
     </nav>
     <!-- Fin Breadcrumb -->
 
     <!-- Título Principal -->
-    <h1 class="text-center mt-5 mb-5 color-texto">Cursillos</h1>
+    <h1 class="text-center mt-4 mb-4 color-texto">Cursillos</h1>
 
     <div class="col">
         <div class="row">
@@ -26,12 +21,12 @@
     </div>
 
     {% if user.is_staff or user.is_superuser %}
-        <!-- Seccion de botones para creación de cursillonuevo-->
-        <div class="container col-md-4 justify-content-center mt-5">
+        <!-- Seccion de botones para creación de cursillo nuevo -->
+        <div class="container col-md-4 justify-content-center mt-4 mb-4">
             <div class="row">
                 <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
                     <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalCursoNuevo">
-                        <i class="bi bi-people-fill"></i> Curso Nuevo</button>
+                        <i class="bi bi-calendar-plus me-2"></i> Crear nuevo cursillo</button>
                 </div>
             </div>  
         </div>
@@ -39,7 +34,7 @@
     {% endif %}
 
     {% if cursillos %}
-        <div class="col mt-5">
+        <div class="col mt-3">
             <div class="row">
               <table id="tbcursillo" class="table table-striped display">
                 <thead>
@@ -54,7 +49,7 @@
                 </thead>
                 <tbody>
                     {% for cursillo in cursillos %}
-                        {% if cursillo.fecha > hoy %}
+                        {% if cursillo.fecha >= hoy %}
                             <tr class="table-warning">
                         {% else %}
                             <tr>
@@ -127,14 +122,17 @@
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
-                                <label class="form-label" for="evento">Ciudad</label>
+                                <label class="form-label" for="ciudad">Ciudad</label>
                                 <input type="text" class="form-control" id="ciudad" name="ciudad" required>
                                 <div class="invalid-feedback">
                                     Introduzca una ciudad válida.
                                 </div>
-                                <div class="col mb-3">
-                                    <label class="form-label" for="pais">País</label>
-                                    <input type="text" class="form-control" id="pais" name="pais">
+                            </div>
+                            <div class="col mb-3">
+                                <label class="form-label" for="pais">País</label>
+                                <input type="text" class="form-control" id="pais" name="pais" required>
+                                <div class="invalid-feedback">
+                                    Introduzca un país válido.
                                 </div>
                             </div>
                         </div>

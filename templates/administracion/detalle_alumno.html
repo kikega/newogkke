@@ -2,20 +2,15 @@
 {% load static %}
 
 {% block container %}
-    
-    {% include "administracion/header.html" %}
-
-        <!-- Breadcrumb -->
-        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'administracion:alumnos' %}">Cinto Negro</a></li>
-                <!-- Puedes añadir más niveles si es necesario -->
-                <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Cinto Negro</li> 
-            </ol>
-        </nav>
-        <!-- Fin Breadcrumb -->
+    <!-- Breadcrumb -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:alumnos' %}">Cintos Negros</a></li>
+            <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Cinto Negro</li> 
+        </ol>
+    </nav>
+    <!-- Fin Breadcrumb -->
 
         <!-- Título Principal -->
         <h1 class="text-center mb-5 mt-5 color-texto">Detalle Cinto Negro</h1>
@@ -44,9 +39,9 @@
 
                         <!-- Contenedor para la Foto o Icono -->
                         <div class="profile-picture-container mt-2">
-                            <!-- ** LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO ** -->
-                            {% if alumno.foto.url != none %}
-                                <img src="{{ alumno.foto.url }}" alt="Foto dalumno" class="rounded-circle img-thumbnail profile-picture">
+                            <!-- LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO -->
+                            {% if alumno.foto %}
+                                <img src="{{ alumno.foto.url }}" alt="Foto alumno" class="rounded-circle img-thumbnail profile-picture">
                             {% else %}
                                 <i class="bi bi-person-circle text-secondary profile-icon"></i>
                             {% endif %}
@@ -54,7 +49,7 @@
 
                         <!-- Detalles del alumno (centrados por card-body text-center) -->
                         <h3 class="card-title mb-3">{{ alumno.nombre }} {{ alumno.apellidos }}</h3>
-                        <p class="card-text mb-1"><strong>Edad:</strong> {{ edad }}</p>
+                        <p class="card-text mb-1"><strong>Edad:</strong> {{ edad }} años</p>
                         <p class="card-text"><strong>Dojo:</strong> {{ alumno.dojo }}</p>
                     </div>
                     <div class="card-footer text-muted text-center">
@@ -86,7 +81,7 @@
             <div class="col-lg-10 col-md-11">
                 <h2 class="text-center mb-5 color-texto">Exámenes realizados</h2>
                 <div class="timeline">
-                    <!-- ... (Items del Timeline van aquí, como en el ejemplo anterior) ... -->
+                    <!-- Items del Timeline -->
                     {% for exm, a in examenes_anios %}
                     <div class="timeline-item exam">
                         <div class="timeline-marker"></div>
@@ -96,12 +91,14 @@
                             <div class="card shadow-sm">
                                 <div class="card-body">
                                     <h4 class="card-text mb-1">{{ exm.evento.evento }}</h4>
-                                    <span class="timeline-date text-muted">Fecha: {{ exm.evento.fecha }}</span>
-                                    <p>Años de {{ exm.grado }}º DAN: {{ a }}</p>
+                                    <span class="timeline-date text-muted">Fecha: {{ exm.evento.fecha|date:"d-m-Y" }}</span>
+                                    <p class="mb-0">Permanencia en {{ exm.grado }}º DAN: {{ a }} {% if a == 1 %}año{% else %}años{% endif %}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    {% empty %}
+                    <div class="alert alert-info">No hay registros de exámenes para este alumno.</div>
                     {% endfor %}
                 </div>
             </div>
@@ -111,7 +108,7 @@
 
 {% block script_js %}
         <script>
-            const data = JSON.parse('{{ data_json|safe }}'); // Obtener los datos como objeto JavaScript
+            const data = JSON.parse('{{ data_json|escapejs }}'); // Obtener los datos como objeto JavaScript seguro
 
             const ctx = document.getElementById('graficoAniosGrado');
             const config = {

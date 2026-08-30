@@ -2,43 +2,93 @@
 {% load static %}
 
 {% block container %}
-    
-    {% include "administracion/header.html" %}
-
     <!-- Breadcrumb -->
-    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <!-- Puedes añadir más niveles si es necesario -->
-            <li class="breadcrumb-item active text-warning" aria-current="page">Organigrama</li>
+            <li class="breadcrumb-item active text-warning" aria-current="page">Equipo Directivo</li>
         </ol>
     </nav>
     <!-- Fin Breadcrumb -->
 
     <!-- Título Principal -->
-    <h1 class="text-center mt-5 mb-5 color-texto">Equipo Directivo</h1>
+    <h1 class="text-center mt-4 mb-5 color-texto">Equipo Directivo OGKKE</h1>
 
-    {% if presidente%}
-        <div class="container col-md-4 justify-content-center mt-5">
-            <div class="row">
-                <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
-                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPresidente">
-                        <i class="bi bi-person-fill"></i> Presidente</button>
+    {% if presidente %}
+    <!-- Sección Presidente -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8 col-lg-5">
+            <div class="card border-warning shadow text-center h-100">
+                <div class="card-header bg-warning text-dark fw-bold py-3">
+                    <h3 class="h4 mb-0"><i class="bi bi-award-fill me-2"></i>{{ presidente.cargo.nombre }}</h3>
                 </div>
-            </div>  
+                <div class="card-body py-4">
+                    <div class="profile-picture-container mb-3">
+                        {% if presidente.alumno and presidente.alumno.foto %}
+                            <img src="{{ presidente.alumno.foto.url }}" alt="Foto {{ presidente.alumno.nombre }}" class="rounded-circle img-thumbnail profile-picture">
+                        {% else %}
+                            <i class="bi bi-person-circle text-warning profile-icon" style="font-size: 5rem;"></i>
+                        {% endif %}
+                    </div>
+                    <h4 class="card-title color-texto mb-2">
+                        {% if presidente.alumno %}
+                            {{ presidente.alumno.nombre }} {{ presidente.alumno.apellidos }}
+                        {% else %}
+                            {{ presidente.usuario.get_full_name|default:presidente.usuario.username }}
+                        {% endif %}
+                    </h4>
+                    {% if presidente.alumno %}
+                        <p class="card-text text-muted mb-1">{{ presidente.alumno.grado }}º DAN - Dojo {{ presidente.alumno.dojo }}</p>
+                    {% endif %}
+                    {% if presidente.usuario.email %}
+                        <p class="card-text"><i class="bi bi-envelope-at me-1"></i> {{ presidente.usuario.email }}</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+    </div>
     {% endif %}
 
     {% if ejecutiva %}
-        <div class="container col-md-4 justify-content-center mt-5">
-            <div class="row">
-                <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
-                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalEjecutiva">
-                        <i class="bi bi-person-fill"></i> Ejecutiva</button>
+    <!-- Sección Junta Ejecutiva -->
+    <h2 class="text-center h3 mb-4 color-texto">Junta Ejecutiva</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5 justify-content-center">
+        {% for miembro in ejecutiva %}
+        <div class="col">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-header bg-body-tertiary fw-semibold py-2">
+                    <h5 class="mb-0 text-warning">{{ miembro.cargo.nombre }}</h5>
                 </div>
-            </div>  
+                <div class="card-body py-3">
+                    <div class="profile-picture-container mb-2">
+                        {% if miembro.alumno and miembro.alumno.foto %}
+                            <img src="{{ miembro.alumno.foto.url }}" alt="Foto {{ miembro.alumno.nombre }}" class="rounded-circle img-thumbnail profile-picture" style="width: 90px; height: 90px; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-person-circle text-secondary" style="font-size: 4rem;"></i>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title color-texto mb-1">
+                        {% if miembro.alumno %}
+                            {{ miembro.alumno.nombre }} {{ miembro.alumno.apellidos }}
+                        {% else %}
+                            {{ miembro.usuario.get_full_name|default:miembro.usuario.username }}
+                        {% endif %}
+                    </h5>
+                    {% if miembro.alumno %}
+                        <p class="card-text text-muted small mb-1">{{ miembro.alumno.grado }}º DAN - Dojo {{ miembro.alumno.dojo }}</p>
+                    {% endif %}
+                    {% if miembro.usuario.email %}
+                        <p class="card-text small text-muted"><i class="bi bi-envelope-at me-1"></i> {{ miembro.usuario.email }}</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not presidente and not ejecutiva %}
+        <div class="alert alert-info text-center mt-4">No hay cargos directivos registrados actualmente.</div>
     {% endif %}
 
 {% endblock container %}

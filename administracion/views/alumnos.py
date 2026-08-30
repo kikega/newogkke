@@ -43,93 +43,79 @@ class AlumnosView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         """
-        Obtenemos los datos de los cintos negros para hacer el grafico de barras
-
-        Returns:
-            El número de cintos negros por grado
+        Obtenemos los datos de los cintos negros para hacer el gráfico de barras completo
         """
         context = super().get_context_data(**kwargs)
         grado = self.kwargs.get('grado', 1)
         context['grado'] = grado
 
-        # Obtenemos los datos para hacer el gráfico de barras
-        data = Alumno.objects.values('grado').annotate(total=Count('id')).order_by('grado')
+        # Obtenemos los datos completos del 1º al 10º DAN
+        data = Alumno.objects.exclude(grado__isnull=True).values('grado').annotate(total=Count('id'))
+        counts_by_grado = {item['grado']: item['total'] for item in data}
+        labels = [f"{g}º DAN" for g in range(1, 11)]
+        values = [counts_by_grado.get(g, 0) for g in range(1, 11)]
 
-        labels = [item['grado'] for item in data]
-        values = [item['total'] for item in data]
         data_json = json.dumps({
             'labels': labels,
             'values': values,
-            'titulo': 'Número de alumnos por grado',})
+            'titulo': 'Número de alumnos por grado',
+        })
         context['data_json'] = data_json
 
-        # Obtenemos la cantidad de cintos negros en la consulta
         if self.context_object_name in context:
             context['cantidad'] = context[self.context_object_name].count()
         else:
             context['cantidad'] = self.get_queryset().count()
 
-        context['grados_posibles'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
+        context['grados_posibles'] = list(range(1, 11))
         return context
 
 
 class AlumnoDetailView(LoginRequiredMixin, DetailView):
     """
-    Muestra los detalles de un alumno específico.
-    Los exámenes que ha realizado y el tiempo que ha estado en cada grado
+    Muestra los detalles de un alumno específico:
+    Exámenes ordenados cronológicamente y tiempo de permanencia en cada grado.
     """
     model = Alumno
-    template_name = 'administracion/detalle_alumno.html' # Crea esta plantilla
-    context_object_name = 'alumno' # Nombre del objeto en la plantilla detalle
+    template_name = 'administracion/detalle_alumno.html'
+    context_object_name = 'alumno'
 
     def get_context_data(self, **kwargs):
-        """
-        Calculamos los eventos en los que se ha examinado y los años en cada grado
-        """
-        # Creamos las variables locales para los calculos
-        anios = list()
-        examen = list()
-        hoy = datetime.date.today()
-        # Llama a la implementación de la base para obtener el contexto inicial
-        context = super(AlumnoDetailView, self).get_context_data(**kwargs)
-        # Obtiene el objeto alumno actual
+        context = super().get_context_data(**kwargs)
         alumno = self.get_object()
+        hoy = datetime.date.today()
 
-        # Obtenemos la lista de examenes de ese alumno
-        examenes = Examen.objects.filter(alumno=alumno.id).select_related('evento')
+        # Obtenemos la lista de exámenes de ese alumno ordenados por fecha
+        examenes = list(Examen.objects.filter(alumno=alumno).select_related('evento').order_by('evento__fecha'))
 
+        anios = []
+        examen = []
         for idx, exam in enumerate(examenes):
-            examen.append(str(exam.grado) + " DAN")
-            # Verificamos si el indica actual es el último de la lista
+            examen.append(f"{exam.grado}º DAN")
             if idx == len(examenes) - 1:
-                anios.append(hoy.year - exam.evento.fecha.year)
+                anios_grado = max(0, hoy.year - exam.evento.fecha.year)
             else:
-                anios.append(examenes[idx + 1].evento.fecha.year - exam.evento.fecha.year)
+                siguiente_fecha = examenes[idx + 1].evento.fecha
+                anios_grado = max(0, siguiente_fecha.year - exam.evento.fecha.year)
+            anios.append(anios_grado)
 
-        # Preparamos el contexto para la plantilla
         context['examen'] = examen
         context['examenes'] = examenes
         context['hoy'] = hoy
         context['anios'] = anios
         context['total_anios'] = sum(anios)
-        # Combinamos dos listas para poder sber los años de cada grado en el timeline de la plantilla
-        # Este enfoque permite recorrer dos listas de forma sincronizada
-        anios_danes = list(zip(examenes, anios))
-        context['examenes_anios'] = anios_danes
+        context['examenes_anios'] = list(zip(examenes, anios))
 
-        # Calculamos la edad del alumno
-        if alumno.fecha_nacimiento is None:
-            edad_a = 0
-            edad_b = 0
+        # Cálculo exacto de la edad
+        if alumno.fecha_nacimiento:
+            edad = hoy.year - alumno.fecha_nacimiento.year - (
+                (hoy.month, hoy.day) < (alumno.fecha_nacimiento.month, alumno.fecha_nacimiento.day)
+            )
         else:
-            edad = hoy - alumno.fecha_nacimiento
-            edad = divmod(edad.days, 365)
-            edad_a = edad[0]
-            edad_b = edad[1]
-        context['edad'] = edad_a
+            edad = 0
+        context['edad'] = edad
 
-        # Preparamos el gráfico
+        # Datos del gráfico de años en cada grado
         data_json = json.dumps({
             'labels': examen,
             'values': anios,
@@ -138,4 +124,5 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
         context['data_json'] = data_json
 
         return context
+
 

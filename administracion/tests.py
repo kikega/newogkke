@@ -242,3 +242,43 @@ class AdministracionSecurityTests(TestCase):
         })
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Peticion.objects.filter(pk=self.peticion.pk).exists())
+
+    def test_cursillo_inscripcion_alumno_post(self):
+        """Verifica inscripción y anulación directa de un alumno en un cursillo."""
+        self.client.force_login(self.regular_user)
+        url = reverse('administracion:cursillo_inscripcion_alumno', kwargs={'pk': self.cursillo.pk})
+
+        # Inscribirse
+        response = self.client.post(url, {'action': 'inscribir'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(self.cursillo.alumnos.filter(pk=self.regular_alumno.pk).exists())
+
+        # Desinscribirse
+        response = self.client.post(url, {'action': 'desinscribir'})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(self.cursillo.alumnos.filter(pk=self.regular_alumno.pk).exists())
+
+    def test_cursillo_inscripcion_instructor_authorization(self):
+        """Verifica que solo instructores o staff pueden acceder a la gestión de inscripciones del dojo."""
+        # Alumno normal es rechazado con 403
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse('administracion:cursillo_inscripcion_instructor', kwargs={'pk': self.cursillo.pk}))
+        self.assertEqual(response.status_code, 403)
+
+        # Instructor puede acceder
+        self.client.force_login(self.instructor_user)
+        response = self.client.get(reverse('administracion:cursillo_inscripcion_instructor', kwargs={'pk': self.cursillo.pk}))
+        self.assertEqual(response.status_code, 200)
+
+    def test_home_and_alumnos_views_return_ok(self):
+        """Verifica que las vistas de dashboard y alumnos calculan métricas sin errores."""
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('cn', response.context)
+        self.assertIn('cursos', response.context)
+
+        response = self.client.get(reverse('administracion:alumnos'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('grados_posibles', response.context)
+

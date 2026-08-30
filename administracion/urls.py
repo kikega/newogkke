@@ -31,12 +31,13 @@ urlpatterns = [
     path("cursillos/<int:pk>/estadisticas", cursos_views.CursilloEstadisticasView.as_view(), name="cursillo_estadisticas"),
     path("cursillos/<int:pk>/circular", cursos_views.descargar_circular, name="descargar_circular"),
     path("cursillos/<int:pk>/inscripcion", cursos_views.CursilloInscripcionInstructorView.as_view(), name="cursillo_inscripcion_instructor"),
+    path("cursillos/<int:pk>/inscripcion-alumno", cursos_views.CursilloInscripcionAlumnoView.as_view(), name="cursillo_inscripcion_alumno"),
     path("curso/nuevo/", administracion_views.CursoNuevoView.as_view(), name="curso_nuevo"),
     # Peticiones
     path("peticiones/", administracion_views.PeticionView.as_view(), name="peticiones"),
     path("peticiones/anular/<int:pk>/", administracion_views.PeticionAnularView.as_view(), name="peticiones_anular"),
     # Directiva
-    #path("directiva/", directiva_views.DirectivaView.as_view(), name="directiva"),
+    path("directiva/", directiva_views.DirectivaView.as_view(), name="directiva"),
     # Actividades
     path("actividades/", actividades_views.ActividadesView.as_view(), name="actividades"),
     path("actividades/editar/<int:pk>/", actividades_views.ActividadEditarView.as_view(), name="editar_actividad"),

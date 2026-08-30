@@ -2,43 +2,38 @@
 {% load static %}
 
 {% block container %}
-    
-    {% include "administracion/header.html" %}
-    
     <!-- Breadcrumb -->
-    <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-    <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <!-- Puedes añadir más niveles si es necesario -->
             <li class="breadcrumb-item active text-warning" aria-current="page">Actividades</li>
         </ol>
     </nav>
     <!-- Fin Breadcrumb -->
 
     <!-- Título Principal -->
-    <h1 class="text-center mt-5 mb-5 color-texto">Actividades</h1>
+    <h1 class="text-center mt-4 mb-4 color-texto">Actividades</h1>
 
-    <div class="container col-md-4 justify-content-center mt-5">
+    <div class="container col-md-4 justify-content-center mt-4 mb-4">
         <div class="row">
             <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
                 <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalActividadNueva">
-                    <i class="bi bi-database-add"></i> Actividad Nueva</button>
+                    <i class="bi bi-calendar-plus me-2"></i> Crear nueva actividad</button>
             </div>
         </div>  
     </div>
 
     {% if actividades %}
-      <div class="row row-cols-1 mt-5">
+      <div class="row row-cols-1 mt-4">
         {% for actividad in actividades %}
-        <div class="card mt-3">
+        <div class="card mt-3 shadow-sm">
           <div class="card-header">
-            <h4 class="color-texto"><i class="bi bi-card-text"></i> 
+            <h4 class="color-texto mb-0"><i class="bi bi-calendar-event me-2"></i> 
                 {{ actividad.titulo }}
             </h4>
         </div>
         <div class="card-body">
-            <p><i class="bi bi-calendar3"></i> {{ actividad.fecha }}</p>
+            <p class="text-muted mb-2"><i class="bi bi-calendar3"></i> {{ actividad.fecha|date:"d-m-Y" }}</p>
             <p class="card-text">{{ actividad.descripcion }}</p>
             <div class="text-end">    
                 <button class="btn btn-outline-warning btn-sm"
@@ -47,7 +42,6 @@
                     data-update-url="{% url 'administracion:editar_actividad' actividad.id %}">
                     <i class="bi bi-pencil-fill"></i> Editar
                 </button>
-            <!-- Generamos la URL de eliminación para cada elemento y la guardamos en un atributo data-*. Así, el botón "sabe" a qué elemento corresponde.-->
                 <button type="button" class="btn btn-outline-danger btn-sm edit-button"
                     data-bs-toggle="modal"
                     data-bs-target="#modalEliminarActividad"
@@ -74,16 +68,16 @@
                     <form class="needs-validation" action="{% url "administracion:actividades" %}" method='post' enctype="multipart/form-data" id="actividadNueva" novalidate>
                         {% csrf_token %}
                         <div class="row input-group">
-                            <div class="col mb3">
+                            <div class="col mb-3">
                                 {{ form.tipo.label}}
                                 {{ form.tipo }}
                                 <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca el típo de actividad.
+                                    Este campo no puede estar vacío, introduzca el tipo de actividad.
                                 </div>
                             </div>
                         </div>
                         <div class="row input-group">
-                            <div class="col mb3">
+                            <div class="col mb-3">
                                 {{ form.titulo.label}}
                                 {{ form.titulo }}
                                 <div class="invalid-feedback">
@@ -92,7 +86,7 @@
                             </div>
                         </div>
                         <div class="row input-group">
-                            <div class="col mb3">
+                            <div class="col mb-3">
                                 {{ form.descripcion.label}}
                                 {{ form.descripcion }}
                             </div>

@@ -40,12 +40,10 @@ class UsuarioSelectDojoForm(forms.Form):
 class CustomPasswordResetForm(PasswordResetForm):
     """
     Formulario para solicitar un reinicio de contraseña:
-        - email: debe existir en la BD
-        - nombre/apellidos: opcionalmente podríamos validarlos también
-        - dojo: relacionado con el usuario
+    Valida email, nombre, apellidos y dojo para verificar identidad sin exponer
+    datos de existencia a atacantes (OWASP User Enumeration Prevention).
     """
 
-    # Correo electrónico del usuario
     email = forms.EmailField(
         widget=forms.TextInput(attrs={'class': 'form-control mt-1 mb-4'}),
         required=True,
@@ -66,48 +64,30 @@ class CustomPasswordResetForm(PasswordResetForm):
         widget=forms.Select(attrs={'class': 'form-select mt-1 mb-4'}),
         required=True,
         empty_label="Dojo al que perteneces",
-        #label="Dojo al que Perteneces"
+        label="Dojo al que perteneces"
     )
 
-    def clean_email(self):
+    def get_users(self, email):
         """
-        Validamos que el email existe en la base de datos de usuarios
+        Filtra usuarios activos que coincidan con el email Y con los datos del alumno (nombre, apellidos, dojo).
+        Si los datos no coinciden exactamente, no envía el correo pero tampoco filtra errores detallados.
         """
+        active_users = super().get_users(email)
+        nombre = self.cleaned_data.get('nombre', '').strip().lower()
+        apellidos = self.cleaned_data.get('apellidos', '').strip().lower()
+        dojo = self.cleaned_data.get('dojo')
 
-        email = self.cleaned_data['email']
-
-        # Si no existe la cuenta, lanzamos una excepción
-        if not User.objects.filter(email=email).exists():
-            raise forms.ValidationError("No existe una cuenta asociada a este correo electrónico")
-        return email
-    
-    def clean(self):
-        """
-        Validacion cruzada, comprobamos que nombre, apellidos y dojo, correspondan al usuario
-        """
-        cleaned_data = super().clean()
-        email = cleaned_data.get('email')
-        nombre = cleaned_data.get('nombre')
-        apellidos = cleaned_data.get('apellidos')
-        dojo = cleaned_data.get('dojo')
-
-        if email and nombre and apellidos and dojo:
+        valid_users = []
+        for user in active_users:
             try:
-                # Obtenemos los datos de alumno relativos al usuario
-                alumno = Alumno.objects.select_related("usuario").get(usuario__email=email)
+                alumno = Alumno.objects.select_related('dojo').get(usuario=user)
+                if (alumno.nombre.strip().lower() == nombre and
+                    alumno.apellidos.strip().lower() == apellidos and
+                    alumno.dojo == dojo):
+                    valid_users.append(user)
             except Alumno.DoesNotExist:
-                self.add_error(None, "No existen datos de alumno asociados a este correo electrónico")
-                return cleaned_data
+                if user.externo:
+                    valid_users.append(user)
 
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return cleaned_data
-            if alumno.nombre.lower() != nombre.lower() or alumno.apellidos.lower() != apellidos.lower():
-                self.add_error(None, "Los datos de nombre y apellidos no coinciden con el usuario")
-            if alumno.dojo != dojo:
-                self.add_error(None, "El usuario no pertenece al dojo seleccionado")
-            return cleaned_data
+        return valid_users
 
-        return cleaned_data
-            

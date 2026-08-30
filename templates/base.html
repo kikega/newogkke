@@ -36,9 +36,12 @@
 <body class="d-flex align-items-center py-4 bg-body-tertiary">
 {% else %}
 <body class="d-flex flex-column min-vh-100">
+    {% if user.is_authenticated %}
+        {% include "administracion/header.html" %}
+    {% endif %}
 {% endif %}
     
-    <main class="container mt-5 mb-5 {% if request.resolver_match.url_name != "login" %}flex-grow-1{% endif %}">
+    <main class="container mt-4 mb-5 {% if request.resolver_match.url_name != 'login' %}flex-grow-1{% endif %}">
         
         {% block container %}
         {% endblock container %}
@@ -57,13 +60,13 @@
                             {% if usuario_foto  %}
                                 <img class="border border-5 border-light-subtle img-fluid rounded-circle" src="{{ usuario_foto.url }}" alt="foto usuario">
                             {% else %}
-                                <img src="{% static "img/foto.png" %}" class="border border-5 border-light-subtle img-fluid rounded-circle" alt="Imagen de foto" class="rounded-circle">
+                                <img src="{% static 'img/foto.png' %}" class="border border-5 border-light-subtle img-fluid rounded-circle" alt="Imagen de foto">
                             {% endif %}
                         </div>
-                        <form action="{% url "cambio_password" %}" method='post' id="cambioPassword">
+                        <form action="{% url 'cambio_password' %}" method='post' id="cambioPassword">
                             {% csrf_token %}
                             <div class="form-floating mb-3">
-                                <input type="password" class="form-control" id="oldPassword" name="old_password" placeholder="Contraseña">
+                                <input type="password" class="form-control" id="oldPassword" name="old_password" placeholder="Contraseña" required>
                                 <label for="oldPassword">Contraseña actual</label>
                             </div>
                             <div class="input-group mb-3">
@@ -71,7 +74,7 @@
                                     <i class="bi bi-eye-slash-fill" id="icono1"></i>
                                 </button>
                                 <div class="form-floating">
-                                    <input type="password" class="form-control" name="new_password" id="newPassword" placeholder="Contraseña">
+                                    <input type="password" class="form-control" name="new_password" id="newPassword" placeholder="Contraseña" required>
                                     <label for="newPassword">Contraseña</label>
                                 </div>     
                             </div>    
@@ -80,7 +83,7 @@
                                     <i class="bi bi-eye-slash-fill" id="icono2"></i>
                                 </button>
                                 <div class="form-floating">
-                                    <input type="password" class="form-control" name="new_password_conf" id="newPasswordConf" placeholder="Confirmar contraseña">
+                                    <input type="password" class="form-control" name="new_password_conf" id="newPasswordConf" placeholder="Confirmar contraseña" required>
                                     <label for="newPasswordConf">Confirmar contraseña</label>
                                 </div>     
                             </div>
@@ -91,19 +94,29 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="submit" form= "cambioPassword" class="btn btn-primary">Guardar cambios</button>
+                        <button type="submit" form="cambioPassword" class="btn btn-warning"><i class="bi bi-check-lg"></i> Guardar cambios</button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Contenedor de Toasts para notificaciones dinámicas -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        <div id="liveToast" class="toast align-items-center text-bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== FOOTER ===== -->
     {% if request.resolver_match.url_name != "login" %}
-    <footer class="footer py-4 mt-5 bg-body-tertiary">
+    <footer class="footer py-4 mt-auto bg-body-tertiary">
         <div class="container">
             <div class="d-flex justify-content-center">
-                <img class="img-thumbnail" src="{% static "img/logo2.png" %}" alt="Logo egalvez" width="137" height="40">
+                <img class="img-thumbnail" src="{% static 'img/logo2.png' %}" alt="Logo egalvez" width="137" height="40">
             </div>
         </div>
     </footer>

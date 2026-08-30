@@ -38,10 +38,12 @@ class TablonView(LoginRequiredMixin, TemplateView):
         cursos = Cursillo.objects.all().count()
         dojos = Dojo.objects.all().count()
 
-        # Obtenemos el dojo del usuario logado
+        # Obtenemos el dojo y rol del usuario logado
+        es_instructor = False
         try:
             alumno = Alumno.objects.select_related('dojo').get(usuario=user)
             dojo = alumno.dojo
+            es_instructor = alumno.instructor
             tablon_qs = Tablon.objects.filter(dojo_id=dojo)
         except Alumno.DoesNotExist:
             dojo = None
@@ -49,6 +51,7 @@ class TablonView(LoginRequiredMixin, TemplateView):
 
         context["dojo_usuario"] = dojo
         context["tablon"] = tablon_qs
+        context["usuario_es_instructor"] = es_instructor
         context['cn'] = cn
         context['cursos'] = cursos
         context['dojos'] = dojos

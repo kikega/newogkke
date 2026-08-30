@@ -171,49 +171,62 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
             'labels': labels_dojo,
             'values': values_asistentes,
         })
-
         return context
+
+
+class CursilloInscripcionAlumnoView(LoginRequiredMixin, View):
+    """
+    Inscripción o anulación directa de un alumno individual a un cursillo mediante petición POST.
+    """
+    def post(self, request, pk):
+        cursillo = get_object_or_404(Cursillo, pk=pk)
+        action = request.POST.get('action', 'inscribir')
+
+        try:
+            alumno = Alumno.objects.get(usuario=request.user)
+        except Alumno.DoesNotExist:
+            messages.error(request, "No tienes un perfil de alumno asociado para gestionar inscripciones.")
+            return redirect('administracion:cursillo_detalle', pk=cursillo.id)
+
+        if action == 'desinscribir':
+            if cursillo.alumnos.filter(pk=alumno.id).exists():
+                cursillo.alumnos.remove(alumno)
+                messages.success(request, f"Has anulado correctamente tu inscripción en {cursillo.evento}.")
+            else:
+                messages.info(request, "No estabas inscrito en este cursillo.")
+        else:
+            if not cursillo.alumnos.filter(pk=alumno.id).exists():
+                cursillo.alumnos.add(alumno)
+                messages.success(request, f"Te has inscrito correctamente en {cursillo.evento}.")
+            else:
+                messages.info(request, "Ya estás inscrito en este cursillo.")
+
+        return redirect('administracion:cursillo_detalle', pk=cursillo.id)
 
 
 class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
     """
-    Inscripción al cursillo.
-    - Si el usuario es instructor/staff, muestra un formulario para inscribir a sus alumnos.
-    - Si el usuario es un alumno normal, lo inscribe a él mismo directamente.
+    Inscripción masiva de alumnos por parte del instructor de su dojo o administradores.
     """
     template_name = 'administracion/inscripcion_instructor.html'
     cursillo = None
 
     def dispatch(self, request, *args, **kwargs):
-        """
-        Maneja la lógica de inscripción directa para no-instructores antes de
-        llegar a los métodos GET o POST.
-        """
-        user = self.request.user
         self.cursillo = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
-        
-        # Si el usuario es administrador/staff, no se auto-inscribe y gestiona alumnos
-        if user.is_staff or user.is_superuser:
-            return super().dispatch(request, *args, **kwargs)
-        
-        try:
-            alumno = Alumno.objects.get(usuario=user)
-        except Alumno.DoesNotExist:
-            messages.error(request, "No tienes un perfil de alumno para inscribirte.")
-            return redirect('administracion:cursillo_detalle', pk=self.cursillo.id)
+        user = request.user
 
-        # Si el usuario no es instructor, se inscribe a sí mismo y se redirige.
-        if not alumno.instructor:
-            # Comprobación adicional si ya está inscrito
-            if not self.cursillo.alumnos.filter(pk=alumno.id).exists():
-                self.cursillo.alumnos.add(alumno)
-                self.cursillo.save()
-                messages.success(request, f"Te has inscrito correctamente en {self.cursillo.evento}.")
-            else:
-                messages.info(request, "Ya estás inscrito en este cursillo.")
-            return redirect('administracion:cursillo_detalle', pk=self.cursillo.id)
-        
-        # Si es instructor, continúa con el flujo normal (GET o POST).
+        # Verificar permisos: debe ser staff o instructor
+        es_instructor = False
+        if user.is_authenticated:
+            try:
+                alumno = Alumno.objects.get(usuario=user)
+                es_instructor = alumno.instructor
+            except Alumno.DoesNotExist:
+                pass
+
+        if not (user.is_staff or user.is_superuser or es_instructor):
+            raise PermissionDenied("No tienes permiso para gestionar la lista de inscritos de este cursillo.")
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -221,9 +234,7 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
         Prepara el contexto para la plantilla, incluyendo el formulario.
         """
         context = super().get_context_data(**kwargs)
-        #context['cursillo'] = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
         context['cursillo'] = self.cursillo
-        # Pasamos el usuario y el cursillo al formulario para que filtre por su dojo.
         context['form'] = InscripcionAlumnosForm(
             user=self.request.user,
             cursillo=self.cursillo
@@ -232,9 +243,8 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """
-        Procesa el formulario de inscripción de alumnos.
+        Procesa el formulario de inscripción de alumnos del dojo de forma atómica.
         """
-        # cursillo = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
         form = InscripcionAlumnosForm(
             request.POST, 
             user=request.user,
@@ -242,56 +252,54 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
         )
 
         if form.is_valid():
-            # Obtenemos la lista de alumnos que el instructor quiere que queden inscritos
-            # Obtiene todos los alumnos seleccionados
             alumnos_a_inscribir = form.cleaned_data['alumnos']
-            
+
             try:
-                # Alumnos que no son del dojo del instructor
                 instructor = Alumno.objects.get(usuario=request.user)
-                alumnos_externos_inscritos = self.cursillo.alumnos.exclude(dojo=instructor.dojo)
-                # Lista final de alumnos en el cursillo
-                # los externos que ya estaban + los que el instructor acaba de seleccionar de su dojo.
-                lista_final_pks = list(alumnos_externos_inscritos.values_list('pk', flat=True)) + \
-                                  list(alumnos_a_inscribir.values_list('pk', flat=True))
+                dojo = instructor.dojo
+                # Obtenemos los alumnos del dojo del instructor
+                alumnos_dojo_pks = set(Alumno.objects.filter(dojo=dojo, instructor=False, activo=True).values_list('pk', flat=True))
+                selected_dojo_pks = set(alumnos_a_inscribir.values_list('pk', flat=True)) & alumnos_dojo_pks
+
+                # Obtenemos los que estaban inscritos previamente de este dojo
+                actuales_dojo_pks = set(self.cursillo.alumnos.filter(dojo=dojo).values_list('pk', flat=True))
+
+                to_remove = actuales_dojo_pks - selected_dojo_pks
+                to_add = selected_dojo_pks - actuales_dojo_pks
+
+                if to_remove:
+                    self.cursillo.alumnos.remove(*to_remove)
+                if to_add:
+                    self.cursillo.alumnos.add(*to_add)
+
             except Alumno.DoesNotExist:
-                # Si el usuario es administrador sin perfil de alumno, realiza la inscripción global
-                lista_final_pks = list(alumnos_a_inscribir.values_list('pk', flat=True))
+                # Administrador global sin perfil de alumno
+                self.cursillo.alumnos.set(alumnos_a_inscribir)
 
-            # Sincronizamos la relación con la lista final de IDs
-            self.cursillo.alumnos.set(lista_final_pks)
-
-            messages.success(request, f"Se han inscrito {alumnos_a_inscribir.count()} alumno(s) correctamente.")
+            messages.success(request, f"Se han actualizado las inscripciones correctamente.")
         else:
             messages.error(request, "Hubo un error con el formulario. Por favor, inténtalo de nuevo.")
-            # Es mejor volver a renderizar la vista con el formulario y sus errores
-            # en lugar de solo redirigir.
             context = self.get_context_data(**kwargs)
             context['form'] = form
             return self.render_to_response(context)
         
         return redirect("administracion:cursillo_detalle", pk=self.cursillo.id)
-    
-
 
 
 @login_required
 def descargar_circular(request, pk):
+    """
+    Descarga segura de la circular en PDF asociada al cursillo.
+    """
     cursillo = get_object_or_404(Cursillo, pk=pk)
 
     if cursillo.circular and hasattr(cursillo.circular, 'path'):
-        # Obtener la ruta absoluta al archivo
-        # cursillo.circular.path te da la ruta absoluta si MEDIA_ROOT está bien configurado
         circular_path = cursillo.circular.path
         if os.path.exists(circular_path):
-            # Abrir el archivo en modo binario para lectura
-            response = FileResponse(open(circular_path, 'rb'), as_attachment=True, filename=cursillo.circular.name)
-            # as_attachment=True: Fuerza la descarga.
-            # filename=cursillo.circular.name: Sugiere el nombre original del archivo al navegador.
-            # Django se encarga de las cabeceras Content-Type, Content-Disposition,
-            if not settings.DEBUG: # Solo añadir en producción
+            filename = os.path.basename(cursillo.circular.name)
+            response = FileResponse(open(circular_path, 'rb'), as_attachment=True, filename=filename)
+            if not settings.DEBUG:
                 response['Connection'] = 'close'
             return response
         
     return redirect("administracion:errores", error_code=404)
-

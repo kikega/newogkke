@@ -2,19 +2,15 @@
 {% load static %}
 
 {% block container %}
-    
-    {% include "administracion/header.html" %}
-
-        <!-- Breadcrumb -->
-        <!-- Colocado dentro del container, debajo de la nav y antes del H1 -->
-        <nav class="mt-5" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';"> <!-- Opcional: Cambia el separador -->
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'administracion:cursillos' %}">Cursillo</a></li>
-                <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Cursillo</li>
-            </ol>
-        </nav>
-        <!-- Fin Breadcrumb -->
+    <!-- Breadcrumb -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:cursillos' %}">Cursillos</a></li>
+            <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Cursillo</li>
+        </ol>
+    </nav>
+    <!-- Fin Breadcrumb -->
 
         <!-- Título Principal -->
         <h1 class="text-center mt-5 mb-5 color-texto">Detalle Cursillo</h1>
@@ -40,21 +36,27 @@
                         <p class="card-text">{{ cursillo.descripcion }}</p>
                     {% endif %}
                     <p class="card-text">{{ cursillo.lugar }}. {{ cursillo.ciudad }}, {{ cursillo.pais }}</p>
-                    {% if cursillo.fecha > hoy %}
-                    <div class="d-flex justify-content-end">
+                    {% if cursillo.fecha >= hoy %}
+                    <div class="d-flex justify-content-end align-items-center gap-2">
                         {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
-                            <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning ms-4"><i class="bi bi-list-ul"></i> Inscripción</a>
-                        {% else %}
+                            <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning">
+                                <i class="bi bi-people-fill"></i> Gestionar inscripciones dojo
+                            </a>
+                        {% elif not user.externo %}
                             {% if alumno_cursillo_inscrito %}
-                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalInscripcionAlumno">
-                                <i class="bi bi-list-ul"></i> Eliminar</button>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalDesinscripcionAlumno">
+                                    <i class="bi bi-x-circle-fill"></i> Anular mi inscripción
+                                </button>
                             {% else %}
                                 <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalInscripcionAlumno">
-                                <i class="bi bi-list-ul"></i> Inscripción</button>
+                                    <i class="bi bi-check-circle-fill"></i> Inscribirme al cursillo
+                                </button>
                             {% endif %}
                         {% endif %}
-                        {% if cursillo.circular != '' %}
-                            <a href="{% url 'administracion:descargar_circular' pk=cursillo.id %}" class="btn btn-outline-warning ms-4"><i class="bi bi-download"></i> Circular</a>
+                        {% if cursillo.circular %}
+                            <a href="{% url 'administracion:descargar_circular' pk=cursillo.id %}" class="btn btn-outline-info">
+                                <i class="bi bi-file-earmark-pdf-fill"></i> Descargar Circular
+                            </a>
                         {% endif %}
                     </div>
                     {% endif %}
@@ -70,11 +72,11 @@
                 <div class="row row-cols-1">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
-                            <a href="#" class="nav-link active">Asistentes</a>
+                            <a href="#" class="nav-link active">Asistentes ({{ asistentes.count }})</a>
                         </li>
                         {% if cursillo.examenes %}
                             <li class="nav-item">
-                                <a href="{% url 'administracion:cursillo_examinados' pk=cursillo.id %}" class="nav-link">Exámen</a>
+                                <a href="{% url 'administracion:cursillo_examinados' pk=cursillo.id %}" class="nav-link">Exámenes</a>
                             </li>
                         {% endif %}
                         <li class="nav-item">
@@ -83,10 +85,10 @@
                     </ul>
                 </div>
         
-                <div class="row row-cols-1 mt-5">
+                <div class="row row-cols-1 mt-4">
         
                     {% if asistentes %}
-                        <div class="col mt-5">
+                        <div class="col mt-3">
                             <div class="row">
                                 <table id="tbalumno" class="table table-striped display">
                                     <thead>
@@ -103,13 +105,15 @@
                                                     href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}
                                                 </a></td>
                                             <td>{{ alm.dojo }}</td>
-                                            <td>{{ alm.grado }}</td>
+                                            <td>{{ alm.grado }}º DAN</td>
                                         </tr>		
                                     {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+                    {% else %}
+                        <div class="alert alert-info mt-4">Aún no hay alumnos inscritos en este cursillo.</div>
                     {% endif %}
         
                 </div>    
@@ -119,26 +123,57 @@
 
         <!-- Modal Inscripción Alumno -->
         <div class="modal fade" id="modalInscripcionAlumno" tabindex="-1" aria-labelledby="modalInscripcionAlumnoLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5 color-texto" id="modalInscripcionAlumnoLabel">Inscripcion alumno</h1>
+                        <h1 class="modal-title fs-5 color-texto" id="modalInscripcionAlumnoLabel">Confirmar Inscripción</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <h3>Te vas a inscribir en el curso</h3>
-                        <p>{{ cursillo.descripcion }}</p>
-                        <p>De fecha {{ cursillo.fecha|date:"d-m-Y" }}</p>
+                    <form method="post" action="{% url 'administracion:cursillo_inscripcion_alumno' pk=cursillo.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="inscribir">
+                        <div class="modal-body">
+                            <h5>¿Deseas inscribirte en este evento?</h5>
+                            <p class="mb-1"><strong>Evento:</strong> {{ cursillo.evento }}</p>
+                            <p class="mb-1"><strong>Fecha:</strong> {{ cursillo.fecha|date:"d-m-Y" }}</p>
+                            <p><strong>Lugar:</strong> {{ cursillo.lugar }} ({{ cursillo.ciudad }})</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning"><i class="bi bi-check-circle-fill"></i> Inscribirme</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Desinscripción Alumno -->
+        <div class="modal fade" id="modalDesinscripcionAlumno" tabindex="-1" aria-labelledby="modalDesinscripcionAlumnoLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5 text-danger" id="modalDesinscripcionAlumnoLabel">Anular Inscripción</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-footer">
-                        <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning ms-4"><i class="bi bi-list-ul"></i> Inscripción</a>
-                    </div>
+                    <form method="post" action="{% url 'administracion:cursillo_inscripcion_alumno' pk=cursillo.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="desinscribir">
+                        <div class="modal-body">
+                            <h5>¿Estás seguro de que deseas anular tu inscripción?</h5>
+                            <p class="mb-1"><strong>Evento:</strong> {{ cursillo.evento }}</p>
+                            <p>Se retirará tu nombre del listado de asistentes.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger"><i class="bi bi-trash-fill"></i> Confirmar Anulación</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
         <!-- Fin Modals -->
 
-        {% endblock container %}
+{% endblock container %}
 
 {% block script_js %}
 
