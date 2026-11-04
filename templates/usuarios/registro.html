@@ -1,44 +1,31 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Registro de Practicantes · OGKKE{% endblock %}
+
 {% block container %}
+    {% include "administracion/hero.html" %}
 
-    <div class="mb-5 mt-5 color-texto">
-        <div class="text-center">
-            <img class="my-4 img-fluid" src={% static "img/logo.png" %} alt="Logo OGKKE">
-        </div>
-        <div class="text-center">
-            <div class="container py-3">
-                <h1>Okinawa Goju-Ryu Karate-Do Kyokai España<h1>
-                <h2 class="col-lg-8 mx-auto lead">
-                    Sensei Ryoichi Onaga, Hanshi 10º Dan. Director Técnico OGKKE
-                </h2>
+    <section class="max-w-narrow my-4">
+        <h2 class="h3 text-center mb-4 color-texto">Registro de usuarios</h2>
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold color-texto py-3 text-center">
+                Paso 1: Identifícate
             </div>
-        </div>
-    </div>
-
-    <section class="container text-center">
-        <h3 class="color-texto">Registro de usuarios</h3>
-        <div class="d-flex justify-content-center">
-            <div class="card mt-5 col-6">
-                <div class="card-header color-texto">
-                    Paso 1: Identifícate
-                </div>
-                <div class="card-body">
-                    <p>
-                        Si no eres usuario registrado, eres cinto negro y perteneces a algún dojo de la asociacioón OGKKE, puedes proceder con el registro
-                    </p>
-                    <form action="" method="post">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            {{ form }}
-                        </div>
-                        <button type="submit" name="submit_seleccion_dojo" class="btn btn-outline-warning mt-5" data-target={% url 'registro' %}>
-                            <i class="bi bi-forward-fill"></i> Siguiente: Seleccionar Alumno</button>
-                    </form>
-                </div>
+            <div class="card-body p-4">
+                <p class="text-body-secondary small mb-4 text-center">
+                    Si eres cinto negro perteneciente a un dojo oficial de OGKKE y aún no dispones de cuenta, inicia aquí el proceso de registro.
+                </p>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div>
+                        {{ form }}
+                    </div>
+                    <button type="submit" name="submit_seleccion_dojo" class="w-100 btn btn-warning fw-semibold mt-4">
+                        <i class="bi bi-arrow-right-circle-fill me-1" aria-hidden="true"></i>Siguiente: Seleccionar alumno
+                    </button>
+                </form>
             </div>
         </div>
     </section>
-
-{% endblock %}
+{% endblock container %}

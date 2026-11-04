@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Group
-from administracion.models import Dojo, Alumno, Tablon, Actividad, Peticion, Cursillo, Examen
+from administracion.models import Dojo, Alumno, Tablon, Actividad, Peticion, Cursillo, Examen, CargoDirectivo, MiembroDirectiva
 import datetime
 
 User = get_user_model()
@@ -393,6 +393,106 @@ class AdministracionSecurityTests(TestCase):
                 self.assertEqual(res.status_code, 200)
                 self.assertNotContains(res, 'jquery')
                 self.assertNotContains(res, 'dataTables')
+
+    def test_phase3_searchable_checklists_and_post_payloads(self):
+        """Verifica que inscripcion_instructor y correo usan checklists táctiles sin SelectFilter2/jsi18n."""
+        self.client.force_login(self.instructor_user)
+        inscripcion_url = reverse('administracion:cursillo_inscripcion_instructor', kwargs={'pk': self.cursillo.pk})
+
+        get_res = self.client.get(inscripcion_url)
+        self.assertEqual(get_res.status_code, 200)
+        self.assertContains(get_res, 'data-ogkke-checklist')
+        self.assertNotContains(get_res, 'SelectFilter2')
+        self.assertNotContains(get_res, 'jsi18n')
+
+        # Inscribir alumno mediante POST de checkboxes
+        post_add = self.client.post(inscripcion_url, {'alumnos': [self.regular_alumno.pk]})
+        self.assertEqual(post_add.status_code, 302)
+        self.assertTrue(self.cursillo.alumnos.filter(pk=self.regular_alumno.pk).exists())
+
+        # Desmarcar todos mediante POST vacío
+        post_clear = self.client.post(inscripcion_url, {})
+        self.assertEqual(post_clear.status_code, 302)
+        self.assertFalse(self.cursillo.alumnos.filter(pk=self.regular_alumno.pk).exists())
+
+        # Vista de correo a instructores para staff
+        self.client.force_login(self.staff_user)
+        correo_res = self.client.get(reverse('administracion:correo'))
+        self.assertEqual(correo_res.status_code, 200)
+        self.assertContains(correo_res, 'data-ogkke-checklist')
+        self.assertNotContains(correo_res, 'SelectFilter2')
+        self.assertNotContains(correo_res, 'jsi18n')
+
+    def test_phase3_native_dialogs_rendered_on_core_views(self):
+        """Verifica que las modales del Core se renderizan como <dialog> nativos accesibles."""
+        # Alumno regular: modalCambioPassword + modalInscripcionAlumno
+        self.client.force_login(self.regular_user)
+        detalle_curso = self.client.get(reverse('administracion:cursillo_detalle', kwargs={'pk': self.cursillo.pk}))
+        self.assertContains(detalle_curso, '<dialog class="ogkke-dialog" id="modalCambioPassword"')
+        self.assertContains(detalle_curso, '<dialog class="ogkke-dialog" id="modalInscripcionAlumno"')
+        self.assertContains(detalle_curso, 'command="show-modal"')
+
+        # Instructor: diálogo de confirmación para eliminar petición sin onclick confirm()
+        self.client.force_login(self.instructor_user)
+        peticiones_res = self.client.get(reverse('administracion:peticiones'))
+        self.assertContains(peticiones_res, '<dialog class="ogkke-dialog" id="modalConfirmarBorrarPeticion"')
+        self.assertNotContains(peticiones_res, 'return confirm(')
+
+        # Staff: modalCursoNuevo y modales de Actividades + AJAX de edición
+        self.client.force_login(self.staff_user)
+        cursillos_res = self.client.get(reverse('administracion:cursillos'))
+        self.assertContains(cursillos_res, '<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalCursoNuevo"')
+
+        act_res = self.client.get(reverse('administracion:actividades'))
+        self.assertContains(act_res, '<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalActividadNueva"')
+        self.assertContains(act_res, '<dialog class="ogkke-dialog" id="modalEliminarActividad"')
+
+        ajax_edit = self.client.get(
+            reverse('administracion:editar_actividad', kwargs={'pk': self.actividad.pk}),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(ajax_edit.status_code, 200)
+        self.assertIn('commandfor="modalEditarActividad"', ajax_edit.json()['html_form'])
+
+        # Vista pública de password_reset
+        self.client.logout()
+        reset_res = self.client.get(reverse('password_reset'))
+        self.assertEqual(reset_res.status_code, 200)
+        self.assertContains(reset_res, '<dialog class="ogkke-dialog" id="errorFormModal"')
+
+    def test_phase4_alumno_profile_shogo_and_timeline(self):
+        """Verifica insignias Shogo, enlace de salto accesible y lista semántica del timeline."""
+        self.instructor_alumno.grado = 7
+        self.instructor_alumno.rango = 'k'
+        self.instructor_alumno.save()
+        Examen.objects.create(alumno=self.instructor_alumno, evento=self.cursillo, grado=7)
+
+        self.client.force_login(self.regular_user)
+        res = self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': self.instructor_alumno.pk}))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'href="#main-content"')
+        self.assertContains(res, 'budo-rank-badge')
+        self.assertContains(res, 'Kyoshi')
+        self.assertContains(res, '<ol class="timeline" role="list">')
+
+    def test_phase4_directiva_and_error_accessibility(self):
+        """Verifica organigrama sin estilos inline de dimensiones y botón accesible en error.html."""
+        cargo_pres = CargoDirectivo.objects.create(nombre="Presidente", orden_jerarquico=1)
+        cargo_sec = CargoDirectivo.objects.create(nombre="Secretario General", orden_jerarquico=2)
+        MiembroDirectiva.objects.create(cargo=cargo_pres, nombre_externo="Taro", apellidos_externo="Chojun", orden=1)
+        MiembroDirectiva.objects.create(cargo=cargo_sec, alumno=self.instructor_alumno, orden=2)
+
+        self.client.force_login(self.regular_user)
+        dir_res = self.client.get(reverse('administracion:directiva'))
+        self.assertEqual(dir_res.status_code, 200)
+        self.assertContains(dir_res, 'president-card')
+        self.assertContains(dir_res, 'Taro Chojun')
+        self.assertNotContains(dir_res, 'style="width:')
+
+        err_res = self.client.get(reverse('administracion:errores', kwargs={'error_code': 404}))
+        self.assertEqual(err_res.status_code, 200)
+        self.assertContains(err_res, 'data-history-back')
+        self.assertNotContains(err_res, 'onclick=')
 
 
 

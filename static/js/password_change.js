@@ -11,6 +11,7 @@ function togglePasswordVisibility(inputElement, iconElement, buttonElement) {
       "aria-label",
       isVisible ? "Mostrar contraseña" : "Ocultar contraseña"
     );
+    buttonElement.setAttribute("aria-pressed", isVisible ? "false" : "true");
   }
 }
 
@@ -26,22 +27,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  const cambioPasswordDialog = document.getElementById("modalCambioPassword");
   const cambioPasswordForm = document.getElementById("cambioPassword");
-  if (cambioPasswordForm) {
-    cambioPasswordForm.addEventListener("submit", function (event) {
-      const password1 = document.getElementById("newPassword");
-      const password2 = document.getElementById("newPasswordConf");
-      const alertBox = document.getElementById("alertPassword");
+  const password1 = document.getElementById("newPassword");
+  const password2 = document.getElementById("newPasswordConf");
+  const alertBox = document.getElementById("alertPassword");
 
+  if (password2) {
+    password2.addEventListener("input", () => {
+      password2.setCustomValidity("");
+      alertBox?.classList.add("d-none");
+    });
+  }
+
+  if (cambioPasswordForm) {
+    cambioPasswordForm.addEventListener("submit", (event) => {
       if (password1 && password2 && password1.value !== password2.value) {
         event.preventDefault();
+        password2.setCustomValidity("Las contraseñas introducidas no coinciden.");
         alertBox?.classList.remove("d-none");
-        password2.classList.add("is-invalid");
         password2.focus();
       } else {
+        password2?.setCustomValidity("");
         alertBox?.classList.add("d-none");
-        password2?.classList.remove("is-invalid");
       }
+    });
+  }
+
+  if (cambioPasswordDialog) {
+    cambioPasswordDialog.addEventListener("close", () => {
+      cambioPasswordDialog.returnValue = "";
+      cambioPasswordForm?.reset();
+      password2?.setCustomValidity("");
+      alertBox?.classList.add("d-none");
     });
   }
 });

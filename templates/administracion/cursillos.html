@@ -19,7 +19,7 @@
         <div class="d-flex align-items-center gap-2">
             <span class="badge rounded-pill text-bg-secondary fs-6">Total: {{ cantidad }}</span>
             {% if user.is_staff or user.is_superuser %}
-                <button type="button" class="btn btn-warning btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#modalCursoNuevo">
+                <button type="button" class="btn btn-warning btn-sm fw-semibold" commandfor="modalCursoNuevo" command="show-modal">
                     <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Crear nuevo cursillo
                 </button>
             {% endif %}
@@ -91,104 +91,83 @@
         </div>
     {% endif %}
 
-    <!-- Modal Alta de cursillo nuevo (se migra a <dialog> nativo en Fase 3) -->
-    <div class="modal fade" id="modalCursoNuevo" tabindex="-1" aria-labelledby="modalCursoNuevoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5 color-texto" id="modalCursoNuevoLabel">Creación de un Curso Nuevo</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form class="needs-validation" action="{% url 'administracion:curso_nuevo' %}" method="post" enctype="multipart/form-data" id="cursoNuevo" novalidate>
-                        {% csrf_token %}
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                <label class="form-label" for="evento">Evento</label>
-                                <input type="text" class="form-control pe-2" id="evento" name="evento" placeholder="Nombre evento" required>
-                                <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca un nombre de evento.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                <label class="form-label" for="descripcion">Descripción</label>
-                                <textarea class="form-control pe-2" rows="4" id="descripcion" name="descripcion" placeholder="Descripción del mismo"></textarea>
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                <label class="form-label" for="lugar">Lugar</label>
-                                <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Lugar dónde se va a realizar" required>
-                                <div class="invalid-feedback">
-                                    Introduzca donde se va a realizar el evento.
-                                </div>
-                            </div>
-                            <div class="col mb-3">
-                                <label class="form-label" for="fecha">Fecha</label>
-                                <input type="date" class="form-control" id="fecha" name="fecha" placeholder="Fecha" required>
-                                <div class="invalid-feedback">
-                                    Introduzca una fecha válida.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                <label class="form-label" for="ciudad">Ciudad</label>
-                                <input type="text" class="form-control" id="ciudad" name="ciudad" required>
-                                <div class="invalid-feedback">
-                                    Introduzca una ciudad válida.
-                                </div>
-                            </div>
-                            <div class="col mb-3">
-                                <label class="form-label" for="pais">País</label>
-                                <input type="text" class="form-control" id="pais" name="pais" value="España" required>
-                                <div class="invalid-feedback">
-                                    Introduzca un país válido.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col ms-2 mb-3 form-check form-switch">
-                                <label class="form-check-label" for="switchInternacional">Curso internacional</label>
-                                <input class="form-check-input" type="checkbox" role="switch" name="internacional" id="switchInternacional">
-                            </div>
-                            <div class="col mb-3 form-check form-switch">
-                                <label class="form-check-label" for="switchExamenes">Exámenes</label>
-                                <input class="form-check-input" type="checkbox" role="switch" name="examenes" id="switchExamenes">
-                            </div>
-                        </div>
-                        <div class="row input-group mb-2">
-                            <div class="col custom-file">
-                                <label for="circularFile" class="input-file-label mb-3">Si existe circular del evento, seleccione el archivo, formato PDF</label>
-                                <input type="file" class="form-control ps-3" id="circularFile" aria-label="Circular" name="circular" accept=".pdf">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Cancelar</button>
-                            <button type="submit" form="cursoNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add" aria-hidden="true"></i> Crear curso</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    {% if user.is_staff or user.is_superuser %}
+    <!-- Diálogo nativo de alta de cursillo -->
+    <dialog class="ogkke-dialog ogkke-dialog-lg" id="modalCursoNuevo" aria-labelledby="modalCursoNuevoLabel">
+        <div class="ogkke-dialog-header">
+            <h2 class="h5 mb-0 color-texto" id="modalCursoNuevoLabel">Creación de un Curso Nuevo</h2>
+            <button type="button" class="btn-close" commandfor="modalCursoNuevo" command="close" aria-label="Cerrar"></button>
         </div>
-    </div>
+        <div class="ogkke-dialog-body">
+            <form action="{% url 'administracion:curso_nuevo' %}" method="post" enctype="multipart/form-data" id="cursoNuevo">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" for="evento">Evento</label>
+                    <input type="text" class="form-control" id="evento" name="evento" placeholder="Nombre del evento" required autofocus>
+                    <div class="invalid-feedback">
+                        Este campo no puede estar vacío, introduzca un nombre de evento.
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="descripcion">Descripción</label>
+                    <textarea class="form-control" rows="4" id="descripcion" name="descripcion" placeholder="Descripción del evento"></textarea>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="lugar">Lugar</label>
+                        <input type="text" class="form-control" id="lugar" name="lugar" placeholder="Instalación o pabellón" required>
+                        <div class="invalid-feedback">
+                            Introduzca dónde se va a realizar el evento.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="fecha">Fecha</label>
+                        <input type="date" class="form-control" id="fecha" name="fecha" required>
+                        <div class="invalid-feedback">
+                            Introduzca una fecha válida.
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="ciudad">Ciudad</label>
+                        <input type="text" class="form-control" id="ciudad" name="ciudad" required>
+                        <div class="invalid-feedback">
+                            Introduzca una ciudad válida.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="pais">País</label>
+                        <input type="text" class="form-control" id="pais" name="pais" value="España" required>
+                        <div class="invalid-feedback">
+                            Introduzca un país válido.
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-4 mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" name="internacional" id="switchInternacional">
+                        <label class="form-check-label" for="switchInternacional">Curso internacional</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" name="examenes" id="switchExamenes">
+                        <label class="form-check-label" for="switchExamenes">Exámenes</label>
+                    </div>
+                </div>
+                <div>
+                    <label for="circularFile" class="form-label">Circular del evento (opcional, formato PDF)</label>
+                    <input type="file" class="form-control" id="circularFile" name="circular" accept=".pdf">
+                </div>
+            </form>
+        </div>
+        <div class="ogkke-dialog-footer">
+            <button type="button" class="btn btn-outline-secondary" commandfor="modalCursoNuevo" command="close">
+                <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancelar
+            </button>
+            <button type="submit" form="cursoNuevo" class="btn btn-warning fw-semibold">
+                <i class="bi bi-database-fill-add me-1" aria-hidden="true"></i>Crear curso
+            </button>
+        </div>
+    </dialog>
+    {% endif %}
 {% endblock container %}
-
-{% block script_js %}
-<script>
-    (() => {
-        'use strict';
-        document.querySelectorAll('.needs-validation').forEach((form) => {
-            form.addEventListener('submit', (event) => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    })();
-</script>
-{% endblock script_js %}

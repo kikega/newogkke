@@ -173,6 +173,21 @@ body {
    3. COMPONENTES CORE OGKKE
    ========================================================================== */
 
+/* Enlace accesible para saltar bloques de navegación repetidos */
+.skip-link {
+  position: fixed;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.75rem;
+  z-index: 1200;
+  padding: 0.55rem 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--brand-accent);
+  color: #111317;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
 /* Barra de navegación sticky translúcida */
 .ogkke-header {
   background-color: var(--surface-navbar);
@@ -333,12 +348,18 @@ body {
 
 /* Fotos de perfil / Iconos */
 .profile-picture-container {
-  margin-block-end: 1.5rem;
+  margin-block-end: 1.25rem;
 }
 
 .profile-picture {
   inline-size: 120px;
   block-size: 120px;
+  object-fit: cover;
+}
+
+.profile-picture-sm {
+  inline-size: 90px;
+  block-size: 90px;
   object-fit: cover;
 }
 
@@ -353,46 +374,102 @@ body {
   margin-inline: auto;
 }
 
-/* Timeline de exámenes */
+.profile-icon-sm {
+  font-size: 4rem;
+  line-height: 1;
+  inline-size: 90px;
+  block-size: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+/* Insignias de grado DAN y títulos Shogo (Renshi / Kyoshi / Hanshi) */
+.budo-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background-color: #15181e;
+  color: #f4c44e;
+  border: 1px solid color-mix(in srgb, var(--brand-accent) 60%, transparent);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+.budo-shogo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--brand-accent) 16%, var(--surface-subtle));
+  color: var(--brand-accent);
+  border: 1px solid color-mix(in srgb, var(--brand-accent) 45%, var(--border-subtle));
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+/* Tarjeta destacada de Presidencia en Organigrama */
+.president-card {
+  border-color: color-mix(in srgb, var(--brand-accent) 65%, var(--border-subtle));
+}
+
+.president-card .card-header {
+  background-color: color-mix(in srgb, var(--brand-accent) 14%, var(--surface-subtle));
+  border-block-end-color: color-mix(in srgb, var(--brand-accent) 35%, var(--border-subtle));
+}
+
+/* Timeline cronológico de exámenes (<ol class="timeline" role="list">) */
 .timeline {
   position: relative;
-  padding-inline-start: 50px;
-  border-inline-start: 2px solid var(--brand-accent);
+  list-style: none;
+  margin-block: 0;
+  padding-inline-start: 2.75rem;
+  border-inline-start: 2px solid color-mix(in srgb, var(--brand-accent) 55%, var(--border-subtle));
 }
 
 .timeline-item {
   position: relative;
-  margin-block-end: 30px;
+  margin-block-end: 1.75rem;
+}
+
+.timeline-item:last-child {
+  margin-block-end: 0;
 }
 
 .timeline-marker {
   position: absolute;
-  inset-inline-start: -60px;
-  inset-block-start: 5px;
-  inline-size: 18px;
-  block-size: 18px;
+  inset-inline-start: calc(-2.75rem - 9px);
+  inset-block-start: 1.1rem;
+  inline-size: 16px;
+  block-size: 16px;
   background-color: var(--brand-accent);
-  border: 2px solid var(--surface-canvas);
+  border: 3px solid var(--surface-canvas);
   border-radius: 50%;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-accent) 40%, transparent);
   z-index: 1;
 }
 
-.timeline-item.start .timeline-marker {
-  background-color: #198754;
-}
-
-.timeline-item.exam .timeline-marker {
-  background-color: var(--brand-accent);
-}
-
-.timeline-content .card-title {
-  margin-block-end: 0.25rem;
+.timeline-card {
+  border-inline-start: 3px solid var(--brand-accent);
 }
 
 .timeline-date {
-  font-size: 0.875rem;
-  margin-block-end: 0.5rem;
-  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary-ink);
+}
+
+.max-w-narrow {
+  max-inline-size: 28rem;
+  margin-inline: auto;
+}
+
+.max-w-medium {
+  max-inline-size: 50rem;
+  margin-inline: auto;
 }
 
 /* Contenedor de gráficos Chart.js */

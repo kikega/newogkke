@@ -91,6 +91,17 @@
         return;
       }
 
+      const backBtn = event.target.closest("[data-history-back]");
+      if (backBtn) {
+        event.preventDefault();
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.assign("/");
+        }
+        return;
+      }
+
       const cmdBtn = event.target.closest("button[commandfor][command]");
       if (!cmdBtn) return;
 

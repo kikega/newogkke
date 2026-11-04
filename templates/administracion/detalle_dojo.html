@@ -5,7 +5,7 @@
 
 {% block vendor_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="{% static 'js/ogkke-charts.js' %}?v=20261105b"></script>
+<script src="{% static 'js/ogkke-charts.js' %}?v=20261105d"></script>
 {% endblock %}
 
 {% block container %}
@@ -84,7 +84,7 @@
             <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalTablon">
                 <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Publicar aviso
             </button>
-            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPeticiones">
+            <button type="button" class="btn btn-outline-warning" commandfor="modalPeticiones" command="show-modal">
                 <i class="bi bi-person-raised-hand me-1" aria-hidden="true"></i>Peticiones
                 {% if numero_peticiones > 0 %}
                     <span class="badge text-bg-info ms-1">{{ numero_peticiones }}</span>
@@ -212,48 +212,44 @@
         </div>
     </div>
 
-    <!-- Modal Peticiones (se migra a <dialog> nativo en Fase 3) -->
-    <div class="modal fade" id="modalPeticiones" tabindex="-1" aria-labelledby="modalPeticionesLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5 color-texto" id="modalPeticionesLabel">Peticiones {{ dojo.nombre }}</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form class="form needs-validation" action="{% url 'administracion:peticiones' %}" method="post" id="peticionesForm" novalidate>
-                        {% csrf_token %}
-                        <input type="hidden" value="{{ dojo.id }}" name="dojo">
-                        <div class="mb-3">
-                            <p class="text-body-secondary">Se va a crear una nueva petición, describa exactamente lo que necesita.</p>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                <label class="form-label" for="titulo">Título</label>
-                                <input type="text" class="form-control" placeholder="Título..." id="titulo" name="titulo" required>
-                                <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca el título de la petición.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                <label for="descripcion" class="form-label">Descripción</label>
-                                <textarea class="form-control" id="descripcion" rows="5" name="descripcion" required></textarea>
-                                <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca lo que necesita.
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Cerrar</button>
-                    <button type="submit" form="peticionesForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add" aria-hidden="true"></i> Enviar</button>
-                </div>
-            </div>
+    <!-- Diálogo nativo de Peticiones del Dojo -->
+    <dialog class="ogkke-dialog ogkke-dialog-lg" id="modalPeticiones" aria-labelledby="modalPeticionesLabel">
+        <div class="ogkke-dialog-header">
+            <h2 class="h5 mb-0 color-texto" id="modalPeticionesLabel">Peticiones · {{ dojo.nombre }}</h2>
+            <button type="button" class="btn-close" commandfor="modalPeticiones" command="close" aria-label="Cerrar"></button>
         </div>
-    </div>
+        <div class="ogkke-dialog-body">
+            <form action="{% url 'administracion:peticiones' %}" method="post" id="peticionesForm">
+                {% csrf_token %}
+                <input type="hidden" value="{{ dojo.id }}" name="dojo">
+                <p class="text-body-secondary small mb-3">
+                    Se enviará una nueva petición administrativa a la secretaría nacional de OGKKE. Describe con detalle la solicitud.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label" for="titulo">Título</label>
+                    <input type="text" class="form-control" placeholder="Ej. Alta nuevo cinto negro / Actualización de datos" id="titulo" name="titulo" required autofocus>
+                    <div class="invalid-feedback">
+                        Este campo no puede estar vacío, introduzca el título de la petición.
+                    </div>
+                </div>
+                <div>
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcion" rows="5" name="descripcion" required></textarea>
+                    <div class="invalid-feedback">
+                        Este campo no puede estar vacío, introduzca el detalle de la solicitud.
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="ogkke-dialog-footer">
+            <button type="button" class="btn btn-outline-secondary" commandfor="modalPeticiones" command="close">
+                <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancelar
+            </button>
+            <button type="submit" form="peticionesForm" class="btn btn-warning fw-semibold">
+                <i class="bi bi-send-fill me-1" aria-hidden="true"></i>Enviar petición
+            </button>
+        </div>
+    </dialog>
 {% endblock container %}
 
 {% block script_js %}
@@ -266,14 +262,14 @@
             label: 'Cintos Negros'
         });
 
-        document.querySelectorAll('.needs-validation').forEach((form) => {
-            form.addEventListener('submit', (event) => {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
+        // Conservado únicamente para #tablonNuevo (módulo heredado de Dojo)
+        const tablonForm = document.getElementById('tablonNuevo');
+        tablonForm?.addEventListener('submit', (event) => {
+            if (!tablonForm.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            tablonForm.classList.add('was-validated');
         });
     })();
 </script>

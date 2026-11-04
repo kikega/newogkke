@@ -1,61 +1,120 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Peticiones Administrativas · OGKKE{% endblock %}
+
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Peticiones</li>
+            <li class="breadcrumb-item active" aria-current="page">Peticiones</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-    <!-- Título Principal -->
-    {% if user.is_staff or user.is_superuser %}
-        <h1 class="text-center mt-5 mb-5 color-texto">Peticiones totales</h1>
-    {% else %}
-        <h1 class="text-center mt-5 mb-5 color-texto">Peticiones {{ dojo_usuario.nombre }}</h1>
-    {% endif %}
+    <header class="my-4 pb-2 border-bottom">
+        {% if user.is_staff or user.is_superuser %}
+            <h1 class="h2 mb-1 color-texto">Peticiones Totales</h1>
+            <p class="text-body-secondary small mb-0">Solicitudes administrativas remitidas por los dojos de la asociación</p>
+        {% else %}
+            <h1 class="h2 mb-1 color-texto">Peticiones · {{ dojo_usuario.nombre }}</h1>
+            <p class="text-body-secondary small mb-0">Solicitudes pendientes enviadas desde tu dojo</p>
+        {% endif %}
+    </header>
 
     {% if peticiones_pendientes %}
-      <div class="row row-cols-1 mt-5">
-        {% for p in peticiones_pendientes %}
-        <div class="card mt-3">
-          <div class="card-header">
-            <h4 class="color-texto mb-0"><i class="bi bi-card-text"></i> 
-                {% if user.is_staff or user.is_superuser %}
-                    {% if "Dojo" in p.dojo.nombre %} 
-                        {{ p.dojo.nombre }} 
-                    {% else %} 
-                        Dojo {{ p.dojo.nombre }}
-                    {% endif %}
-                     - 
-                {% endif %}
-                {{ p.titulo }}
-            </h4>
+        <div class="d-flex flex-column gap-3 mt-3">
+            {% for p in peticiones_pendientes %}
+                <article class="card activity-card shadow-sm">
+                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h2 class="h5 mb-0 color-texto">
+                            <i class="bi bi-card-text me-2" aria-hidden="true"></i>
+                            {% if user.is_staff or user.is_superuser %}
+                                {% if "Dojo" in p.dojo.nombre %}{{ p.dojo.nombre }}{% else %}Dojo {{ p.dojo.nombre }}{% endif %} ·
+                            {% endif %}
+                            {{ p.titulo }}
+                        </h2>
+                        <span class="badge rounded-pill text-bg-secondary">
+                            <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>{{ p.fecha|date:"d-m-Y" }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text mb-3">{{ p.descripcion }}</p>
+                        <div class="d-flex justify-content-end pt-2 border-top">
+                            {% if user.is_staff or user.is_superuser %}
+                                <form method="post" action="{% url 'administracion:peticiones_anular' pk=p.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="finalizar">
+                                    <button type="submit" class="btn btn-warning btn-sm fw-semibold">
+                                        <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Resolver
+                                    </button>
+                                </form>
+                            {% else %}
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-danger btn-sm"
+                                    data-delete-peticion-url="{% url 'administracion:peticiones_anular' pk=p.id %}"
+                                    data-delete-peticion-title="{{ p.titulo }}"
+                                >
+                                    <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Eliminar petición
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
         </div>
-        <div class="card-body">
-            <p class="text-muted mb-2"><i class="bi bi-calendar3"></i> {{ p.fecha|date:"d-m-Y" }}</p>
-            <p class="card-text">{{ p.descripcion }}</p>
-            <div class="text-end">
-              <form method="post" action="{% url 'administracion:peticiones_anular' pk=p.id %}" style="display: inline;">
-                {% csrf_token %}
-                {% if user.is_staff or user.is_superuser %}
-                    <input type="hidden" name="action" value="finalizar">
-                    <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-hand-thumbs-up"></i> Resolver</button>
-                {% else %}
-                    <input type="hidden" name="action" value="borrar">
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres borrar esta petición?');"><i class="bi bi-trash-fill"></i> Eliminar</button>
-                {% endif %}
-            </form>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
     {% else %}
-      <div class="alert alert-info mt-4 text-center">No hay peticiones pendientes actualmente.</div>
+        <div class="card shadow-sm mt-4">
+            <div class="card-body py-4 text-center text-body-secondary">
+                No hay peticiones pendientes actualmente.
+            </div>
+        </div>
     {% endif %}
 
+    {% if peticiones_pendientes and not user.is_staff and not user.is_superuser %}
+    <!-- Diálogo nativo de confirmación para anular petición sin window.confirm() bloqueante -->
+    <dialog class="ogkke-dialog" id="modalConfirmarBorrarPeticion" closedby="any" aria-labelledby="modalConfirmarBorrarPeticionLabel">
+        <div class="ogkke-dialog-header">
+            <h2 class="h5 mb-0 text-danger" id="modalConfirmarBorrarPeticionLabel">Eliminar Petición</h2>
+            <button type="button" class="btn-close" commandfor="modalConfirmarBorrarPeticion" command="close" aria-label="Cerrar"></button>
+        </div>
+        <form method="post" id="confirmarBorrarPeticionForm" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="borrar">
+            <div class="ogkke-dialog-body">
+                <p class="mb-2">¿Estás seguro de que quieres eliminar la petición <strong id="confirmarBorrarPeticionTitulo">seleccionada</strong>?</p>
+                <p class="small text-body-secondary mb-0">Esta acción retirará la solicitud del listado de secretaría.</p>
+            </div>
+            <div class="ogkke-dialog-footer">
+                <button type="button" class="btn btn-outline-secondary" commandfor="modalConfirmarBorrarPeticion" command="close" autofocus>
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Sí, eliminar
+                </button>
+            </div>
+        </form>
+    </dialog>
+    {% endif %}
 {% endblock container %}
+
+{% block script_js %}
+<script>
+    (() => {
+        const dialog = document.getElementById("modalConfirmarBorrarPeticion");
+        const form = document.getElementById("confirmarBorrarPeticionForm");
+        const titleEl = document.getElementById("confirmarBorrarPeticionTitulo");
+        if (!dialog || !form) return;
+
+        document.addEventListener("click", (event) => {
+            const btn = event.target.closest("[data-delete-peticion-url]");
+            if (!btn) return;
+            form.action = btn.getAttribute("data-delete-peticion-url");
+            if (titleEl) {
+                titleEl.textContent = btn.getAttribute("data-delete-peticion-title") || "seleccionada";
+            }
+            dialog.showModal();
+        });
+    })();
+</script>
+{% endblock script_js %}

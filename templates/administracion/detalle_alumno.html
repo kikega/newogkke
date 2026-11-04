@@ -1,114 +1,146 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}{{ alumno.nombre }} {{ alumno.apellidos }} · Cinto Negro · OGKKE{% endblock %}
+
 {% block vendor_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="{% static 'js/ogkke-charts.js' %}?v=20261105b"></script>
+<script src="{% static 'js/ogkke-charts.js' %}?v=20261105d"></script>
 {% endblock %}
 
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'administracion:alumnos' %}">Cintos Negros</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Cinto Negro</li> 
+            <li class="breadcrumb-item active" aria-current="page">{{ alumno.nombre }} {{ alumno.apellidos }}</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-        <!-- Título Principal -->
-        <h1 class="text-center mb-5 mt-5 color-texto">Detalle Cinto Negro</h1>
+    <header class="text-center my-4">
+        <h1 class="color-texto mb-1">{{ alumno.nombre }} {{ alumno.apellidos }}</h1>
+        <p class="text-body-secondary mb-0">Ficha oficial de Cinturón Negro OGKKE</p>
+    </header>
 
-        <!-- SECCIÓN SUPERIOR: Gráfico e Info Personal -->
-        <section class="row mb-5 gy-4">
-            <!-- Columna Izquierda: Información Personal -->
-            <div class="col-lg-5 col-md-6">
-                <div class="card h-100">
-                    <div class="card-header text-center">
-                        <h4 class="mb-0">
-                            <span class="badge bg-dark p-2">Cinturón Negro {{ alumno.grado }}º DAN
-                                {% if alumno.rango == "k" %}
-                                     - Kyoshi
-                                {% endif %}
-                                {% if alumno.rango == "r" %}
-                                     - Renshi
-                                {% endif %}
-                                {% if alumno.rango == "h" %}
-                                     - Hanshi
-                                {% endif %}
-                            </span>
-                        </h4>
+    <!-- SECCIÓN SUPERIOR: Ficha Personal y Gráfico de Permanencia -->
+    <section class="row mb-5 gy-4">
+        <div class="col-lg-5 col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex flex-wrap justify-content-center align-items-center gap-2 py-3">
+                    <span class="budo-rank-badge">
+                        <i class="bi bi-award-fill" aria-hidden="true"></i>Cinturón Negro {{ alumno.grado }}º DAN
+                    </span>
+                    {% if alumno.rango == "r" %}
+                        <span class="budo-shogo-badge">Renshi</span>
+                    {% elif alumno.rango == "k" %}
+                        <span class="budo-shogo-badge">Kyoshi</span>
+                    {% elif alumno.rango == "h" %}
+                        <span class="budo-shogo-badge">Hanshi</span>
+                    {% endif %}
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="profile-picture-container mt-1">
+                        {% if alumno.foto %}
+                            <img
+                                src="{{ alumno.foto.url }}"
+                                alt="Retrato de {{ alumno.nombre }} {{ alumno.apellidos }}"
+                                class="rounded-circle img-thumbnail profile-picture"
+                                width="120"
+                                height="120"
+                            >
+                        {% else %}
+                            <i class="bi bi-person-circle text-secondary profile-icon" aria-hidden="true"></i>
+                        {% endif %}
                     </div>
-                    <div class="card-body text-center"> <!-- text-center para centrar foto/icono y texto -->
 
-                        <!-- Contenedor para la Foto o Icono -->
-                        <div class="profile-picture-container mt-2">
-                            <!-- LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO -->
-                            {% if alumno.foto %}
-                                <img src="{{ alumno.foto.url }}" alt="Foto alumno" class="rounded-circle img-thumbnail profile-picture">
+                    <h2 class="h4 card-title mb-3">{{ alumno.nombre }} {{ alumno.apellidos }}</h2>
+
+                    <div class="d-flex flex-column gap-1 text-body-secondary">
+                        {% if edad > 0 %}
+                            <p class="mb-0"><strong>Edad:</strong> <span class="text-body">{{ edad }} años</span></p>
+                        {% endif %}
+                        <p class="mb-0">
+                            <strong>Dojo:</strong>
+                            {% if alumno.dojo %}
+                                <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                   href="{% url 'administracion:dojo_detalle' pk=alumno.dojo.id %}">
+                                    {{ alumno.dojo }}
+                                </a>
                             {% else %}
-                                <i class="bi bi-person-circle text-secondary profile-icon"></i>
+                                <span class="text-body">Sin asignar</span>
                             {% endif %}
-                        </div>
-
-                        <!-- Detalles del alumno (centrados por card-body text-center) -->
-                        <h3 class="card-title mb-3">{{ alumno.nombre }} {{ alumno.apellidos }}</h3>
-                        <p class="card-text mb-1"><strong>Edad:</strong> {{ edad }} años</p>
-                        <p class="card-text"><strong>Dojo:</strong> {{ alumno.dojo }}</p>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Estado:</strong>
+                            {% if alumno.activo %}
+                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis ms-1">Activo</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis ms-1">Inactivo</span>
+                            {% endif %}
+                        </p>
                     </div>
-                    <div class="card-footer text-muted text-center">
-                        Años de cinturón negro: {{ total_anios }} años
+                </div>
+                <div class="card-footer text-center text-body-secondary small py-3">
+                    Trayectoria total como cinturón negro: <strong class="text-body">{{ total_anios }} {% if total_anios == 1 %}año{% else %}años{% endif %}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7 col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h2 class="h6 mb-0 fw-semibold">Permanencia en cada grado</h2>
+                    <span class="badge rounded-pill text-bg-secondary">Exámenes: {{ examenes|length }}</span>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div class="chart-container">
+                        <canvas id="graficoAniosGrado"></canvas>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- Columna Derecha: Gráfico de Barras -->
-            <div class="col-lg-7 col-md-6">
-                <div class="card h-100">
-                    <div class="card-header text-center">
-                        <h4 class="mb-0">
-                            <span class="badge bg-dark p-2">Años en cada grado</span>
-                        </h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <div class="d-flex justify-content-center chart-container">
-                            <canvas id="graficoAniosGrado"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </section> <!-- Fin Sección Superior -->
-
-        <!-- SECCIÓN INFERIOR: Timeline -->
-        <section class="row justify-content-center">
-            <div class="col-lg-10 col-md-11">
-                <h2 class="text-center mb-5 color-texto">Exámenes realizados</h2>
-                <div class="timeline">
-                    <!-- Items del Timeline -->
+    <!-- SECCIÓN INFERIOR: Historial Cronológico de Exámenes -->
+    <section class="row justify-content-center">
+        <div class="col-lg-10 col-md-11">
+            <h2 class="h3 text-center mb-4 color-texto">Historial de Exámenes</h2>
+            {% if examenes_anios %}
+                <ol class="timeline" role="list">
                     {% for exm, a in examenes_anios %}
-                    <div class="timeline-item exam">
-                        <div class="timeline-marker"></div>
-                        <div class="timeline-content mb-3">
-
-                            <h3 class="card-title color-texto">Examen {{ exm.grado }}º Dan</h3>
-                            <div class="card shadow-sm">
+                        <li class="timeline-item exam">
+                            <span class="timeline-marker" aria-hidden="true"></span>
+                            <div class="card timeline-card shadow-sm">
                                 <div class="card-body">
-                                    <h4 class="card-text mb-1">{{ exm.evento.evento }}</h4>
-                                    <span class="timeline-date text-muted">Fecha: {{ exm.evento.fecha|date:"d-m-Y" }}</span>
-                                    <p class="mb-0">Permanencia en {{ exm.grado }}º DAN: {{ a }} {% if a == 1 %}año{% else %}años{% endif %}</p>
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                        <h3 class="h5 mb-0 color-texto">Examen {{ exm.grado }}º DAN</h3>
+                                        <span class="timeline-date">
+                                            <i class="bi bi-calendar3 me-1 color-texto" aria-hidden="true"></i>{{ exm.evento.fecha|date:"d-m-Y" }}
+                                        </span>
+                                    </div>
+                                    <p class="mb-1 fw-medium">
+                                        <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                           href="{% url 'administracion:cursillo_detalle' pk=exm.evento.id %}">
+                                            {{ exm.evento.evento }}
+                                        </a>
+                                    </p>
+                                    <p class="small text-body-secondary mb-0">
+                                        Permanencia en {{ exm.grado }}º DAN: <strong class="text-body">{{ a }} {% if a == 1 %}año{% else %}años{% endif %}</strong>
+                                    </p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="alert alert-info">No hay registros de exámenes para este alumno.</div>
+                        </li>
                     {% endfor %}
+                </ol>
+            {% else %}
+                <div class="card shadow-sm">
+                    <div class="card-body py-4 text-center text-body-secondary">
+                        No hay registros históricos de exámenes para este practicante.
+                    </div>
                 </div>
-            </div>
-        </section> <!-- Fin Sección Timeline -->
-
+            {% endif %}
+        </div>
+    </section>
 {% endblock container %}
 
 {% block script_js %}
