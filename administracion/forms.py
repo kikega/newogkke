@@ -3,7 +3,6 @@
 """
 # Django
 from django import forms
-from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.validators import FileExtensionValidator
 
 # Modelos
@@ -11,46 +10,51 @@ from administracion.models import Alumno, Cursillo, Tablon, Actividad
 
 class EmailInstructoresForm(forms.Form):
     """
-    Formulario para la selección de instructores
+    Formulario para la selección de instructores y envío de comunicado por correo.
     """
 
-    # Filtra solo instructores y trae el usuario asociado
-    # ModelMultipleChoiceField: Permite seleccionar múltiples objetos de un modelo.
     instructores = forms.ModelMultipleChoiceField(
-        queryset=Alumno.objects.filter(instructor=True).select_related('usuario'),
-        widget=FilteredSelectMultiple("Instructores", is_stacked=False),
-        #label="Seleccionar Instructores",
+        queryset=Alumno.objects.filter(instructor=True).select_related('usuario', 'dojo'),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input ogkke-check-input'}),
+        label="Destinatarios (Instructores)",
         required=True,
-        #help_text="Selecciona los instructores a los que deseas enviar el correo."(attrs={'class': 'form-control', 'rows': 5})
+        help_text="Selecciona uno o varios instructores a los que deseas enviar el comunicado."
     )
     asunto = forms.CharField(
-        label="Asunto del Correo",
+        label="Asunto del correo",
         max_length=200,
-        widget=forms.TextInput(attrs={'class': 'form-control'}) # Bootstrap class opcional
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej. Convocatoria próxima reunión técnica',
+            'required': True,
+        })
     )
     mensaje = forms.CharField(
-        label="Mensaje del Correo",
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}) # Bootstrap class opcional
+        label="Mensaje del correo",
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 6,
+            'placeholder': 'Escribe aquí el contenido del mensaje...',
+            'required': True,
+        })
     )
-
-    class Media:
-        """
-        Esta clase Media es CRUCIAL para que el widget funcione
-        """
-        css = {
-            'all': ('/static/admin/css/widgets.css',), # Ajusta la ruta si es necesario
-        }
-        js = ('/admin/jsi18n/', '/static/admin/js/core.js', '/static/admin/js/SelectBox.js', '/static/admin/js/SelectFilter2.js')
-        # Es importante que estas rutas sean correctas y accesibles.
-        # /admin/jsi18n/ es generado por Django.
-        # Los archivos .js y .css de admin/static/ deben ser servidos por tu servidor de estáticos.
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Para que el queryset se evalúe dinámicamente si cambian los instructores (opcional)
-        self.fields['instructores'].queryset = Alumno.objects.filter(instructor=True).select_related('usuario')
-        # Personalizar el texto que se muestra en el widget para cada alumno
-        self.fields['instructores'].label_from_instance = lambda obj: f"{obj.nombre} {obj.apellidos} ({obj.usuario.email if obj.usuario else 'Sin email'})"
+        self.fields['instructores'].queryset = (
+            Alumno.objects.filter(instructor=True)
+            .select_related('usuario', 'dojo')
+            .order_by('apellidos', 'nombre')
+        )
+        self.fields['instructores'].label_from_instance = (
+            lambda obj: (
+                f"{obj.apellidos}, {obj.nombre} · "
+                f"{obj.dojo.nombre if obj.dojo else 'Sin dojo'} "
+                f"({obj.usuario.email if obj.usuario and obj.usuario.email else 'Sin email'})"
+            )
+        )
 
 class ActividadNuevaForm(forms.Form):
     """
@@ -214,27 +218,15 @@ class InscripcionAlumnosForm(forms.Form):
     Formulario para la inscripción de alumnos a un cursillo por parte de un instructor.
     """
 
-    # ModelMultipleChoiceField permite seleccionar múltiples alumnos.
     alumnos = forms.ModelMultipleChoiceField(
-        queryset=Alumno.objects.none(),  # El queryset se establecerá dinámicamente en __init__
-        widget=FilteredSelectMultiple("Alumnos", is_stacked=False),
-        label="Seleccionar Alumnos",
-        required=False, # Puede que no se seleccione a nadie
-        help_text="Selecciona los alumnos de tu dojo para inscribirlos al cursillo."
+        queryset=Alumno.objects.none(),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input ogkke-check-input'}),
+        label="Alumnos inscritos en el cursillo",
+        required=False,
+        help_text="Marca los alumnos que asistirán al cursillo y desmarca quienes causen baja."
     )
 
-    class Media:
-        """
-        Esta clase Media es CRUCIAL para que el widget FilteredSelectMultiple funcione.
-        """
-        css = {
-            'all': ('/static/admin/css/widgets.css',),
-        }
-        js = ('/admin/jsi18n/', '/static/admin/js/core.js', '/static/admin/js/SelectBox.js', '/static/admin/js/SelectFilter2.js')
-
     def __init__(self, *args, **kwargs):
-        # Extraemos los argumentos personalizados que pasaremos desde la vista
-        # Extraemos el usuario (que debe ser un instructor) y el cursillo.
         user = kwargs.pop('user', None)
         cursillo = kwargs.pop('cursillo', None)
         super().__init__(*args, **kwargs)
@@ -247,17 +239,16 @@ class InscripcionAlumnosForm(forms.Form):
                 ).select_related('dojo').order_by('dojo__nombre', 'apellidos', 'nombre')
 
                 self.fields['alumnos'].queryset = alumnos_queryset
-
-                # Obtenemos los ID de los alumnos ya inscritos en el cursillo
                 inscritos_ids = cursillo.alumnos.values_list('id', flat=True)
-
                 self.fields['alumnos'].initial = alumnos_queryset.filter(id__in=inscritos_ids)
-                
-                # Personalizar el texto que se muestra en el widget para cada alumno (incluyendo el dojo)
-                self.fields['alumnos'].label_from_instance = lambda obj: f"[{obj.dojo.nombre}] {obj.apellidos}, {obj.nombre}"
+                self.fields['alumnos'].label_from_instance = (
+                    lambda obj: (
+                        f"[{obj.dojo.nombre}] {obj.apellidos}, {obj.nombre}"
+                        + (f" · {obj.grado}º DAN" if obj.grado else "")
+                    )
+                )
             else:
                 try:
-                    # Obtenemos el queryset base: alumnos del dojo del instructor
                     instructor = Alumno.objects.get(usuario=user)
                     dojo_instructor = instructor.dojo
                     alumnos_queryset = Alumno.objects.filter(
@@ -267,16 +258,13 @@ class InscripcionAlumnosForm(forms.Form):
                     ).order_by('apellidos', 'nombre')
 
                     self.fields['alumnos'].queryset = alumnos_queryset
-
-                    # Obtenemos los ID de los alumnos ya inscritos en el cursillo
                     inscritos_ids = cursillo.alumnos.values_list('id', flat=True)
-
-                    # Le decimos al campo que su valor inical son los alumnos del dojo
-                    # que tambien se encuentran en la lista de inscritos
-                    self.fields['alumnos'].initial = alumnos_queryset.filter(id__in=inscritos_ids)     
-                            
-                    # Personalizar el texto que se muestra en el widget para cada alumno
-                    self.fields['alumnos'].label_from_instance = lambda obj: f"{obj.apellidos}, {obj.nombre}"
-                
+                    self.fields['alumnos'].initial = alumnos_queryset.filter(id__in=inscritos_ids)
+                    self.fields['alumnos'].label_from_instance = (
+                        lambda obj: (
+                            f"{obj.apellidos}, {obj.nombre}"
+                            + (f" · {obj.grado}º DAN" if obj.grado else "")
+                        )
+                    )
                 except Alumno.DoesNotExist:
                     self.fields['alumnos'].queryset = Alumno.objects.none()

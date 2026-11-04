@@ -45,17 +45,30 @@ class CustomPasswordResetForm(PasswordResetForm):
     """
 
     email = forms.EmailField(
-        widget=forms.TextInput(attrs={'class': 'form-control mt-1 mb-4'}),
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control mt-1 mb-3',
+            'autocomplete': 'email',
+            'autocorrect': 'off',
+            'autocapitalize': 'off',
+            'spellcheck': 'false',
+            'placeholder': 'correo@ejemplo.com',
+        }),
         required=True,
         label="Correo electrónico"
     )
     nombre = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control mt-1 mb-4'}),
+        widget=forms.TextInput(attrs={
+            'class': 'form-control mt-1 mb-3',
+            'autocomplete': 'given-name',
+        }),
         required=True,
         label="Nombre"
     )
     apellidos = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control mt-1 mb-4'}),
+        widget=forms.TextInput(attrs={
+            'class': 'form-control mt-1 mb-3',
+            'autocomplete': 'family-name',
+        }),
         required=True,
         label="Apellidos"
     )

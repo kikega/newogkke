@@ -1,87 +1,79 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block vendor_css %}
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
-{% endblock %}
+{% block title %}Dojo {{ dojo.nombre }} · OGKKE{% endblock %}
 
 {% block vendor_js %}
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/ogkke-charts.js' %}?v=20261105b"></script>
 {% endblock %}
 
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'administracion:dojos' %}">Dojos</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Detalle Dojo</li> 
+            <li class="breadcrumb-item active" aria-current="page">{{ dojo.nombre }}</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-    <!-- Título Principal -->
-    <h1 class="text-center mb-5 mt-5 color-texto">Detalle Dojo</h1>
+    <header class="text-center my-4">
+        <h1 class="color-texto mb-1">Dojo {{ dojo.nombre }}</h1>
+        <p class="text-body-secondary mb-0">{{ dojo.poblacion }} ({{ dojo.provincia }})</p>
+    </header>
 
-    <!-- SECCIÓN SUPERIOR: Gráfico e Info Personal -->
-    <section class="row mb-5 gy-4">
-        <!-- Columna Izquierda: Información Personal -->
+    <!-- SECCIÓN SUPERIOR: Información del Dojo y Gráfica -->
+    <section class="row mb-4 gy-4">
         <div class="col-lg-5 col-md-6">
-            <div class="card h-100">
-                <div class="card-header text-center">
-                    <h4 class="mb-0">
-                        <span class="badge bg-dark p-2">Dojo {{ dojo.nombre }}</span>
-                    </h4>
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-center py-3">
+                    <span class="badge rounded-pill text-bg-secondary px-3 py-2">Ficha del Centro</span>
                 </div>
-                <div class="card-body text-center"> <!-- text-center para centrar foto/icono y texto -->
-
-                    <!-- Contenedor para la Foto o Icono -->
+                <div class="card-body text-center">
                     <div class="profile-picture-container mt-2">
-                        <!-- LÓGICA CONDICIONAL: Mostrar IMG si hay foto, si no, mostrar ICONO -->
                         {% if instructor and instructor.foto %}
-                            <img src="{{ instructor.foto.url }}" alt="Foto instructor" class="rounded-circle img-thumbnail profile-picture">
+                            <img src="{{ instructor.foto.url }}" alt="Foto de {{ instructor.nombre }} {{ instructor.apellidos }}" class="rounded-circle img-thumbnail profile-picture" width="120" height="120">
                         {% else %}
-                            <i class="bi bi-person-circle text-secondary profile-icon"></i>
+                            <i class="bi bi-person-circle text-secondary profile-icon" aria-hidden="true"></i>
                         {% endif %}
                     </div>
 
-                    <!-- Detalles del dojo e instructor -->
-                    <h3 class="card-title mb-3">{{ dojo.direccion }}</h3>
-                    <p class="card-text mb-1"><strong>{{ dojo.poblacion }}</strong>, {{ dojo.provincia }}, {{ dojo.codigo_postal }}</p>
+                    <h2 class="h5 card-title mb-2">{{ dojo.direccion }}</h2>
+                    <p class="card-text text-body-secondary mb-3">
+                        <strong>{{ dojo.poblacion }}</strong>, {{ dojo.provincia }} · {{ dojo.codigo_postal }}
+                    </p>
                     {% if instructor %}
-                        <p class="card-text"><strong>Instructor: </strong> {{ instructor.nombre }} {{ instructor.apellidos }}{% if instructor.grado %}, {{ instructor.grado }}º DAN{% endif %}</p>
+                        <p class="card-text mb-0">
+                            <strong>Instructor:</strong> {{ instructor.nombre }} {{ instructor.apellidos }}{% if instructor.grado %} · <span class="color-texto fw-semibold">{{ instructor.grado }}º DAN</span>{% endif %}
+                        </p>
                     {% else %}
-                        <p class="card-text text-muted"><em>Sin instructor asignado</em></p>
+                        <p class="card-text text-body-secondary mb-0"><em>Sin instructor asignado</em></p>
                     {% endif %}
                 </div>
-                <div class="card-footer text-muted text-center">
-                    Email: {% if instructor and instructor.usuario %}{{ instructor.usuario.email }}{% else %}No disponible{% endif %}
+                <div class="card-footer text-body-secondary small text-center">
+                    <i class="bi bi-envelope me-1" aria-hidden="true"></i>
+                    {% if instructor and instructor.usuario %}{{ instructor.usuario.email }}{% else %}Correo no disponible{% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Columna Derecha: Gráfico de Barras -->
         <div class="col-lg-7 col-md-6">
-            <div class="card h-100">
-                <div class="card-header text-center">
-                    <h4 class="mb-0">
-                        <span class="badge bg-dark p-2">Cintos Negros del Dojo: {{ total_cintos_negros }}</span>
-                    </h4>
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <span class="fw-semibold">Distribución por grado DAN</span>
+                    <span class="badge rounded-pill text-bg-secondary">Cintos Negros: {{ total_cintos_negros }}</span>
                 </div>
-                <div class="card-body text-center">
-                    <div class="d-flex justify-content-center chart-container">
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div class="chart-container">
                         <canvas id="graficoCintosNegrosDojo"></canvas>
                     </div>
                 </div>
             </div>
         </div>
-
-    </section> <!-- Fin Sección Superior -->
+    </section>
 
     <!-- Acciones del Dojo: Acceso al Tablón local y gestión de instructor/staff -->
-    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+    <div class="d-flex flex-wrap justify-content-center gap-2 my-4">
         <a href="{% url 'administracion:tablon' %}?dojo={{ dojo.id }}" class="btn btn-outline-warning">
             <i class="bi bi-pin-angle-fill me-1" aria-hidden="true"></i>Ver Tablón del Dojo
             {% if numero_anuncios_tablon > 0 %}
@@ -101,64 +93,81 @@
         {% endif %}
     </div>
 
-    <!-- SECCIÓN INFERIOR: Listado alumnos del Dojo -->
-    <section class="row justify-content-center">
-        <div class="col mt-5">
-            <div class="row">
-              <table id="tbalumno" class="table table-striped display">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Grado</th>
-                    <th>Activo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for alm in cintos_negros_dojo %}
-                    <tr>
-                      <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
-                            href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}
-                        </a></td>
-                      <td>{{ alm.grado }}º DAN</td>
-                      <td>
-                        {% if alm.activo %}
-                          <i class="bi bi-check-circle-fill text-success"></i>
-                        {% endif %}
-                      </td>
-                    </tr>		
-                  {% endfor %}
-                </tbody>
-              </table>
+    <!-- SECCIÓN INFERIOR: Listado de cintos negros del Dojo -->
+    <section class="mt-4" aria-labelledby="dojoAlumnosCaption">
+        <h2 id="dojoAlumnosCaption" class="h4 mb-3 color-texto">Cintos Negros del Dojo</h2>
+        {% if cintos_negros_dojo %}
+            <div tabindex="0" role="region" aria-labelledby="dojoAlumnosCaption" class="table-wrapper shadow-sm">
+                <table
+                    id="tbalumno"
+                    class="ogkke-data-table"
+                    data-ogkke-table
+                    style="--label-2: 'Grado'; --label-3: 'Estado';"
+                >
+                    <thead>
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Grado</th>
+                            <th scope="col">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alm in cintos_negros_dojo %}
+                        <tr>
+                            <th scope="row">
+                                <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                   href="{% url 'administracion:alumno_detalle' pk=alm.id %}">
+                                    {{ alm.apellidos }}, {{ alm.nombre }}
+                                </a>
+                            </th>
+                            <td data-order="{{ alm.grado|default:0 }}">{{ alm.grado }}º DAN</td>
+                            <td data-order="{% if alm.activo %}1{% else %}0{% endif %}">
+                                {% if alm.activo %}
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">
+                                        <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </section> 
-    <!-- Fin Sección Timeline -->
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body py-4 text-center text-body-secondary">
+                    No hay cintos negros adicionales registrados en este dojo.
+                </div>
+            </div>
+        {% endif %}
+    </section>
 
-    <!-- Modals -->
-    <!-- Modal Tablón de anuncios -->
+    <!-- Modal Tablón de anuncios (conservada hasta migración a app local de Dojos) -->
     <div class="modal fade" id="modalTablon" tabindex="-1" aria-labelledby="modalTablonLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 color-texto" id="modalTablonLabel">Tablón de anuncios {{dojo.nombre}}</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title fs-5 color-texto" id="modalTablonLabel">Tablón de anuncios {{ dojo.nombre }}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="needs-validation" action="{% url "administracion:tablon" %}" method='post' enctype="multipart/form-data" id="tablonNuevo" novalidate>
+                    <form class="needs-validation" action="{% url 'administracion:tablon' %}" method="post" enctype="multipart/form-data" id="tablonNuevo" novalidate>
                         {% csrf_token %}
                         <input type="hidden" value="{{ dojo.id }}" name="dojo">
                         <div class="row input-group">
                             <div class="col mb-3">
-                                {{ form.tipo.label}}
+                                {{ form.tipo.label }}
                                 {{ form.tipo }}
                                 <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca el típo de actividad.
+                                    Este campo no puede estar vacío, introduzca el tipo de actividad.
                                 </div>
                             </div>
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
-                                {{ form.titulo.label}}
+                                {{ form.titulo.label }}
                                 {{ form.titulo }}
                                 <div class="invalid-feedback">
                                     Este campo no puede estar vacío, introduzca un nombre para la actividad.
@@ -167,13 +176,13 @@
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
-                                {{ form.descripcion.label}}
+                                {{ form.descripcion.label }}
                                 {{ form.descripcion }}
                             </div>
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
-                                {{ form.fecha.label}}
+                                {{ form.fecha.label }}
                                 {{ form.fecha }}
                                 <div class="invalid-feedback">
                                     Este campo no puede estar vacío, introduzca la fecha.
@@ -189,48 +198,41 @@
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
-                                {{ form.informacion.label}}
+                                {{ form.informacion.label }}
                                 {{ form.informacion }}
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
-                    <button type="submit" form= "tablonNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Crear</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Cancelar</button>
+                    <button type="submit" form="tablonNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add" aria-hidden="true"></i> Crear</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Peticiones -->
+    <!-- Modal Peticiones (se migra a <dialog> nativo en Fase 3) -->
     <div class="modal fade" id="modalPeticiones" tabindex="-1" aria-labelledby="modalPeticionesLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 color-texto" id="modalPeticionesLabel">Peticiones {{dojo.nombre}}</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title fs-5 color-texto" id="modalPeticionesLabel">Peticiones {{ dojo.nombre }}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="form needs-validation" action="{% url "administracion:peticiones" %}" method='post' id="peticionesForm" novalidate>
+                    <form class="form needs-validation" action="{% url 'administracion:peticiones' %}" method="post" id="peticionesForm" novalidate>
                         {% csrf_token %}
                         <input type="hidden" value="{{ dojo.id }}" name="dojo">
                         <div class="mb-3">
-                            <!--<label for="tipoSelect" class="form-label">Tipo de Petición</label>
-                            <select class="form-select form-select-lg mb-3" id="tipoSelect" aria-label="Large select example" name="tipo">
-                                <option selected>Seleccionar del menú</option>
-                                <option value="a">Añadir</option>
-                                <option value="m">Modificar</option>
-                                <option value="e">Eliminar</option>
-                              </select>-->
-                              <p>Se va a crear una nueva petición, describa exactamente lo que necesita</p>
+                            <p class="text-body-secondary">Se va a crear una nueva petición, describa exactamente lo que necesita.</p>
                         </div>
                         <div class="row input-group">
                             <div class="col mb-3">
-                                <label class="form-label" for="titulo">Titulo</label>
-                                <input type="text" class="form-control" placeholder="Titulo..." id="titulo" name="titulo" required>
+                                <label class="form-label" for="titulo">Título</label>
+                                <input type="text" class="form-control" placeholder="Título..." id="titulo" name="titulo" required>
                                 <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca el título de la petición
+                                    Este campo no puede estar vacío, introduzca el título de la petición.
                                 </div>
                             </div>
                         </div>
@@ -239,109 +241,40 @@
                                 <label for="descripcion" class="form-label">Descripción</label>
                                 <textarea class="form-control" id="descripcion" rows="5" name="descripcion" required></textarea>
                                 <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca lo que necesita
+                                    Este campo no puede estar vacío, introduzca lo que necesita.
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cerrar</button>
-                    <button type="submit" form= "peticionesForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Enviar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Cerrar</button>
+                    <button type="submit" form="peticionesForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add" aria-hidden="true"></i> Enviar</button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Fin Modals -->
+{% endblock container %}
 
-    {% endblock container %}
+{% block script_js %}
+<script>
+    (() => {
+        const data = JSON.parse('{{ cinturon_negro_data_json|escapejs }}');
+        window.OGKKECharts?.renderBarChart('graficoCintosNegrosDojo', {
+            labels: data.labels,
+            values: data.values,
+            label: 'Cintos Negros'
+        });
 
-    {% block script_js %}
-        <script>
-            // Gráfica cintos negros por dojo
-            const data = JSON.parse('{{ cinturon_negro_data_json|escapejs }}'); // Obtener los datos como objeto JavaScript
-
-            const ctx = document.getElementById('graficoCintosNegrosDojo');
-            const config = {
-                type: 'bar',
-                data: {
-                    datasets: [{
-                        label: '',
-                        data: data.values,
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.2)',
-                        ],
-                        borderColor: [
-                            'rgba(54, 162, 235, 1)',
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 10,
-                        datalabels: { // Configuración de chartjs-plugin-datalabels para ESTE dataset
-                            display: false // Oculta las etiquetas de datos solo para este dataset
-                        },
-                    }],
-                    labels: data.labels,
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false // Esto oculta la leyenda completamente
-                        },
-                    },
-                    scales: { // Configuración del eje Y sin porcentajes
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }          
-                },
-            };
-
-            const myChart = new Chart(ctx, config);    
-            
-            //new DataTable('#tbalumno');
-            $('#tbalumno').DataTable({
-                "pageLength": 25,
-                "responsive": true,
-                "language": {
-                    search: "Buscar en la tabla ",
-                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
-                    infoFiltered: "(filtrado de _MAX_ registros totales)",
-                    lengthMenu: "Mostrar _MENU_ registros",
-                    zeroRecords: "No se encontraron registros",
-                    paginate: {
-                        first: "Primera",
-                        last: "Última",
-                        next: "Siguiente",
-                        previous: "Anterior"
-                    },
+        document.querySelectorAll('.needs-validation').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
                 }
-            });
-
-            // Validación del formulario Nuevo curso
-            (function () {
-                'use strict'
-            
-                // Obtén todos los formularios a los que quieres aplicar estilos de validación de Bootstrap personalizados
-                var forms = document.querySelectorAll('.needs-validation')
-            
-                // Bucle sobre ellos y evita el envío
-                Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-            
-                    form.classList.add('was-validated')
-                    }, false)
-                })
-            })()
-        </script>
-
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
 {% endblock script_js %}

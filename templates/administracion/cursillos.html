@@ -1,102 +1,106 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block vendor_css %}
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
-{% endblock %}
-
-{% block vendor_js %}
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
-{% endblock %}
+{% block title %}Cursillos y Gasshukus · OGKKE{% endblock %}
 
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Cursillos</li>
+            <li class="breadcrumb-item active" aria-current="page">Cursillos</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-    <!-- Título Principal -->
-    <h1 class="text-center mt-4 mb-4 color-texto">Cursillos</h1>
-
-    <div class="col">
-        <div class="row">
-            <h2 class="text-center color-texto">Total: <strong>{{ cantidad }}</strong></h2>
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 my-4 pb-2 border-bottom">
+        <div>
+            <h1 id="cursillosTableCaption" class="h2 mb-1 color-texto">Cursillos y Gasshukus</h1>
+            <p class="text-body-secondary small mb-0">Histórico y próximas convocatorias de la asociación</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill text-bg-secondary fs-6">Total: {{ cantidad }}</span>
+            {% if user.is_staff or user.is_superuser %}
+                <button type="button" class="btn btn-warning btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#modalCursoNuevo">
+                    <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Crear nuevo cursillo
+                </button>
+            {% endif %}
         </div>
     </div>
 
-    {% if user.is_staff or user.is_superuser %}
-        <!-- Seccion de botones para creación de cursillo nuevo -->
-        <div class="container col-md-4 justify-content-center mt-4 mb-4">
-            <div class="row">
-                <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
-                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalCursoNuevo">
-                        <i class="bi bi-calendar-plus me-2"></i> Crear nuevo cursillo</button>
-                </div>
-            </div>  
-        </div>
-        <!-- Fin de sección de botones -->
-    {% endif %}
-
     {% if cursillos %}
-        <div class="col mt-3">
-            <div class="row">
-              <table id="tbcursillo" class="table table-striped display">
+        <div tabindex="0" role="region" aria-labelledby="cursillosTableCaption" class="table-wrapper shadow-sm">
+            <table
+                id="tbcursillo"
+                class="ogkke-data-table"
+                data-ogkke-table
+                data-default-sort="1:desc"
+                style="--label-2: 'Fecha'; --label-3: 'Ciudad'; --label-4: 'País'; --label-5: 'Ámbito'; --label-6: 'Exámenes';"
+            >
                 <thead>
-                  <tr>
-                        <th>Evento</th>
-                        <th>Fecha</th>
-                        <th>Ciudad</th>
-                        <th>País</th>
-                        <th>Internacional</th>
-                        <th>Exámenes</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Evento</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Ciudad</th>
+                        <th scope="col">País</th>
+                        <th scope="col">Internacional</th>
+                        <th scope="col">Exámenes</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for cursillo in cursillos %}
-                        {% if cursillo.fecha >= hoy %}
-                            <tr class="table-warning">
-                        {% else %}
-                            <tr>
-                        {% endif %} 
-                        <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
-                                href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}
-                            </a></td>
-                        <td data-order="{{ cursillo.fecha|date:'Y-m-d' }}">{{ cursillo.fecha|date:"d-m-Y" }}</td>
-                        <td>{{ cursillo.ciudad }}</td>
-                        <td>{{ cursillo.pais }}</td>
-                        <td>
-                            {% if cursillo.internacional %}
-                                <i class="bi bi-check-circle-fill text-warning"></i>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if cursillo.examenes %}
-                                <i class="bi bi-check-circle-fill text-success"></i>
-                            {% endif %}
-                        </td>
-                    </tr>		
-                  {% endfor %}
+                        <tr {% if hoy and cursillo.fecha >= hoy %}class="is-upcoming"{% endif %}>
+                            <th scope="row">
+                                <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                   href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">
+                                    {{ cursillo.evento }}
+                                </a>
+                                {% if hoy and cursillo.fecha >= hoy %}
+                                    <span class="badge rounded-pill text-bg-warning ms-2">Próximo</span>
+                                {% endif %}
+                            </th>
+                            <td data-order="{{ cursillo.fecha|date:'Y-m-d' }}">{{ cursillo.fecha|date:"d-m-Y" }}</td>
+                            <td>{{ cursillo.ciudad }}</td>
+                            <td>{{ cursillo.pais }}</td>
+                            <td data-order="{% if cursillo.internacional %}1{% else %}0{% endif %}">
+                                {% if cursillo.internacional %}
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">
+                                        <i class="bi bi-globe2 me-1" aria-hidden="true"></i>Sí
+                                    </span>
+                                {% else %}
+                                    <span class="text-body-secondary small">—</span>
+                                {% endif %}
+                            </td>
+                            <td data-order="{% if cursillo.examenes %}1{% else %}0{% endif %}">
+                                {% if cursillo.examenes %}
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">
+                                        <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Sí
+                                    </span>
+                                {% else %}
+                                    <span class="text-body-secondary small">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
-              </table>
+            </table>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body py-4 text-center text-body-secondary">
+                No hay cursillos registrados actualmente.
             </div>
         </div>
-      {% endif %}
+    {% endif %}
 
-    <!-- Modal Alta de cursillo nuevo -->
+    <!-- Modal Alta de cursillo nuevo (se migra a <dialog> nativo en Fase 3) -->
     <div class="modal fade" id="modalCursoNuevo" tabindex="-1" aria-labelledby="modalCursoNuevoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 color-texto" id="modalCursoNuevoLabel">Creación de un Curso Nuevo</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title fs-5 color-texto" id="modalCursoNuevoLabel">Creación de un Curso Nuevo</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <form class="needs-validation" action="{% url "administracion:curso_nuevo" %}" method='post' enctype="multipart/form-data" id="cursoNuevo" novalidate>
+                    <form class="needs-validation" action="{% url 'administracion:curso_nuevo' %}" method="post" enctype="multipart/form-data" id="cursoNuevo" novalidate>
                         {% csrf_token %}
                         <div class="row input-group">
                             <div class="col mb-3">
@@ -139,7 +143,7 @@
                             </div>
                             <div class="col mb-3">
                                 <label class="form-label" for="pais">País</label>
-                                <input type="text" class="form-control" id="pais" name="pais" required>
+                                <input type="text" class="form-control" id="pais" name="pais" value="España" required>
                                 <div class="invalid-feedback">
                                     Introduzca un país válido.
                                 </div>
@@ -160,62 +164,31 @@
                                 <label for="circularFile" class="input-file-label mb-3">Si existe circular del evento, seleccione el archivo, formato PDF</label>
                                 <input type="file" class="form-control ps-3" id="circularFile" aria-label="Circular" name="circular" accept=".pdf">
                             </div>
-                        </div>  
+                        </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
-                            <button type="submit" form= "cursoNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Crear curso</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Cancelar</button>
+                            <button type="submit" form="cursoNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add" aria-hidden="true"></i> Crear curso</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
 {% endblock container %}
 
 {% block script_js %}
 <script>
-    //new DataTable('#tbalumno');
-    $('#tbcursillo').DataTable({
-        "pageLength": 25,
-        "responsive": true,
-        "order": [[1, "desc"]],
-        "language": {
-            search: "Buscar en la tabla ",
-            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-            infoEmpty: "Mostrando 0 a 0 de 0 registros",
-            infoFiltered: "(filtrado de _MAX_ registros totales)",
-            lengthMenu: "Mostrar _MENU_ registros",
-            zeroRecords: "No se encontraron registros",
-            paginate: {
-                first: "Primera",
-                last: "Última",
-                next: "Siguiente",
-                previous: "Anterior"
-            },
-        }
-    });
-
-    // Validación del formulario Nuevo curso
-    (function () {
-        'use strict'
-      
-        // Obtén todos los formularios a los que quieres aplicar estilos de validación de Bootstrap personalizados
-        var forms = document.querySelectorAll('.needs-validation')
-      
-        // Bucle sobre ellos y evita el envío
-        Array.prototype.slice.call(forms)
-          .forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-              if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-              }
-      
-              form.classList.add('was-validated')
-            }, false)
-          })
-      })()
-
+    (() => {
+        'use strict';
+        document.querySelectorAll('.needs-validation').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
 </script>
 {% endblock script_js %}

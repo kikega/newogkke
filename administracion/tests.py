@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Group
-from administracion.models import Dojo, Alumno, Tablon, Actividad, Peticion, Cursillo
+from administracion.models import Dojo, Alumno, Tablon, Actividad, Peticion, Cursillo, Examen
 import datetime
 
 User = get_user_model()
@@ -328,6 +328,72 @@ class AdministracionSecurityTests(TestCase):
         self.assertEqual(tablon_other.context['dojo_usuario'], self.other_dojo)
         self.assertEqual(tablon_other.context['tablon'].count(), 0)
         self.assertFalse(tablon_other.context['puede_gestionar_tablon'])
+
+    def test_alumnos_htmx_partial_and_full_render(self):
+        """Verifica carga completa y actualización parcial HTMX por grado DAN sin jQuery/DataTables."""
+        nidan_user = User.objects.create_user(email="nidan@test.com", password="Password123!")
+        Alumno.objects.create(
+            usuario=nidan_user,
+            nombre="Kenji",
+            apellidos="Miyagi",
+            dojo=self.dojo,
+            grado=2,
+        )
+        self.client.force_login(self.regular_user)
+
+        # Petición normal -> página completa con gráfico y tabla responsiva
+        full_res = self.client.get(reverse('administracion:alumnos'))
+        self.assertEqual(full_res.status_code, 200)
+        self.assertTemplateUsed(full_res, 'administracion/alumnos.html')
+        self.assertContains(full_res, 'window.OGKKECharts?.renderBarChart')
+        self.assertContains(full_res, 'data-ogkke-table')
+        self.assertNotContains(full_res, 'jquery')
+        self.assertNotContains(full_res, 'dataTables')
+
+        # Petición parcial HTMX -> solo el panel de grado 2º DAN
+        htmx_res = self.client.get(
+            reverse('administracion:alumnos_grado', kwargs={'grado': 2}),
+            HTTP_HX_REQUEST='true',
+        )
+        self.assertEqual(htmx_res.status_code, 200)
+        self.assertTemplateUsed(htmx_res, 'administracion/partials/alumnos_grado_panel.html')
+        self.assertTemplateNotUsed(htmx_res, 'administracion/alumnos.html')
+        self.assertContains(htmx_res, 'data-selected-grado="2"')
+        self.assertContains(htmx_res, 'Miyagi, Kenji')
+
+        # Petición HTMX con HX-Boosted -> devuelve página completa
+        boosted_res = self.client.get(
+            reverse('administracion:alumnos_grado', kwargs={'grado': 2}),
+            HTTP_HX_REQUEST='true',
+            HTTP_HX_BOOSTED='true',
+        )
+        self.assertEqual(boosted_res.status_code, 200)
+        self.assertTemplateUsed(boosted_res, 'administracion/alumnos.html')
+
+    def test_phase2_tables_and_charts_views_render_cleanly(self):
+        """Verifica que todas las vistas de listados, detalles y estadísticas de Fase 2 renderizan sin jQuery."""
+        self.cursillo.examenes = True
+        self.cursillo.save()
+        self.cursillo.alumnos.add(self.regular_alumno)
+        Examen.objects.create(alumno=self.regular_alumno, evento=self.cursillo, grado=1)
+
+        self.client.force_login(self.regular_user)
+        urls = [
+            reverse('administracion:dojos'),
+            reverse('administracion:dojo_detalle', kwargs={'pk': self.dojo.pk}),
+            reverse('administracion:alumno_detalle', kwargs={'pk': self.regular_alumno.pk}),
+            reverse('administracion:cursillos'),
+            reverse('administracion:cursillo_detalle', kwargs={'pk': self.cursillo.pk}),
+            reverse('administracion:cursillo_examinados', kwargs={'pk': self.cursillo.pk}),
+            reverse('administracion:cursillo_estadisticas', kwargs={'pk': self.cursillo.pk}),
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                res = self.client.get(url)
+                self.assertEqual(res.status_code, 200)
+                self.assertNotContains(res, 'jquery')
+                self.assertNotContains(res, 'dataTables')
+
 
 
 

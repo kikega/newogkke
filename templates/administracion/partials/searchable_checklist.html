@@ -1,0 +1,67 @@
+<fieldset class="ogkke-checklist shadow-sm" data-ogkke-checklist>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <legend class="h6 mb-0 color-texto float-none w-auto">
+            <i class="bi bi-person-check-fill me-1" aria-hidden="true"></i>{{ field.label }}
+        </legend>
+        <span class="badge rounded-pill text-bg-secondary" data-checklist-count aria-live="polite"></span>
+    </div>
+
+    {% if field.help_text %}
+        <p class="small text-body-secondary mb-3">{{ field.help_text }}</p>
+    {% endif %}
+
+    {% if field.errors %}
+        <div class="alert alert-danger py-2 px-3 mb-3" role="alert">
+            {{ field.errors|join:", " }}
+        </div>
+    {% endif %}
+
+    {% if field %}
+        <div class="ogkke-checklist-toolbar">
+            <div class="ogkke-checklist-search">
+                <label for="search-{{ field.html_name }}" class="visually-hidden">Filtrar {{ field.label|lower }}</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input
+                    type="search"
+                    id="search-{{ field.html_name }}"
+                    class="form-control form-control-sm"
+                    placeholder="{{ search_placeholder|default:'Filtrar por nombre, dojo o grado...' }}"
+                    data-checklist-search
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    enterkeyhint="search"
+                    autocomplete="off"
+                >
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-checklist-action="toggle-selected" aria-pressed="false">
+                    <i class="bi bi-funnel me-1" aria-hidden="true"></i>Solo marcados
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm" data-checklist-action="select-visible">
+                    <i class="bi bi-check2-all me-1" aria-hidden="true"></i>Marcar visibles
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-checklist-action="clear-all">
+                    <i class="bi bi-x-lg me-1" aria-hidden="true"></i>Desmarcar todos
+                </button>
+            </div>
+        </div>
+
+        <div class="ogkke-checklist-grid">
+            {% for checkbox in field %}
+                <label class="ogkke-checklist-item" for="{{ checkbox.id_for_label }}">
+                    {{ checkbox.tag }}
+                    <span class="ogkke-checklist-label">{{ checkbox.choice_label }}</span>
+                </label>
+            {% endfor %}
+        </div>
+
+        <p class="text-center text-body-secondary small py-3 mb-0" data-checklist-empty hidden>
+            No hay coincidencias para la búsqueda actual.
+        </p>
+    {% else %}
+        <p class="text-center text-body-secondary py-3 mb-0">
+            No hay registros disponibles para seleccionar.
+        </p>
+    {% endif %}
+</fieldset>

@@ -1,190 +1,63 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block vendor_css %}
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
-{% endblock %}
+{% block title %}Cintos Negros · OGKKE{% endblock %}
 
 {% block vendor_js %}
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/ogkke-charts.js' %}?v=20261105b"></script>
 {% endblock %}
 
 {% block container %}
-      <!-- Breadcrumb -->
-      <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-          <li class="breadcrumb-item active text-warning" aria-current="page">Cintos Negros</li>
-         </ol>
-      </nav>
-      <!-- Fin Breadcrumb -->
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Cintos Negros</li>
+        </ol>
+    </nav>
 
-        <!-- Título Principal -->
-        <h1 class="text-center mb-5 mt-5 color-texto">Cintos Negros {{ grado }}º DAN</h1>
+    <header class="text-center my-4">
+        <h1 class="color-texto mb-1">Escalafón de Cintos Negros</h1>
+        <p class="text-body-secondary mb-0">Distribución oficial por grado DAN en OGKKE</p>
+    </header>
 
-        <div class="col">
-            <div class="row">
-              <h2 class="text-center color-texto">Total: <strong>{{ cantidad }}</strong></h2>
+    <!-- Gráfico global de Danes -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-3 p-md-4">
+            <div class="chart-container" style="max-inline-size: 760px;">
+                <canvas id="graficoDanes"></canvas>
             </div>
         </div>
-        <!-- Contenedor para el gráfico de barras -->
-        <div class="container">
-            <div>
-                <canvas id="graficoDanes" width="300" height="150"></canvas>
-            </div>
-        </div>
-        <!-- Formulario de selección de DAN y búsqueda -->
-        <div class="container col-md-6 justify-content-center mt-5">
-          <div class="row">
-            <label class="form-label" for="gradoSelect">Seleccionar grado</label>
-            <select name="grado" id="gradoSelect" class="form-select form-select-lg mb-3">
-                        
-              {% for g in grados_posibles %}
-                <option value="{{ g }}" {% if g == grado %}selected{% endif %}>
-                  {{ g }}º DAN
-                </option>
-              {% endfor %}           
-            </select>
-          </div>
-        </div>
+    </div>
 
-      {% if alumnos %}
-        <div class="col mt-5">
-            <div class="row">
-              <table id="tbalumno" class="table table-striped display">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Gimnasio</th>
-                    <th>Activo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for alm in alumnos %}
-                    <tr>
-                      <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover" 
-                            href="{% url 'administracion:alumno_detalle' pk=alm.id %}">{{ alm.apellidos }}, {{ alm.nombre }}
-                          </a></td>
-                      <td>{{ alm.dojo }}</td>
-                      <td>
-                        {% if alm.activo %}
-                          <i class="bi bi-check-circle-fill text-success"></i>
-                        {% endif %}
-                      </td>
-                    </tr>		
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-        </div>
-      {% else %}
-        <div class="alert alert-info mt-4 text-center">No hay alumnos registrados con el grado {{ grado }}º DAN.</div>
-      {% endif %}
-      
+    {% include "administracion/partials/alumnos_grado_panel.html" %}
 {% endblock container %}
 
 {% block script_js %}
-        <script>
-          // Script para la selección de grado
-          document.getElementById('gradoSelect').addEventListener('change', function() {
-            const selectedGrado = this.value;
-            const baseUrl = "{% url 'administracion:alumnos_grado' 0 %}";
-            const newUrl = baseUrl.replace('/0/', '/' + selectedGrado + '/');
-            window.location.href = newUrl;
-          });
+<script>
+    (() => {
+        const data = JSON.parse('{{ data_json|escapejs }}');
+        const initialGrado = parseInt('{{ grado }}', 10) || 1;
 
+        window.OGKKECharts?.renderBarChart('graficoDanes', {
+            labels: data.labels,
+            values: data.values,
+            title: data.titulo,
+            highlightIndex: initialGrado - 1,
+            label: 'Cintos Negros'
+        });
 
-          // Script para la generacion del gráfico de barras
-            const data = JSON.parse('{{ data_json|escapejs }}'); // Obtener los datos de forma segura
-
-            const ctx = document.getElementById('graficoDanes').getContext('2d');
-            const config = {
-                type: 'bar',
-                data: {
-                    datasets: [{
-                        label: 'Alumnos',
-                        data: data.values,      
-                        borderWidth: 2,
-                        borderRadius: 10,
-                        backgroundColor: [
-                            'rgba(255, 255, 255, 0.6)',
-                            'rgba(255, 255, 0, 0.6)',
-                            'rgba(255, 165, 0, 0.6)',
-                            'rgba(0, 128, 0, 0.6)',
-                            'rgba(0, 0, 255, 0.6)',
-                            'rgba(165, 42, 42, 0.6)',
-                            'rgba(128, 0, 128, 0.6)',
-                            'rgba(255, 0, 0, 0.6)',
-                            'rgba(128, 128, 128, 0.6)',
-                            'rgba(128, 128, 128, 0.6)',
-                        ],
-                        borderColor: [
-                            'rgba(255, 255, 255)',
-                            'rgba(255, 255, 0)',
-                            'rgba(255, 165, 0)',
-                            'rgba(0, 128, 0)',
-                            'rgba(0, 0, 255)',
-                            'rgba(165, 42, 42)',
-                            'rgba(128, 0, 128)',
-                            'rgba(255, 0, 0)',
-                            'rgba(128, 128, 128)',
-                            'rgba(128, 128, 128)',
-                        ],
-                    }],
-                    labels: data.labels,
-                },
-                options: {
-                    responsive: true,
-                    indexAxis: 'x',
-                    plugins: {
-                        title: {
-                            display: true,
-                            font: {
-                                size: 22,
-                            },
-                            text: data.titulo,
-                        },
-                        legend: {
-                          display: false
-                        },
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                },
-            };
-
-            const myChart = new Chart(ctx, config);
-
-            //new DataTable('#tbalumno');
-            $('#tbalumno').DataTable({
-                "pageLength": 25,
-                "responsive": true,
-                "language": {
-                    search: "Buscar en la tabla ",
-                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
-                    infoFiltered: "(filtrado de _MAX_ registros totales)",
-                    lengthMenu: "Mostrar _MENU_ registros",
-                    zeroRecords: "No se encontraron registros",
-                    paginate: {
-                        first: "Primera",
-                        last: "Última",
-                        next: "Siguiente",
-                        previous: "Anterior"
-                    },
+        document.addEventListener('htmx:afterSwap', (event) => {
+            const panel = event.detail?.target?.id === 'panelAlumnosGrado'
+                ? event.detail.target
+                : document.getElementById('panelAlumnosGrado');
+            if (panel && panel.dataset.selectedGrado) {
+                const selected = parseInt(panel.dataset.selectedGrado, 10);
+                if (!Number.isNaN(selected)) {
+                    window.OGKKECharts?.setHighlightIndex('graficoDanes', selected - 1);
                 }
-            });
-
-            
-        </script>
+            }
+        });
+    })();
+</script>
 {% endblock script_js %}
-
-    

@@ -1,0 +1,126 @@
+<!-- Cabecera y pestañas compartidas para las vistas de Detalle de Cursillo -->
+<div class="card shadow-sm mt-3">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+        <span class="fw-semibold color-texto">
+            <i class="bi bi-bookmark-star me-1" aria-hidden="true"></i>{{ cursillo.evento }}
+        </span>
+        {% if cursillo.internacional %}
+            <span class="badge rounded-pill text-bg-warning">Internacional</span>
+        {% else %}
+            <span class="badge rounded-pill text-bg-secondary">Nacional</span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <p class="text-body-secondary small mb-2 d-flex flex-wrap gap-3">
+            <span><i class="bi bi-calendar3 me-1 color-texto" aria-hidden="true"></i>{{ cursillo.fecha|date:"d-m-Y" }}</span>
+            <span><i class="bi bi-geo-alt-fill me-1 color-texto" aria-hidden="true"></i>{% if cursillo.lugar %}{{ cursillo.lugar }} · {% endif %}{{ cursillo.ciudad }}, {{ cursillo.pais }}</span>
+        </p>
+        {% if cursillo.descripcion %}
+            <p class="card-text">{{ cursillo.descripcion }}</p>
+        {% endif %}
+
+        {% if cursillo.fecha >= hoy %}
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mt-3 pt-3 border-top">
+            {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
+                <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-people-fill me-1" aria-hidden="true"></i>Gestionar inscripciones dojo
+                </a>
+            {% elif not user.externo %}
+                {% if alumno_cursillo_inscrito %}
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalDesinscripcionAlumno">
+                        <i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i>Anular mi inscripción
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-warning btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#modalInscripcionAlumno">
+                        <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Inscribirme al cursillo
+                    </button>
+                {% endif %}
+            {% endif %}
+            {% if cursillo.circular %}
+                <a href="{% url 'administracion:descargar_circular' pk=cursillo.id %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-file-earmark-pdf-fill me-1" aria-hidden="true"></i>Descargar Circular
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if cursillo.fecha >= hoy and not usuario_es_instructor and not user.is_staff and not user.is_superuser and not user.externo %}
+<!-- Modales de inscripción/anulación individual (se migran a <dialog> nativo en Fase 3) -->
+<div class="modal fade" id="modalInscripcionAlumno" tabindex="-1" aria-labelledby="modalInscripcionAlumnoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5 color-texto" id="modalInscripcionAlumnoLabel">Confirmar Inscripción</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form method="post" action="{% url 'administracion:cursillo_inscripcion_alumno' pk=cursillo.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="inscribir">
+                <div class="modal-body">
+                    <p class="fw-semibold mb-2">¿Deseas inscribirte en este evento?</p>
+                    <p class="mb-1 small"><strong>Evento:</strong> {{ cursillo.evento }}</p>
+                    <p class="mb-1 small"><strong>Fecha:</strong> {{ cursillo.fecha|date:"d-m-Y" }}</p>
+                    <p class="mb-0 small"><strong>Lugar:</strong> {{ cursillo.lugar }} ({{ cursillo.ciudad }})</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Inscribirme</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDesinscripcionAlumno" tabindex="-1" aria-labelledby="modalDesinscripcionAlumnoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5 text-danger" id="modalDesinscripcionAlumnoLabel">Anular Inscripción</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form method="post" action="{% url 'administracion:cursillo_inscripcion_alumno' pk=cursillo.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="desinscribir">
+                <div class="modal-body">
+                    <p class="fw-semibold mb-2">¿Estás seguro de que deseas anular tu inscripción?</p>
+                    <p class="mb-1 small"><strong>Evento:</strong> {{ cursillo.evento }}</p>
+                    <p class="mb-0 small text-body-secondary">Se retirará tu nombre del listado de asistentes.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Confirmar Anulación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Pestañas de navegación del cursillo -->
+<ul class="nav nav-tabs ogkke-tabs mt-5">
+    <li class="nav-item">
+        <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}"
+           class="nav-link {% if active_tab == 'asistentes' %}active{% endif %}"
+           {% if active_tab == 'asistentes' %}aria-current="page"{% endif %}>
+            <i class="bi bi-people me-1" aria-hidden="true"></i>Asistentes{% if active_tab == 'asistentes' %} ({{ asistentes.count }}){% endif %}
+        </a>
+    </li>
+    {% if cursillo.examenes %}
+    <li class="nav-item">
+        <a href="{% url 'administracion:cursillo_examinados' pk=cursillo.id %}"
+           class="nav-link {% if active_tab == 'examenes' %}active{% endif %}"
+           {% if active_tab == 'examenes' %}aria-current="page"{% endif %}>
+            <i class="bi bi-award me-1" aria-hidden="true"></i>Exámenes{% if active_tab == 'examenes' %} ({{ examinan.count }}){% endif %}
+        </a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+        <a href="{% url 'administracion:cursillo_estadisticas' pk=cursillo.id %}"
+           class="nav-link {% if active_tab == 'estadisticas' %}active{% endif %}"
+           {% if active_tab == 'estadisticas' %}aria-current="page"{% endif %}>
+            <i class="bi bi-bar-chart-line me-1" aria-hidden="true"></i>Estadísticas
+        </a>
+    </li>
+</ul>

@@ -1,0 +1,77 @@
+<section id="panelAlumnosGrado" data-selected-grado="{{ grado }}" class="mt-4">
+    <!-- Selector rápido de grado DAN con actualización parcial HTMX -->
+    <nav aria-label="Filtrar cintos negros por grado DAN" class="mb-4">
+        <div class="dan-filter-bar">
+            {% for g in grados_posibles %}
+                <a
+                    href="{% url 'administracion:alumnos_grado' g %}"
+                    hx-get="{% url 'administracion:alumnos_grado' g %}"
+                    hx-target="#panelAlumnosGrado"
+                    hx-swap="outerHTML"
+                    hx-push-url="true"
+                    class="dan-pill {% if g == grado %}active{% endif %}"
+                    {% if g == grado %}aria-current="page"{% endif %}
+                >
+                    {{ g }}º DAN
+                </a>
+            {% endfor %}
+        </div>
+    </nav>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 id="alumnosTableCaption" class="h4 mb-0 color-texto">
+            Listado {{ grado }}º DAN
+        </h2>
+        <span class="badge rounded-pill text-bg-secondary fs-6">
+            Total: {{ cantidad }}
+        </span>
+    </div>
+
+    {% if alumnos %}
+        <div tabindex="0" role="region" aria-labelledby="alumnosTableCaption" class="table-wrapper shadow-sm">
+            <table
+                id="tbalumno"
+                class="ogkke-data-table"
+                data-ogkke-table
+                style="--label-2: 'Dojo'; --label-3: 'Estado';"
+            >
+                <thead>
+                    <tr>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Dojo</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alm in alumnos %}
+                    <tr>
+                        <th scope="row">
+                            <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                               href="{% url 'administracion:alumno_detalle' pk=alm.id %}">
+                                {{ alm.apellidos }}, {{ alm.nombre }}
+                            </a>
+                        </th>
+                        <td>{{ alm.dojo }}</td>
+                        <td data-order="{% if alm.activo %}1{% else %}0{% endif %}">
+                            {% if alm.activo %}
+                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis">
+                                    <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Activo
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Inactivo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body py-4 text-center text-body-secondary">
+                <i class="bi bi-people fs-3 d-block mb-2 color-texto" aria-hidden="true"></i>
+                No hay cintos negros registrados actualmente con el grado {{ grado }}º DAN.
+            </div>
+        </div>
+    {% endif %}
+</section>

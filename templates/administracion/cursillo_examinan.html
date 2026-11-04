@@ -1,138 +1,67 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block vendor_css %}
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
-{% endblock %}
-
-{% block vendor_js %}
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
-{% endblock %}
+{% block title %}Exámenes · {{ cursillo.evento }} · OGKKE{% endblock %}
 
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'administracion:cursillos' %}">Cursillos</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Exámenes en Cursillo</li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Exámenes</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-        <!-- Título Principal -->
-        <h1 class="text-center mt-5 mb-5 color-texto">Detalle Cursillo</h1>
+    <header class="text-center my-4">
+        <h1 class="color-texto mb-1">Exámenes en Cursillo</h1>
+    </header>
 
-        <div class="row row-cols-1 mt-5">
-            <div class="card mt-3">
-                <div class="card-header">
-                  {% if cursillo.internacional %}Internacional{% else %}Nacional{% endif %}
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title color-texto">{{ cursillo.evento }}</h5>
-                    <p class="card-text"><i class="bi bi-calendar3"></i> {{ cursillo.fecha }}</p>
-                    {% if cursillo.descripcion != None %}
-                        <p class="card-text">{{ cursillo.descripcion }}</p>
-                    {% endif %}
-                    <p class="card-text">{{ cursillo.lugar }}. {{ cursillo.ciudad }}, {{ cursillo.pais }}</p>
-                    {% if cursillo.fecha >= hoy %}
-                    <div class="d-flex justify-content-end align-items-center gap-2">
-                        {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
-                            <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning">
-                                <i class="bi bi-people-fill"></i> Gestionar inscripciones dojo
-                            </a>
-                        {% endif %}
-                        {% if cursillo.circular %}
-                            <a href="{% url 'administracion:descargar_circular' pk=cursillo.id %}" class="btn btn-outline-info">
-                                <i class="bi bi-file-earmark-pdf-fill"></i> Descargar Circular
-                            </a>
-                        {% endif %}
-                    </div>
-                    {% endif %}
+    {% include "administracion/partials/cursillo_cabecera.html" with active_tab="examenes" %}
+
+    <section class="py-4" aria-labelledby="examenesTableCaption">
+        <h2 id="examenesTableCaption" class="visually-hidden">Alumnos que se examinan en {{ cursillo.evento }}</h2>
+
+        {% if examinan %}
+            <div tabindex="0" role="region" aria-labelledby="examenesTableCaption" class="table-wrapper shadow-sm">
+                <table
+                    id="tbalumno"
+                    class="ogkke-data-table"
+                    data-ogkke-table
+                    style="--label-2: 'Dojo'; --label-3: 'Grado Examen';"
+                >
+                    <thead>
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Dojo</th>
+                            <th scope="col">Grado Examen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alm in examinan %}
+                        <tr>
+                            <th scope="row">
+                                <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                   href="{% url 'administracion:alumno_detalle' pk=alm.alumno.id %}">
+                                    {{ alm.alumno.apellidos }}, {{ alm.alumno.nombre }}
+                                </a>
+                            </th>
+                            <td>{{ alm.alumno.dojo }}</td>
+                            <td data-order="{{ alm.grado|default:0 }}">
+                                <span class="badge rounded-pill text-bg-warning">{{ alm.grado }}º DAN</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body py-4 text-center text-body-secondary">
+                    <i class="bi bi-award fs-3 d-block mb-2 color-texto" aria-hidden="true"></i>
+                    No hay alumnos registrados para examen en este cursillo.
                 </div>
             </div>
-        </div>
-
-        <section class="album py-5">
-            <div class="container">
-                
-                <!-- Pestañas -->
-                <div class="row row-cols-1">
-                    <ul class="nav nav-tabs">
-                        <li class="nav-item">
-                            <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="nav-link">Asistentes</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active">Exámenes ({{ examinan.count }})</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'administracion:cursillo_estadisticas' pk=cursillo.id %}" class="nav-link">Estadísticas</a>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- Listado de alumnos que se examinan -->
-                <div class="row row-cols-1 mt-4">
-        
-                    {% if examinan %}
-                        <div class="col mt-3">
-                            <div class="row">
-                                <table id="tbalumno" class="table table-striped display">
-                                    <thead>
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>Gimnasio</th>
-                                        <th>Grado Examen</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for alm in examinan %}
-                                        <tr>
-                                            <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
-                                                    href="{% url 'administracion:alumno_detalle' pk=alm.alumno.id %}">{{ alm.alumno.apellidos }}, {{ alm.alumno.nombre }}</a></td>
-                                            <td>{{ alm.alumno.dojo }}</td>
-                                            <td>{{ alm.grado }}º DAN</td>
-                                        </tr>		
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info mt-4">No hay alumnos registrados para examen en este cursillo.</div>
-                    {% endif %}
-        
-                </div>    
-            </div>
-        </section>
-        <!-- Fin listado de alumnos que se examinan -->
-
-        {% endblock container %}
-
-{% block script_js %}
-
-<script>
-    //new DataTable('#tbalumno');
-    $('#tbalumno').DataTable({
-        "pageLength": 25,
-        "responsive": true,
-        "language": {
-            search: "Buscar en la tabla ",
-            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-            infoEmpty: "Mostrando 0 a 0 de 0 registros",
-            infoFiltered: "(filtrado de _MAX_ registros totales)",
-            lengthMenu: "Mostrar _MENU_ registros",
-            zeroRecords: "No se encontraron registros",
-            paginate: {
-                first: "Primera",
-                last: "Última",
-                next: "Siguiente",
-                previous: "Anterior"
-            },
-        }
-    });
-</script>
-
-
-{% endblock script_js %}
+        {% endif %}
+    </section>
+{% endblock container %}

@@ -1,84 +1,60 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block vendor_css %}
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
-{% endblock %}
-
-{% block vendor_js %}
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
-{% endblock %}
+{% block title %}Dojos asociados · OGKKE{% endblock %}
 
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Dojos</li>
+            <li class="breadcrumb-item active" aria-current="page">Dojos</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-    <!-- Título Principal -->
-    <h1 class="text-center mt-5 mb-5 color-texto">Dojos asociados</h1>
-
-    <div class="col">
-        <div class="row">
-          <h2 class="text-center color-texto">Total: <strong>{{ cantidad }}</strong></h2>
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 my-4 pb-2 border-bottom">
+        <div>
+            <h1 id="dojosTableCaption" class="h2 mb-1 color-texto">Dojos asociados</h1>
+            <p class="text-body-secondary small mb-0">Centros de enseñanza reconocidos por OGKKE</p>
         </div>
+        <span class="badge rounded-pill text-bg-secondary fs-6">Total: {{ cantidad }}</span>
     </div>
 
     {% if dojos %}
-        <div class="col mt-5">
-            <div class="row">
-              <table id="tbdojo" class="table table-striped display">
+        <div tabindex="0" role="region" aria-labelledby="dojosTableCaption" class="table-wrapper shadow-sm">
+            <table
+                id="tbdojo"
+                class="ogkke-data-table"
+                data-ogkke-table
+                style="--label-2: 'Población'; --label-3: 'Provincia';"
+            >
                 <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Población</th>
-                    <th>Provincia</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Población</th>
+                        <th scope="col">Provincia</th>
+                    </tr>
                 </thead>
                 <tbody>
-                  {% for dojo in dojos %}
+                    {% for dojo in dojos %}
                     <tr>
-                      <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover" 
-                            href="{% url 'administracion:dojo_detalle' pk=dojo.id %}">{{ dojo.nombre }}
-                          </a></td>
-                      <td>{{ dojo.poblacion }}</td>
-                      <td>{{ dojo.provincia }}</td>
-                    </tr>		
-                  {% endfor %}
+                        <th scope="row">
+                            <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                               href="{% url 'administracion:dojo_detalle' pk=dojo.id %}">
+                                {{ dojo.nombre }}
+                            </a>
+                        </th>
+                        <td>{{ dojo.poblacion }}</td>
+                        <td>{{ dojo.provincia }}</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
-              </table>
+            </table>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body py-4 text-center text-body-secondary">
+                No hay dojos registrados actualmente.
             </div>
         </div>
-      {% endif %}
-
+    {% endif %}
 {% endblock container %}
-
-{% block script_js %}
-<script>
-    //new DataTable('#tbalumno');
-    $('#tbdojo').DataTable({
-        "pageLength": 25,
-        "responsive": true,
-        "language": {
-            search: "Buscar en la tabla ",
-            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-            infoEmpty: "Mostrando 0 a 0 de 0 registros",
-            infoFiltered: "(filtrado de _MAX_ registros totales)",
-            lengthMenu: "Mostrar _MENU_ registros",
-            zeroRecords: "No se encontraron registros",
-            paginate: {
-                first: "Primera",
-                last: "Última",
-                next: "Siguiente",
-                previous: "Anterior"
-            },
-        }
-    });
-</script>
-{% endblock script_js %}
-

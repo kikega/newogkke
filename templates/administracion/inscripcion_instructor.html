@@ -1,59 +1,37 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Inscripción de Alumnos · {{ cursillo.evento }} · OGKKE{% endblock %}
+
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'administracion:cursillos' %}">Cursillos</a></li>
             <li class="breadcrumb-item"><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Inscripción de Alumnos</li>
+            <li class="breadcrumb-item active" aria-current="page">Inscripción de Alumnos</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-    <!-- Título Principal -->
-    <h1 class="text-center mb-4 mt-5 color-texto">Inscribir Alumnos al Cursillo</h1>
-    <h3 class="text-center mb-5 color-texto">{{ cursillo.evento }}</h3>
+    <header class="my-4 pb-2 border-bottom">
+        <h1 class="h2 mb-1 color-texto">Inscribir Alumnos al Cursillo</h1>
+        <p class="text-body-secondary mb-0">
+            <strong>{{ cursillo.evento }}</strong> · {{ cursillo.fecha|date:"d-m-Y" }} ({{ cursillo.ciudad }})
+        </p>
+    </header>
 
-    <p class="lead text-center mb-5">
-        Como instructor, puedes seleccionar a los alumnos de tu dojo que deseas inscribir en este cursillo.
-        <br>
-        Utiliza el filtro para encontrar alumnos rápidamente y muévelos a la caja de la derecha para seleccionarlos.
-    </p>
-
-    <form method="post" class="form-control" novalidate>
+    <form method="post" action="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}">
         {% csrf_token %}
-        
-        {# El widget FilteredSelectMultiple con el estilo de la página de correo #}
-        <fieldset class="mt-5 module aligned color-texto form-select">
-            <div class="mt-3 form-row field-{{ form.alumnos.name }}">
-                <div>
-                    {{ form.alumnos }} {# Esto renderizará el widget #}
-                    {% if form.alumnos.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.alumnos.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-            </div>
-        </fieldset>
-        <div class="d-flex justify-content-end mt-4">
-            <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-x-circle"></i> Cancelar
+
+        {% include "administracion/partials/searchable_checklist.html" with field=form.alumnos search_placeholder="Buscar alumno por apellidos, nombre o dojo..." %}
+
+        <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+            <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Cancelar
             </a>
-            <button type="submit" class="btn btn-outline-warning">
-                <i class="bi bi-check-circle"></i> Inscribir Seleccionados
+            <button type="submit" class="btn btn-warning fw-semibold">
+                <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Guardar inscripciones
             </button>
         </div>
     </form>
-
 {% endblock container %}
-
-{% block script_js %}
-    {# Esta línea es CRUCIAL para cargar el CSS y JS del widget FilteredSelectMultiple #}
-    {{ form.media }}
-{% endblock script_js %}

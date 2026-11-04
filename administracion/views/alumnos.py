@@ -24,21 +24,28 @@ class AlumnosView(LoginRequiredMixin, ListView):
     # paginate_by = 10
 
 
+    def get_template_names(self):
+        if (
+            self.request.headers.get("HX-Request") == "true"
+            and self.request.headers.get("HX-Boosted") != "true"
+        ):
+            return ["administracion/partials/alumnos_grado_panel.html"]
+        return [self.template_name]
+
     def get_queryset(self):
         """
         Define la consulta para obtener los alumnos por grado.
         Filtra por el grado obtenido en los parametros de la url
         Ordena los resultados
         """
-
-        # Obtiene el valor de 'grado' de los argumentos de la URL (kwargs)
-        # Si no se pasa 'grado' en la URL, usa 1 como valor predeterminado.
         grado = self.kwargs.get('grado', 1)
-        queryset = super().get_queryset().filter(grado=grado).order_by('dojo', 'apellidos')
-        # Alternativamente, podrías escribirlo sin llamar a super() aquí:
-        #queryset = Alumno.objects.filter(grado=grado).order_by('dojo', 'apellidos')
-
-        return queryset
+        return (
+            super()
+            .get_queryset()
+            .select_related('dojo')
+            .filter(grado=grado)
+            .order_by('dojo', 'apellidos')
+        )
 
 
     def get_context_data(self, **kwargs):

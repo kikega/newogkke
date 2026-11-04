@@ -433,58 +433,541 @@ body {
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-/* Soporte transitorio para widget FilteredSelectMultiple hasta Fase 3 */
-.selector {
-  display: flex !important;
-  flex-grow: 1 !important;
-  gap: 0 10px !important;
-  width: auto !important;
-  float: none !important;
+/* ==========================================================================
+   4. TABLAS RESPONSIVAS (@container) Y FILTROS DE GRADO DAN
+   ========================================================================== */
+
+/* Botonera de selección rápida de grado DAN (HTMX) */
+.dan-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
 }
 
-.selector .selector-filter {
-  border: var(--bs-border-width) solid var(--bs-border-color) !important;
-  border-radius: var(--bs-border-radius) !important;
-  font-size: 1rem !important;
-  line-height: 1.5 !important;
-  margin-bottom: 30px !important;
+.dan-pill {
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-card);
+  color: var(--text-secondary-ink);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
 
-.selector select {
-  flex: 1 0 auto !important;
-  overflow: auto;
-  width: 100% !important;
-  border: var(--bs-border-width) solid var(--bs-border-color);
-  border-radius: var(--bs-border-radius);
-  background-color: var(--bs-body-bg);
-  color: var(--text-main);
-  font-size: 1rem;
-  margin-bottom: 30px;
-  height: 35.7em !important;
+.dan-pill:hover,
+.dan-pill:focus-visible {
+  color: var(--brand-accent);
+  border-color: var(--brand-accent);
+  background-color: var(--surface-subtle);
 }
 
-.selector-available,
-.selector-chosen {
-  text-align: center;
+.dan-pill.active {
+  background-color: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: #111317;
+}
+
+/* Envoltorio de tabla responsiva con Container Queries */
+.ogkke-table-shell {
   display: flex;
   flex-direction: column;
-  flex: 1 1;
+  gap: 0.75rem;
 }
 
-.selector .selector-available input,
-.selector .selector-chosen input {
-  background-color: var(--bs-body-bg);
+.ogkke-table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ogkke-table-search {
+  position: relative;
+  flex: 1 1 240px;
+  max-inline-size: 340px;
+}
+
+.ogkke-table-search-icon {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  color: var(--text-secondary-ink);
+  pointer-events: none;
+  font-size: 0.85rem;
+}
+
+.ogkke-table-search input {
+  padding-inline-start: 2.1rem;
+  background-color: var(--surface-card);
+  border-color: var(--border-subtle);
+}
+
+.ogkke-table-length {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ogkke-table-length select {
+  background-color: var(--surface-card);
+  border-color: var(--border-subtle);
+}
+
+.table-wrapper {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: min(680px, 78dvh);
+  container-type: inline-size;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.85rem;
+  background-color: var(--surface-card);
+}
+
+.table-wrapper:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+.ogkke-data-table {
+  inline-size: 100%;
+  margin-block-end: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ogkke-data-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+}
+
+.ogkke-data-table thead th {
+  background-color: var(--surface-subtle);
+  color: var(--text-secondary-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.75rem 1rem;
+  border-block-end: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.ogkke-sort-btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  inline-size: 100%;
+  color: inherit;
+}
+
+.ogkke-sort-btn:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.ogkke-sort-icon {
+  font-size: 0.8rem;
+  opacity: 0.45;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.ogkke-sort-icon.is-active,
+.ogkke-sort-btn:hover .ogkke-sort-icon {
+  opacity: 1;
+  color: var(--brand-accent);
+}
+
+.ogkke-data-table tbody th,
+.ogkke-data-table tbody td {
+  padding: 0.8rem 1rem;
+  vertical-align: middle;
+  border-block-end: 1px solid var(--border-subtle);
+  background-color: var(--surface-card);
+}
+
+.ogkke-data-table tbody tr:last-child th,
+.ogkke-data-table tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+/* Cabecera de fila sticky horizontal en escritorio */
+.ogkke-data-table tbody th[scope="row"] {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  font-weight: 600;
+}
+
+.ogkke-data-table tbody tr:hover th,
+.ogkke-data-table tbody tr:hover td {
+  background-color: color-mix(in srgb, var(--brand-accent) 6%, var(--surface-card));
+}
+
+/* Resaltado elegante para próximos cursillos */
+.ogkke-data-table tbody tr.is-upcoming th[scope="row"] {
+  box-shadow: inset 3px 0 0 var(--brand-accent);
+}
+
+.ogkke-data-table tbody tr.is-upcoming th,
+.ogkke-data-table tbody tr.is-upcoming td {
+  background-color: color-mix(in srgb, var(--brand-accent) 9%, var(--surface-card));
+}
+
+/* Transformación adaptativa a tarjetas apiladas en contenedores estrechos */
+@container (width < 600px) {
+  .ogkke-data-table,
+  .ogkke-data-table thead,
+  .ogkke-data-table tbody,
+  .ogkke-data-table tr:not([hidden]),
+  .ogkke-data-table th:not([hidden]),
+  .ogkke-data-table td:not([hidden]) {
+    display: block;
+  }
+
+  .ogkke-data-table tr[hidden],
+  .ogkke-data-table [hidden] {
+    display: none;
+  }
+
+  .ogkke-data-table thead {
+    /* MANDATORY: Ocultar cabecera de columnas de layout y lectores de pantalla en modo apilado */
+    display: none;
+  }
+
+  .ogkke-data-table tbody {
+    padding: 0.65rem;
+  }
+
+  .ogkke-data-table tbody tr:not(.ogkke-table-empty-row) {
+    margin-block-end: 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    overflow: clip;
+  }
+
+  .ogkke-data-table tbody tr:last-child {
+    margin-block-end: 0;
+  }
+
+  .ogkke-data-table tbody th[scope="row"] {
+    position: sticky;
+    inset-block-start: 0;
+    inset-inline-start: auto;
+    z-index: 2;
+    background-color: var(--surface-subtle);
+    border-block-end: 1px solid var(--border-subtle);
+    padding: 0.7rem 0.9rem;
+  }
+
+  .ogkke-data-table tbody td:not([hidden]) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    text-align: end;
+  }
+
+  .ogkke-data-table tbody tr.ogkke-table-empty-row td:not([hidden]) {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .ogkke-data-table tbody td:nth-child(2)::before {
+    content: var(--label-2) ": ";
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary-ink);
+    text-align: start;
+  }
+  .ogkke-data-table tbody td:nth-child(3)::before {
+    content: var(--label-3) ": ";
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary-ink);
+    text-align: start;
+  }
+  .ogkke-data-table tbody td:nth-child(4)::before {
+    content: var(--label-4) ": ";
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary-ink);
+    text-align: start;
+  }
+  .ogkke-data-table tbody td:nth-child(5)::before {
+    content: var(--label-5) ": ";
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary-ink);
+    text-align: start;
+  }
+  .ogkke-data-table tbody td:nth-child(6)::before {
+    content: var(--label-6) ": ";
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary-ink);
+    text-align: start;
+  }
+}
+
+.ogkke-table-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ogkke-table-pagination .page-link {
+  background-color: var(--surface-card);
+  border-color: var(--border-subtle);
   color: var(--text-main);
-  border: 0;
 }
 
-a.selector-chooseall,
-a.selector-clearall {
-  margin-bottom: 30px;
+.ogkke-table-pagination .page-item.active .page-link {
+  background-color: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: #111317;
+  font-weight: 600;
+}
+
+/* Pestañas modernas reutilizables */
+.ogkke-tabs {
+  border-block-end-color: var(--border-subtle);
+  gap: 0.25rem;
+}
+
+.ogkke-tabs .nav-link {
+  color: var(--text-secondary-ink);
+  border: 1px solid transparent;
+  border-start-start-radius: 0.6rem;
+  border-start-end-radius: 0.6rem;
+  font-weight: 500;
+  padding: 0.6rem 1.1rem;
+}
+
+.ogkke-tabs .nav-link:hover {
+  color: var(--brand-accent);
+  border-color: var(--border-subtle) var(--border-subtle) transparent;
+}
+
+.ogkke-tabs .nav-link.active {
+  background-color: var(--surface-card);
+  border-color: var(--border-subtle) var(--border-subtle) var(--surface-card);
+  color: var(--brand-accent);
+  font-weight: 600;
 }
 
 /* ==========================================================================
-   4. UTILIDADES DE COMPATIBILIDAD
+   5. DIÁLOGOS NATIVOS (<dialog>), VALIDACIÓN (:user-invalid) Y CHECKLISTS
+   ========================================================================== */
+
+/* Contención obligatoria de scroll en modales nativos sin mutar html/body */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background-color: rgba(8, 10, 14, 0.68);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Base de diálogo nativo (IMPORTANTE: nunca fijar display sin [open]) */
+dialog.ogkke-dialog {
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background-color: var(--surface-card);
+  color: var(--text-main);
+  inline-size: min(92vw, 520px);
+  max-inline-size: 100%;
+  max-block-size: min(88dvh, 840px);
+  overflow: auto;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.48);
+}
+
+dialog.ogkke-dialog.ogkke-dialog-lg {
+  inline-size: min(94vw, 760px);
+}
+
+dialog.ogkke-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.ogkke-dialog[open] {
+    animation: ogkke-dialog-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes ogkke-dialog-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+    translate: 0 6px;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+  }
+}
+
+.ogkke-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.05rem 1.35rem;
+  border-block-end: 1px solid var(--border-subtle);
+  background-color: var(--surface-card);
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+}
+
+.ogkke-dialog-body {
+  padding: 1.35rem;
+  flex: 1 1 auto;
+}
+
+.ogkke-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.35rem;
+  border-block-start: 1px solid var(--border-subtle);
+  background-color: var(--surface-subtle);
+}
+
+/* Validación diferida post-interacción (:user-invalid + fallback JS) */
+:is(.form-control, .form-select):not([type="search"]):is(:user-invalid, .user-invalid-fallback) {
+  border-color: var(--bs-form-invalid-border-color);
+  background-color: color-mix(in srgb, var(--bs-form-invalid-border-color) 7%, var(--bs-body-bg));
+}
+
+:is(.form-control, .form-select):not([type="search"]):is(:user-invalid, .user-invalid-fallback) ~ .invalid-feedback {
+  display: block;
+}
+
+:is(.form-control, .form-select):not([type="search"]):is(:user-valid, .user-valid-fallback) {
+  border-color: color-mix(in srgb, var(--bs-form-valid-border-color) 65%, var(--border-subtle));
+}
+
+/* Panel táctil de selección múltiple con buscador (reemplazo de FilteredSelectMultiple) */
+.ogkke-checklist {
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.9rem;
+  background-color: var(--surface-card);
+  padding: 1.15rem;
+}
+
+.ogkke-checklist-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block-end: 0.9rem;
+  margin-block-end: 0.9rem;
+  border-block-end: 1px solid var(--border-subtle);
+}
+
+.ogkke-checklist-search {
+  position: relative;
+  flex: 1 1 250px;
+  max-inline-size: 380px;
+}
+
+.ogkke-checklist-search i {
+  position: absolute;
+  inset-inline-start: 0.8rem;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  color: var(--text-secondary-ink);
+  pointer-events: none;
+}
+
+.ogkke-checklist-search input {
+  padding-inline-start: 2.25rem;
+  min-block-size: 44px;
+  background-color: var(--surface-subtle);
+  border-color: var(--border-subtle);
+}
+
+.ogkke-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  gap: 0.6rem;
+  max-block-size: min(520px, 62dvh);
+  overflow-y: auto;
+  padding-inline-end: 0.25rem;
+}
+
+.ogkke-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-block-size: 48px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background-color: var(--surface-subtle);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ogkke-checklist-item[hidden] {
+  display: none;
+}
+
+.ogkke-checklist-item:hover {
+  border-color: color-mix(in srgb, var(--brand-accent) 55%, var(--border-subtle));
+}
+
+.ogkke-checklist-item input[type="checkbox"] {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  margin-block-start: 0;
+  flex-shrink: 0;
+  accent-color: var(--brand-accent);
+  cursor: pointer;
+}
+
+.ogkke-checklist-item:has(input:checked) {
+  border-color: var(--brand-accent);
+  background-color: color-mix(in srgb, var(--brand-accent) 12%, var(--surface-card));
+}
+
+.ogkke-checklist-item:has(input:focus-visible) {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+.ogkke-checklist-label {
+  font-size: 0.92rem;
+  line-height: 1.35;
+  color: var(--text-main);
+}
+
+/* ==========================================================================
+   6. UTILIDADES DE COMPATIBILIDAD
    ========================================================================== */
 .color-background {
   background-color: var(--surface-card);

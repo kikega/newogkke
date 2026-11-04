@@ -1,185 +1,94 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block vendor_css %}
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
-{% endblock %}
+{% block title %}Estadísticas · {{ cursillo.evento }} · OGKKE{% endblock %}
 
 {% block vendor_js %}
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/ogkke-charts.js' %}?v=20261105b"></script>
 {% endblock %}
 
 {% block container %}
-    <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'administracion:cursillos' %}">Cursillos</a></li>
-            <li class="breadcrumb-item active text-warning" aria-current="page">Estadísticas Cursillo</li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Estadísticas</li>
         </ol>
     </nav>
-    <!-- Fin Breadcrumb -->
 
-        <!-- Título Principal -->
-        <h1 class="text-center mt-5 mb-5 color-texto">Detalle Cursillo</h1>
+    <header class="text-center my-4">
+        <h1 class="color-texto mb-1">Estadísticas del Cursillo</h1>
+    </header>
 
-        <div class="row row-cols-1 mt-5">
-            <div class="card mt-3">
-                <div class="card-header">
-                  {% if cursillo.internacional %}Internacional{% else %}Nacional{% endif %}
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title color-texto">{{ cursillo.evento }}</h5>
-                    <p class="card-text"><i class="bi bi-calendar3"></i> {{ cursillo.fecha }}</p>
-                    {% if cursillo.descripcion != None %}
-                        <p class="card-text">{{ cursillo.descripcion }}</p>
-                    {% endif %}
-                    <p class="card-text">{{ cursillo.lugar }}. {{ cursillo.ciudad }}, {{ cursillo.pais }}</p>
-                    {% if cursillo.fecha >= hoy %}
-                    <div class="d-flex justify-content-end align-items-center gap-2">
-                        {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
-                            <a href="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}" class="btn btn-outline-warning">
-                                <i class="bi bi-people-fill"></i> Gestionar inscripciones dojo
-                            </a>
-                        {% endif %}
-                        {% if cursillo.circular %}
-                            <a href="{% url 'administracion:descargar_circular' pk=cursillo.id %}" class="btn btn-outline-info">
-                                <i class="bi bi-file-earmark-pdf-fill"></i> Descargar Circular
-                            </a>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    {% include "administracion/partials/cursillo_cabecera.html" with active_tab="estadisticas" %}
 
-        <!-- Pestañas -->
-        <section class="album py-5">
-            <div class="container">
-                
-                <div class="row row-cols-1">
-                    <ul class="nav nav-tabs">
-                        <li class="nav-item">
-                            <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="nav-link">Asistentes</a>
-                        </li>
-                        {% if cursillo.examenes %}
-                            <li class="nav-item">
-                                <a href="{% url 'administracion:cursillo_examinados' pk=cursillo.id %}" class="nav-link">Exámenes</a>
-                            </li>
-                        {% endif %}
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active">Estadísticas</a>
-                        </li>
-                    </ul>
-                </div>
-        
-                <div class="row row-cols-1 mt-4">
-                    {% if estadisticas_asistentes_por_dojo %}
-                        <table id="tbestadisticas" class="table table-striped table-hover">
+    <section class="py-4" aria-labelledby="estadisticasTableCaption">
+        <h2 id="estadisticasTableCaption" class="visually-hidden">Asistentes por Dojo en {{ cursillo.evento }}</h2>
+
+        {% if estadisticas_asistentes_por_dojo %}
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-6">
+                    <div tabindex="0" role="region" aria-labelledby="estadisticasTableCaption" class="table-wrapper shadow-sm">
+                        <table
+                            id="tbestadisticas"
+                            class="ogkke-data-table"
+                            data-ogkke-table
+                            data-default-sort="1:desc"
+                            style="--label-2: 'Total asistentes';"
+                        >
                             <thead>
                                 <tr>
-                                    <th>Dojo</th>
-                                    <th>Total de Asistentes</th>
+                                    <th scope="col">Dojo</th>
+                                    <th scope="col">Total de Asistentes</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in estadisticas_asistentes_por_dojo %}
                                 <tr>
-                                    <td>{{ item.dojo__nombre }}</td>
-                                    <td>{{ item.total_asistentes }}</td>
+                                    <th scope="row">{{ item.dojo__nombre }}</th>
+                                    <td data-order="{{ item.total_asistentes }}">{{ item.total_asistentes }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
-                        </table>   
-                        <div class="container">
-                            <div class="d-flex justify-content-center mt-5">
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3 fw-semibold">Participación por Dojo</div>
+                        <div class="card-body">
+                            <div class="chart-container" style="block-size: 340px;">
                                 <canvas id="graficoAsistentesPorDojo"></canvas>
                             </div>
                         </div>
-                    {% else %}
-                        <div class="alert alert-info mt-4">No hay datos estadísticos de asistencia para este cursillo todavía.</div>
-                    {% endif %}
-                </div>    
+                    </div>
+                </div>
             </div>
-        </section>
-        <!-- Fin listado de alumnos asistentes -->
-
-        {% endblock container %}
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body py-4 text-center text-body-secondary">
+                    <i class="bi bi-bar-chart-line fs-3 d-block mb-2 color-texto" aria-hidden="true"></i>
+                    No hay datos estadísticos de asistencia para este cursillo todavía.
+                </div>
+            </div>
+        {% endif %}
+    </section>
+{% endblock container %}
 
 {% block script_js %}
-
+{% if estadisticas_asistentes_por_dojo %}
 <script>
-    if (document.getElementById('tbestadisticas')) {
-        $('#tbestadisticas').DataTable({
-            "pageLength": 25,
-            "responsive": true,
-            "order": [[1, "desc"]],
-            "language": {
-                search: "Buscar en la tabla ",
-                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                infoEmpty: "Mostrando 0 a 0 de 0 registros",
-                infoFiltered: "(filtrado de _MAX_ registros totales)",
-                lengthMenu: "Mostrar _MENU_ registros",
-                zeroRecords: "No se encontraron registros",
-                paginate: {
-                    first: "Primera",
-                    last: "Última",
-                    next: "Siguiente",
-                    previous: "Anterior"
-                },
-            }
-        });
-    }
-
-    // Gráfica asistentes por dojo
-    const data = JSON.parse('{{ asistentes_por_dojo|escapejs }}'); // Obtener los datos de forma segura
-
-    const ctx = document.getElementById('graficoAsistentesPorDojo');
-    const config = {
-        type: 'bar',
-        data: {
-            datasets: [{
-                label: '',
-                data: data.values,
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.2)',
-                ],
-                borderColor: [
-                    'rgba(54, 162, 235, 1)',
-                ],
-                borderWidth: 2,
-                borderRadius: 10,
-                datalabels: { // Configuración de chartjs-plugin-datalabels para ESTE dataset
-                    display: false // Oculta las etiquetas de datos solo para este dataset
-                },
-            }],
+    (() => {
+        const data = JSON.parse('{{ asistentes_por_dojo|escapejs }}');
+        window.OGKKECharts?.renderBarChart('graficoAsistentesPorDojo', {
             labels: data.labels,
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false // Esto oculta la leyenda completamente
-                },
-            },
-            scales: { // Configuración del eje Y sin porcentajes
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }          
-        },
-    };
-
-    const myChart = new Chart(ctx, config); 
-    
+            values: data.values,
+            horizontal: true,
+            label: 'Asistentes'
+        });
+    })();
 </script>
-
-
+{% endif %}
 {% endblock script_js %}
-
