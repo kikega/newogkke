@@ -16,15 +16,20 @@ def common_navbar_context(request):
     context_data = {
         'usuario_foto': None,
         'peticiones_totales': 0,
+        'usuario_es_instructor': False,
     }
 
-    # Obtenemos la foto del usuario que esta logado
+    # Obtenemos la foto y estado de instructor del usuario que esta logado
     if request.user.is_authenticated:
+        es_instructor = request.user.groups.filter(name='Instructor').exists()
         try:
-            alumno_obj = Alumno.objects.select_related('usuario').get(usuario__email=request.user.email)
+            alumno_obj = Alumno.objects.select_related('usuario').get(usuario=request.user)
             context_data['usuario_foto'] = alumno_obj.foto
+            es_instructor = es_instructor or alumno_obj.instructor
         except Alumno.DoesNotExist: # pylint: disable=no-member
             pass
+        context_data['usuario_es_instructor'] = es_instructor
+
         # Contar peticiones pendientes con caché (5 minutos)
         peticiones_totales = cache.get('peticiones_totales')
         if peticiones_totales is None:

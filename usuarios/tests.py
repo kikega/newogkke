@@ -63,6 +63,10 @@ class UsuariosSecurityTests(TestCase):
         response = self.client.post(reverse('cambio_password'), {})
         self.assertEqual(response.status_code, 200) # Renderiza cambio_password.html con error descriptivo
 
+        # Petición GET no debe lanzar ValueError (500), sino redirigir a home
+        response_get = self.client.get(reverse('cambio_password'))
+        self.assertEqual(response_get.status_code, 302)
+
         # Petición con contraseña correcta
         response = self.client.post(reverse('cambio_password'), {
             'old_password': 'OldPassword123!',

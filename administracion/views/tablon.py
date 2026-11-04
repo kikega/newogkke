@@ -29,32 +29,39 @@ class TablonView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # Obtenemos los datos del usuario logado
         user = self.request.user
 
-        # Obtenemos los datos de cantidad de dojos, alumnos y seminarios
-        cn = Alumno.objects.all().count()
-        cursos = Cursillo.objects.all().count()
-        dojos = Dojo.objects.all().count()
-
-        # Obtenemos el dojo y rol del usuario logado
+        dojo_alumno = None
         es_instructor = False
         try:
             alumno = Alumno.objects.select_related('dojo').get(usuario=user)
-            dojo = alumno.dojo
+            dojo_alumno = alumno.dojo
             es_instructor = alumno.instructor
-            tablon_qs = Tablon.objects.filter(dojo_id=dojo)
         except Alumno.DoesNotExist:
+            pass
+
+        dojo_param = self.request.GET.get('dojo')
+        if dojo_param and dojo_param.isdigit():
+            dojo = get_object_or_404(Dojo, pk=int(dojo_param))
+            tablon_qs = Tablon.objects.filter(dojo=dojo)
+        elif dojo_alumno is not None:
+            dojo = dojo_alumno
+            tablon_qs = Tablon.objects.filter(dojo=dojo_alumno)
+        else:
             dojo = None
-            tablon_qs = Tablon.objects.all() if (user.is_staff or user.is_superuser) else Tablon.objects.none()
+            tablon_qs = Tablon.objects.select_related('dojo').all() if (user.is_staff or user.is_superuser) else Tablon.objects.none()
+
+        puede_gestionar = bool(
+            user.is_staff
+            or user.is_superuser
+            or (es_instructor and dojo is not None and dojo_alumno == dojo)
+            or (es_instructor and dojo is None)
+        )
 
         context["dojo_usuario"] = dojo
         context["tablon"] = tablon_qs
         context["usuario_es_instructor"] = es_instructor
-        context['cn'] = cn
-        context['cursos'] = cursos
-        context['dojos'] = dojos
+        context["puede_gestionar_tablon"] = puede_gestionar
 
         return context
 
@@ -64,7 +71,7 @@ class TablonView(LoginRequiredMixin, TemplateView):
         """
 
         # Obtenemos los datos del formulario
-        form = TablonNuevoForm(request.POST)
+        form = TablonNuevoForm(request.POST, request.FILES)
 
         if form.is_valid():
             try:
@@ -74,10 +81,7 @@ class TablonView(LoginRequiredMixin, TemplateView):
                 titulo = form.cleaned_data['titulo']
                 descripcion = form.cleaned_data['descripcion']
                 lugar = form.cleaned_data['lugar']
-                if request.FILES.get('informacion'):
-                    informacion = request.FILES["informacion"]
-                else:
-                    informacion = None
+                informacion = form.cleaned_data.get('informacion')
 
                 # Obtener el Dojo
                 dojo = get_object_or_404(Dojo, pk=dojo_id)
@@ -104,6 +108,7 @@ class TablonView(LoginRequiredMixin, TemplateView):
                 )
 
                 messages.success(self.request, "¡Notificación creada exitosamente!")
+                return redirect(f"{reverse_lazy('administracion:tablon')}?dojo={dojo.id}")
             except PermissionDenied as pe:
                 raise pe
             except Exception as e:

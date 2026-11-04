@@ -126,9 +126,17 @@ class CursilloExaminaListView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         curso_actual = self.get_object()
+        user = self.request.user
+
+        if not user.externo:
+            try:
+                alumno = Alumno.objects.select_related('usuario').get(usuario=user)
+                context['alumno_cursillo_inscrito'] = curso_actual.alumnos.filter(pk=alumno.id).exists()
+            except Alumno.DoesNotExist:
+                context['alumno_cursillo_inscrito'] = False
 
         # Obtenemos todos los alumnos que se examinan en el cursillo
-        context['examinan'] = Examen.objects.filter(evento=curso_actual).select_related('alumno').order_by('alumno__apellidos')
+        context['examinan'] = Examen.objects.filter(evento=curso_actual).select_related('alumno', 'alumno__dojo').order_by('alumno__apellidos')
         context['curso'] = curso_actual
         context['hoy'] = datetime.date.today()
 
@@ -150,6 +158,15 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
 
         curso_actual = self.object
         context['curso'] = curso_actual
+        context['hoy'] = datetime.date.today()
+
+        user = self.request.user
+        if not user.externo:
+            try:
+                alumno = Alumno.objects.select_related('usuario').get(usuario=user)
+                context['alumno_cursillo_inscrito'] = curso_actual.alumnos.filter(pk=alumno.id).exists()
+            except Alumno.DoesNotExist:
+                context['alumno_cursillo_inscrito'] = False
 
         asistentes_por_dojo = curso_actual.alumnos.values(
             'dojo__nombre'  # Agrupa por el nombre del Dojo

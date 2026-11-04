@@ -56,16 +56,18 @@ class ActividadesView(LoginRequiredMixin, TemplateView):
         form = ActividadNuevaForm(request.POST)
         if form.is_valid():
             try:
+                tipo = form.cleaned_data['tipo']
                 titulo = form.cleaned_data['titulo']
                 descripcion = form.cleaned_data['descripcion']
                 fecha = form.cleaned_data['fecha']
                 lugar = form.cleaned_data['lugar']
                 ciudad = form.cleaned_data['ciudad']
                 provincia = form.cleaned_data['provincia']
-                pais = form.cleaned_data['pais']
+                pais = form.cleaned_data['pais'] or 'España'
 
                 # Creamos la nueva actividad
                 Actividad.objects.create(
+                    tipo = tipo,
                     titulo = titulo,
                     descripcion = descripcion,
                     fecha = fecha,

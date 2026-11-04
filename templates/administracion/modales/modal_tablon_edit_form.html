@@ -1,8 +1,44 @@
 <form id="editarTablonForm" method="post" action="{% url 'administracion:editar_tablon' tablon.id %}" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
+    <div class="row input-group">
+        <div class="col mb-3">
+            {{ form.tipo.label }}
+            {{ form.tipo }}
+        </div>
+    </div>
+    <div class="row input-group">
+        <div class="col mb-3">
+            {{ form.titulo.label }}
+            {{ form.titulo }}
+        </div>
+    </div>
+    <div class="row input-group">
+        <div class="col mb-3">
+            {{ form.descripcion.label }}
+            {{ form.descripcion }}
+        </div>
+    </div>
+    <div class="row input-group">
+        <div class="col mb-3">
+            {{ form.fecha.label }}
+            {{ form.fecha }}
+        </div>
+        <div class="col mb-3">
+            {{ form.lugar.label }}
+            {{ form.lugar }}
+        </div>
+    </div>
+    <div class="row input-group">
+        <div class="col mb-3">
+            {{ form.informacion.label }}
+            {{ form.informacion }}
+            {% if tablon.informacion %}
+                <small class="text-muted d-block mt-1">Archivo actual: <a href="{{ tablon.informacion.url }}" target="_blank" class="text-warning">{{ tablon.informacion.name }}</a></small>
+            {% endif %}
+        </div>
+    </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
-        <button type="submit" form= "editarTablonForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Actualizar</button>
+        <button type="submit" form="editarTablonForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Actualizar</button>
     </div>
 </form>

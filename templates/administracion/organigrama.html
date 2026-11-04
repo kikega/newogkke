@@ -25,23 +25,23 @@
                 <div class="card-body py-4">
                     <div class="profile-picture-container mb-3">
                         {% if presidente.alumno and presidente.alumno.foto %}
-                            <img src="{{ presidente.alumno.foto.url }}" alt="Foto {{ presidente.alumno.nombre }}" class="rounded-circle img-thumbnail profile-picture">
+                            <img src="{{ presidente.alumno.foto.url }}" alt="Foto {{ presidente.obtener_nombre_mostrable }}" class="rounded-circle img-thumbnail profile-picture">
+                        {% elif presidente.foto_externa %}
+                            <img src="{{ presidente.foto_externa.url }}" alt="Foto {{ presidente.obtener_nombre_mostrable }}" class="rounded-circle img-thumbnail profile-picture">
                         {% else %}
                             <i class="bi bi-person-circle text-warning profile-icon" style="font-size: 5rem;"></i>
                         {% endif %}
                     </div>
                     <h4 class="card-title color-texto mb-2">
-                        {% if presidente.alumno %}
-                            {{ presidente.alumno.nombre }} {{ presidente.alumno.apellidos }}
-                        {% else %}
-                            {{ presidente.usuario.get_full_name|default:presidente.usuario.username }}
-                        {% endif %}
+                        {{ presidente.obtener_nombre_mostrable }}
                     </h4>
                     {% if presidente.alumno %}
                         <p class="card-text text-muted mb-1">{{ presidente.alumno.grado }}º DAN - Dojo {{ presidente.alumno.dojo }}</p>
                     {% endif %}
-                    {% if presidente.usuario.email %}
+                    {% if presidente.usuario and presidente.usuario.email %}
                         <p class="card-text"><i class="bi bi-envelope-at me-1"></i> {{ presidente.usuario.email }}</p>
+                    {% elif presidente.alumno and presidente.alumno.usuario and presidente.alumno.usuario.email %}
+                        <p class="card-text"><i class="bi bi-envelope-at me-1"></i> {{ presidente.alumno.usuario.email }}</p>
                     {% endif %}
                 </div>
             </div>
@@ -62,23 +62,23 @@
                 <div class="card-body py-3">
                     <div class="profile-picture-container mb-2">
                         {% if miembro.alumno and miembro.alumno.foto %}
-                            <img src="{{ miembro.alumno.foto.url }}" alt="Foto {{ miembro.alumno.nombre }}" class="rounded-circle img-thumbnail profile-picture" style="width: 90px; height: 90px; object-fit: cover;">
+                            <img src="{{ miembro.alumno.foto.url }}" alt="Foto {{ miembro.obtener_nombre_mostrable }}" class="rounded-circle img-thumbnail profile-picture" style="width: 90px; height: 90px; object-fit: cover;">
+                        {% elif miembro.foto_externa %}
+                            <img src="{{ miembro.foto_externa.url }}" alt="Foto {{ miembro.obtener_nombre_mostrable }}" class="rounded-circle img-thumbnail profile-picture" style="width: 90px; height: 90px; object-fit: cover;">
                         {% else %}
                             <i class="bi bi-person-circle text-secondary" style="font-size: 4rem;"></i>
                         {% endif %}
                     </div>
                     <h5 class="card-title color-texto mb-1">
-                        {% if miembro.alumno %}
-                            {{ miembro.alumno.nombre }} {{ miembro.alumno.apellidos }}
-                        {% else %}
-                            {{ miembro.usuario.get_full_name|default:miembro.usuario.username }}
-                        {% endif %}
+                        {{ miembro.obtener_nombre_mostrable }}
                     </h5>
                     {% if miembro.alumno %}
                         <p class="card-text text-muted small mb-1">{{ miembro.alumno.grado }}º DAN - Dojo {{ miembro.alumno.dojo }}</p>
                     {% endif %}
-                    {% if miembro.usuario.email %}
+                    {% if miembro.usuario and miembro.usuario.email %}
                         <p class="card-text small text-muted"><i class="bi bi-envelope-at me-1"></i> {{ miembro.usuario.email }}</p>
+                    {% elif miembro.alumno and miembro.alumno.usuario and miembro.alumno.usuario.email %}
+                        <p class="card-text small text-muted"><i class="bi bi-envelope-at me-1"></i> {{ miembro.alumno.usuario.email }}</p>
                     {% endif %}
                 </div>
             </div>

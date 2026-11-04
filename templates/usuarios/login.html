@@ -1,43 +1,77 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Iniciar sesión · OGKKE{% endblock %}
+
 {% block container %}
-    
     <div class="form-signin w-100 m-auto">
-        <form action="" method="POST" autocomplete="on">
+        <form action="" method="post" autocomplete="on">
             {% csrf_token %}
             <div class="text-center mb-3">
-                <img class="m-2" src="{% static 'img/goju-logo.png' %}" alt="Logo OGKKE" width="130" height="130">
+                <img class="login-logo" src="{% static 'img/goju-logo.png' %}" alt="Emblema Okinawa Goju-Ryu OGKKE" width="116" height="113" fetchpriority="high">
             </div>
-            <h1 class="h2 mb-2 fw-bold text-center color-texto">OGKKE</h1>
-            <h2 class="h6 mb-4 text-center text-muted">Acceso a la plataforma de gestión</h2>
-            
+            <h1 class="h3 mb-1 fw-bold text-center">OGKKE</h1>
+            <p class="small mb-4 text-center login-subtitle">Acceso a la plataforma de la asociación</p>
+
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="id_username" name="username" placeholder="name@example.com" value="{{ form.username.value|default:'' }}" required autocomplete="username">
-                <label for="id_username">Usuario o Correo electrónico</label>
+                <input
+                    type="email"
+                    class="form-control"
+                    id="id_username"
+                    name="username"
+                    placeholder="nombre@ejemplo.com"
+                    value="{{ form.username.value|default:'' }}"
+                    required
+                    autocomplete="username"
+                    spellcheck="false"
+                    enterkeyhint="next"
+                >
+                <label for="id_username">Correo electrónico</label>
             </div>
-            <div class="form-floating mb-3">
-                <input type="password" class="form-control" id="id_password" name="password" placeholder="Contraseña" required autocomplete="current-password">
-                <label for="id_password">Contraseña</label>
+
+            <div class="input-group mb-3">
+                <div class="form-floating">
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="id_password"
+                        name="password"
+                        placeholder="Contraseña"
+                        required
+                        autocomplete="current-password"
+                        enterkeyhint="done"
+                    >
+                    <label for="id_password">Contraseña</label>
+                </div>
+                <button
+                    class="input-group-text password-toggle-btn view-password"
+                    type="button"
+                    data-target="id_password"
+                    aria-label="Mostrar contraseña"
+                >
+                    <i class="bi bi-eye-slash-fill" aria-hidden="true"></i>
+                </button>
             </div>
-            
+
             {% if form.errors %}
-                <div class="alert alert-danger py-2" role="alert">
-                    Usuario o contraseña incorrectos.
-                </div>           
-            {% endif %}
-            {% if error %}
-                <div class="alert alert-danger py-2" role="alert">
+                <div class="alert alert-danger py-2 small" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                    Correo electrónico o contraseña incorrectos.
+                </div>
+            {% elif error %}
+                <div class="alert alert-danger py-2 small" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
                     {{ error }}
-                </div>           
+                </div>
             {% endif %}
-            
-            <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div class="d-flex justify-content-end align-items-center mb-4">
                 <a href="{% url 'password_reset' %}" class="small text-warning text-decoration-none">¿Olvidó su contraseña?</a>
             </div>
-            
-            <button class="btn btn-warning w-100 py-2 fw-semibold" type="submit"><i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión</button>
+
+            <button class="btn btn-login-submit w-100 py-2 fw-semibold" type="submit">
+                <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Iniciar sesión
+            </button>
         </form>
     </div>
 {% endblock container %}
-

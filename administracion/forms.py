@@ -110,11 +110,12 @@ class ActividadEditForm(forms.ModelForm):
 
     class Meta:
         model = Actividad
-        fields = ['titulo', 'descripcion', 'lugar', 'ciudad', 'provincia', 'pais', 'fecha']
+        fields = ['tipo', 'titulo', 'descripcion', 'lugar', 'ciudad', 'provincia', 'pais', 'fecha']
         widgets = {
+            'tipo': forms.TextInput(attrs={"class": "form-control mt-2 mb-3"}),
             'titulo': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
             'descripcion': forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 5}),
-            'fecha': forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}),
+            'fecha': forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}, format='%Y-%m-%d'),
             'lugar': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
             'ciudad': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
             'provincia': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
@@ -155,8 +156,9 @@ class TablonNuevoForm(forms.Form):
         required = True
     )
     informacion = forms.FileField(
-        label="Información",
-        widget=forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file"}),
+        label="Información (PDF)",
+        widget=forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file", "accept": ".pdf"}),
+        validators=[FileExtensionValidator(['pdf'])],
         required = False
     )
 
@@ -166,12 +168,14 @@ class TablonEditForm(forms.ModelForm):
 
     class Meta:
         model = Tablon
-        fields = ['titulo', 'descripcion', 'lugar', 'informacion']
+        fields = ['tipo', 'titulo', 'descripcion', 'fecha', 'lugar', 'informacion']
         widgets = {
+            'tipo': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
             'titulo': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
             'descripcion': forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 5}),
+            'fecha': forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}, format='%Y-%m-%d'),
             'lugar': forms.TextInput(attrs={"class": "form-control mt-2 mb-3",}),
-            'informacion': forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file"}),
+            'informacion': forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "type": "file", "accept": ".pdf"}),
         }
 
 

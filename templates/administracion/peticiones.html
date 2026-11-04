@@ -23,29 +23,30 @@
         {% for p in peticiones_pendientes %}
         <div class="card mt-3">
           <div class="card-header">
-            {% if user.is_staff or user.is_superuser %}
-                <h4 class="color-texto"><i class="bi bi-card-text"></i> 
+            <h4 class="color-texto mb-0"><i class="bi bi-card-text"></i> 
+                {% if user.is_staff or user.is_superuser %}
                     {% if "Dojo" in p.dojo.nombre %} 
                         {{ p.dojo.nombre }} 
                     {% else %} 
                         Dojo {{ p.dojo.nombre }}
                     {% endif %}
-                     - {{ p.titulo}}
-                </h4>
-            {% endif %}
+                     - 
+                {% endif %}
+                {{ p.titulo }}
+            </h4>
         </div>
         <div class="card-body">
-            <p><i class="bi bi-calendar3"></i> {{ p.fecha }}</p>
+            <p class="text-muted mb-2"><i class="bi bi-calendar3"></i> {{ p.fecha|date:"d-m-Y" }}</p>
             <p class="card-text">{{ p.descripcion }}</p>
             <div class="text-end">
               <form method="post" action="{% url 'administracion:peticiones_anular' pk=p.id %}" style="display: inline;">
                 {% csrf_token %}
-                {% if user.is_staff %}
+                {% if user.is_staff or user.is_superuser %}
                     <input type="hidden" name="action" value="finalizar">
                     <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-hand-thumbs-up"></i> Resolver</button>
                 {% else %}
                     <input type="hidden" name="action" value="borrar">
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres borrar esta petición?');">Eliminar</button>
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres borrar esta petición?');"><i class="bi bi-trash-fill"></i> Eliminar</button>
                 {% endif %}
             </form>
             </div>
@@ -53,6 +54,8 @@
         </div>
         {% endfor %}
       </div>
+    {% else %}
+      <div class="alert alert-info mt-4 text-center">No hay peticiones pendientes actualmente.</div>
     {% endif %}
 
 {% endblock container %}

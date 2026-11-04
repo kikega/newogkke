@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block vendor_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
+{% endblock %}
+
+{% block vendor_js %}
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
+{% endblock %}
+
 {% block container %}
     <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
@@ -57,7 +66,7 @@
                         <td><a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
                                 href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}">{{ cursillo.evento }}
                             </a></td>
-                        <td>{{ cursillo.fecha|date:"d-m-Y" }}</td>
+                        <td data-order="{{ cursillo.fecha|date:'Y-m-d' }}">{{ cursillo.fecha|date:"d-m-Y" }}</td>
                         <td>{{ cursillo.ciudad }}</td>
                         <td>{{ cursillo.pais }}</td>
                         <td>
@@ -170,7 +179,7 @@
     $('#tbcursillo').DataTable({
         "pageLength": 25,
         "responsive": true,
-        "ordering": false,
+        "order": [[1, "desc"]],
         "language": {
             search: "Buscar en la tabla ",
             info: "Mostrando _START_ a _END_ de _TOTAL_ registros",

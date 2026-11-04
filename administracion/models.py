@@ -154,7 +154,7 @@ class MiembroDirectiva(models.Model):
             if self.foto_externa:
                 return self.foto_externa.url
             # Puedes añadir lógica aquí para sacar la foto del modelo Usuario si tuviera
-            return "/static/img/default-avatar.png"
+            return "/static/img/foto.png"
 
         def __str__(self):
             return f"{self.cargo}: {self.obtener_nombre_mostrable}"

@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import View, TemplateView
 from django.conf import settings
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 
 from django.core.cache import cache
@@ -129,6 +130,7 @@ class PeticionView(LoginRequiredMixin, TemplateView):
             destinatarios = destinatario,
         )
 
+        messages.success(request, "Petición enviada correctamente.")
         return redirect('administracion:peticiones')
 
 
@@ -154,9 +156,11 @@ class PeticionAnularView(LoginRequiredMixin, View):
         action = request.POST.get('action')
         if action == 'borrar':
             peticion.delete()
+            messages.success(request, "Petición eliminada correctamente.")
         else:
             peticion.finalizada = True
             peticion.save()
+            messages.success(request, "Petición marcada como resuelta.")
 
         # Invalidamos la caché de peticiones pendientes
         cache.delete('peticiones_totales')

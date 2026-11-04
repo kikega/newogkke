@@ -1,275 +1,195 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Tablón del Dojo · OGKKE{% endblock %}
+
 {% block container %}
-    
-    {% include "administracion/hero.html" %}
+    <!-- Breadcrumb encuadrado en Dojos (Módulo transitorio hacia futura estructura local de Dojos) -->
+    <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'administracion:dojos' %}">Dojos</a></li>
+            {% if dojo_usuario %}
+                <li class="breadcrumb-item"><a href="{% url 'administracion:dojo_detalle' pk=dojo_usuario.id %}">{{ dojo_usuario.nombre }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">Tablón de anuncios</li>
+        </ol>
+    </nav>
 
-    <section class="album py-4">
-        <div class="container">
-            
-            <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xl-3 g-3">
-                <article class="col">
-                    <div class="card shadow-sm color-background h-100">
-                        <img src="{% static 'img/dojos.jpg' %}" class="card-img-top img-fluid" alt="Dojos">
-                        <div class="m-3">
-                            <h3 class="card-title"><i class="bi bi-houses"></i> Dojos <span class="badge text-bg-tertiary fs-3">{{ dojos }}</span></h3>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="d-flex justify-content-start mb-2">
-                                <p>Número de Dojos asociados</p>
-                            </div>
-                            <div class="d-flex justify-content-end align-items-center">
-                                <div class="btn-group mt-auto w-100">
-                                    <a href="{% url 'administracion:dojos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="col">
-                    <div class="card shadow-sm color-background h-100">
-                        <img src="{% static 'img/cn.jpg' %}" class="card-img-top img-fluid" alt="Cintos negros">
-                        <div class="m-3">
-                            <h3 class="card-title"><i class="bi bi-person"></i> Cintos Negros <span class="badge text-bg-tertiary fs-3">{{ cn }}</span></h3>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="d-flex justify-content-start mb-2">
-                                <p>Número de Cintos Negros registrados</p>
-                            </div>
-                            <div class="d-flex justify-content-end align-items-center">
-                                <div class="btn-group mt-auto w-100">
-                                    <a href="{% url 'administracion:alumnos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="col">
-                    <div class="card shadow-sm color-background h-100">
-                        <img src="{% static 'img/gassukus.jpg' %}" class="card-img-top img-fluid" alt="Gasshukus">
-                        <div class="m-3">
-                            <h3 class="card-title"><i class="bi bi-people"></i> Gasshukus <span class="badge text-bg-tertiary fs-3">{{ cursos }}</span></h3>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="d-flex justify-content-start mb-2">
-                                <p>Número de seminarios realizados</p>
-                            </div>
-                            <div class="d-flex justify-content-end align-items-center">
-                                <div class="btn-group mt-auto w-100">
-                                    <a href="{% url 'administracion:cursillos' %}" class="btn btn-outline-warning"><i class="bi bi-arrow-up-right-circle"></i> Ver todos</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </article>
+    <section class="py-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-4 border-bottom">
+            <div>
+                <h1 class="h3 mb-1 color-texto">
+                    <i class="bi bi-pin-angle-fill me-2" aria-hidden="true"></i>
+                    {% if dojo_usuario %}
+                        Tablón del Dojo {{ dojo_usuario.nombre }}
+                    {% else %}
+                        Tablón de anuncios de Dojos
+                    {% endif %}
+                </h1>
+                <p class="text-body-secondary small mb-0">Comunicados y avisos internos de ámbito local del dojo.</p>
             </div>
+            {% if dojo_usuario %}
+                <a href="{% url 'administracion:dojo_detalle' pk=dojo_usuario.id %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver a la ficha del Dojo
+                </a>
+            {% endif %}
         </div>
-    </section>
 
-    <section class="album py-4">
-        <div class="container">
-            <div class="row row-cols-1">
-                <ul class="nav nav-tabs">
-                    <li class="nav-item">
-                        <a href="{% url 'home' %}" class="nav-link">Actividades</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link active">Tablón Anuncios</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="row row-cols-1 mt-3">
-                {% if tablon %}
-                    <div class="row row-cols-1 mt-2">
-                        {% if dojo_usuario %}
-                            <h3 class="mb-3 color-texto"><i class="bi bi-pin-angle me-2"></i>Dojo: {{ dojo_usuario.nombre }}</h3>
-                        {% endif %}
-                        {% for tab in tablon %}
-                        <div class="card mt-3 shadow-sm">
-                            <div class="card-header">
-                                <h4 class="color-texto mb-0"><i class="bi bi-card-text me-2"></i> 
-                                {{ tab.titulo }} 
-                                </h4>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-muted mb-2"><i class="bi bi-calendar3"></i> {{ tab.fecha|date:"d-m-Y" }}</p>
-                                <p class="card-text">{{ tab.descripcion }}</p>
-                                {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
-                                    <div class="text-end">
-                                        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarTablon" data-update-url="{% url 'administracion:editar_tablon' tab.id %}">
-                                            <i class="bi bi-pencil-fill"></i> Editar
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger btn-sm edit-button" data-bs-toggle="modal" data-bs-target="#modalBorrarTablon" data-delete-url="{% url 'administracion:eliminar_tablon' tab.id %}">
-                                            <i class="bi bi-trash-fill"></i> Eliminar
-                                        </button>
-                                    </div>
+        {% if tablon %}
+            <div class="d-flex flex-column gap-3">
+                {% for tab in tablon %}
+                <article class="card activity-card shadow-sm">
+                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h2 class="h5 color-texto mb-0">
+                            <i class="bi bi-card-text me-2" aria-hidden="true"></i>{{ tab.titulo }}
+                        </h2>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if not dojo_usuario %}
+                                <span class="badge text-bg-warning">{{ tab.dojo.nombre }}</span>
+                            {% endif %}
+                            {% if tab.tipo %}
+                                <span class="badge text-bg-secondary">{{ tab.tipo }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-body-secondary small mb-2 d-flex flex-wrap gap-3">
+                            <span><i class="bi bi-calendar3 me-1 color-texto" aria-hidden="true"></i>{{ tab.fecha|date:"d-m-Y" }}</span>
+                            {% if tab.lugar %}
+                                <span><i class="bi bi-geo-alt-fill me-1 color-texto" aria-hidden="true"></i>{{ tab.lugar }}</span>
+                            {% endif %}
+                        </p>
+                        <p class="card-text">{{ tab.descripcion }}</p>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                            <div>
+                                {% if tab.informacion %}
+                                    <a href="{{ tab.informacion.url }}" target="_blank" rel="noopener" class="btn btn-outline-info btn-sm">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1" aria-hidden="true"></i>Ver información (PDF)
+                                    </a>
                                 {% endif %}
                             </div>
+                            {% if puede_gestionar_tablon %}
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarTablon" data-update-url="{% url 'administracion:editar_tablon' tab.id %}">
+                                        <i class="bi bi-pencil-fill me-1" aria-hidden="true"></i>Editar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm edit-button" data-bs-toggle="modal" data-bs-target="#modalBorrarTablon" data-delete-url="{% url 'administracion:eliminar_tablon' tab.id %}">
+                                        <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Eliminar
+                                    </button>
+                                </div>
+                            {% endif %}
                         </div>
-                        {% endfor %}
                     </div>
-                {% else %}
-                    <div class="alert alert-info mt-4">No hay anuncios publicados en el tablón actualmente.</div>
-                {% endif %}
+                </article>
+                {% endfor %}
             </div>
-        </div>
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body py-4 text-center text-body-secondary">
+                    <i class="bi bi-journal-x fs-3 d-block mb-2 color-texto" aria-hidden="true"></i>
+                    No hay anuncios publicados en el tablón de este dojo actualmente.
+                </div>
+            </div>
+        {% endif %}
     </section>
 
-    <!-- Modals -->
-    <!-- Modal eliminar entrada Tablón -->
+    <!-- Modales heredadas del Tablón (conservadas sin refactorizar hasta migrar a app local de Dojos) -->
     <div class="modal fade" id="modalBorrarTablon" tabindex="-1" aria-labelledby="modalBorrarTablonLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 color-texto" id="modalBorrarTablonLabel">Eliminar {{tab.id}}</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title fs-5 color-texto" id="modalBorrarTablonLabel">Eliminar anuncio del Tablón</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>¿Estás seguro de querer eliminar la entrada del Tablón? Esta acción no se puede deshacer.</p>
-                    <!-- La 'action' se llenará con JavaScript -->
-                    <form class="form" method='post' id="deleteForm" action="">
+                    <form class="form" method="post" id="deleteForm" action="">
                         {% csrf_token %}
-                        <input type="hidden" value="{{ pk.id }}" name="pk">
-                        
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
-                    <button type="submit" form= "deleteForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Eliminar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Cancelar</button>
+                    <button type="submit" form="deleteForm" class="btn btn-outline-danger"><i class="bi bi-trash-fill" aria-hidden="true"></i> Eliminar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal editar Tablón de anuncios -->
     <div class="modal fade" id="modalEditarTablon" tabindex="-1" aria-labelledby="modalEditarTablonLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 color-texto" id="modalEditarTablonLabel">Tablón de anuncios {{dojo.nombre}}</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title fs-5 color-texto" id="modalEditarTablonLabel">Editar anuncio del Tablón</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body" id="modalEditarTablonBody">
-                    <!-- El formulario para la edición -->
-                    
-                </div>
+                <div class="modal-body" id="modalEditarTablonBody"></div>
             </div>
         </div>
     </div>
-    <!-- Fin Modals -->
+{% endblock container %}
 
-    {% endblock container %}
+{% block script_js %}
+    <script>
+        const modalBorrarTablon = document.getElementById('modalBorrarTablon');
+        if (modalBorrarTablon) {
+            modalBorrarTablon.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                const deleteUrl = button.getAttribute('data-delete-url');
+                const deleteForm = modalBorrarTablon.querySelector('#deleteForm');
+                deleteForm.setAttribute('action', deleteUrl);
+            });
+        }
 
-    {% block script_js %}
-        <script>
-            // Script para la modal de ELIMINACION
-            // Este script se encarga de pasar la URL al formulario de la modal dinámicamente
-            const modalBorrarTablon = document.getElementById('modalBorrarTablon');
-            if (modalBorrarTablon) {
-                modalBorrarTablon.addEventListener('show.bs.modal', event => {
-                    // Identifica el botón que activó la modal
-                    const button = event.relatedTarget;
-                    // Extraer la URL del atributo data-delete-url
-                    const deleteUrl = button.getAttribute('data-delete-url');
-                    // Encontrar el formulario dentro de la modal y establecer su atributo 'action'
-                    const deleteForm = modalBorrarTablon.querySelector('#deleteForm');
-                    deleteForm.setAttribute('action', deleteUrl);
-                });
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalEditarTablon = document.getElementById('modalEditarTablon');
+            if (!modalEditarTablon) return;
+            const modalBody = modalEditarTablon.querySelector('.modal-body');
+            const bootstrapModal = new bootstrap.Modal(modalEditarTablon);
 
-            // Script para la modal de ACTUALIZACIóN
-            // Espera a que el DOM esté completamente cargado.
-            document.addEventListener('DOMContentLoaded', () => {
+            modalEditarTablon.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                const url = button.dataset.updateUrl;
+                modalBody.innerHTML = 'Cargando...';
 
-                // Selecciona los elementos de la modal una sola vez.
-                const modalEditarTablon = document.getElementById('modalEditarTablon');
-                const modalBody = modalEditarTablon.querySelector('.modal-body');
-                
-                // Crea la instancia de la modal de Bootstrap para poder controlarla (ej. cerrarla).
-                const bootstrapModal = new bootstrap.Modal(modalEditarTablon);
-
-                // 1. Escucha el evento 'show.bs.modal'.
-                // Este evento se dispara justo antes de que la modal se muestre.
-                modalEditarTablon.addEventListener('show.bs.modal', event => {
-                    // 'event.relatedTarget' es el botón que disparó la modal.
-                    const button = event.relatedTarget;
-                    
-                    // Obtiene la URL para cargar el formulario desde el atributo 'data-update-url' del botón.
-                    const url = button.dataset.updateUrl;
-                    console.log('URL para cargar el formulario:', url);
-
-                    // Limpia el contenido anterior de la modal mientras se carga el nuevo.
-                    modalBody.innerHTML = 'Cargando...';
-
-                    // Realiza la petición GET para obtener el HTML del formulario.
-                    fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest' // Cabecera para que Django detecte que es AJAX.
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Error al cargar el formulario.');
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Inserta el HTML del formulario recibido en el cuerpo de la modal.
-                        modalBody.innerHTML = data.html_form;
-                    })
-                    .catch(error => {
-                        console.error('Error en fetch (GET):', error);
-                        modalBody.innerHTML = `<div class="alert alert-danger">No se pudo cargar el contenido. Por favor, inténtalo de nuevo.</div>`;
-                    });
-                });
-
-                // 2. Maneja el envío del formulario que está DENTRO de la modal.
-                // Usamos delegación de eventos en el cuerpo de la modal.
-                modalBody.addEventListener('submit', event => {
-                    // Nos aseguramos de que el evento fue disparado por nuestro formulario.
-                    if (event.target.matches('#form-editar-tablon')) {
-                        event.preventDefault(); // Previene el envío tradicional de la página.
-
-                        const form = event.target;
-                        const url = form.action;
-                        const formData = new FormData(form);
-
-                        fetch(url, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                                // No es necesario 'X-CSRFToken' aquí porque FormData lo incluye del input oculto.
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Si la actualización fue exitosa, cierra la modal.
-                                console.log('DEBUG: Formulario válido, cierra la modal');
-                                bootstrapModal.hide();
-                                // Opcional: Muestra una notificación de éxito.
-                                alert(data.message || 'Actualización completada.');
-                                // Recarga la página para ver los cambios. Es la opción más simple.
-                                window.location.reload();
-                            } else {
-                                // Si hay errores de validación, el servidor devuelve el formulario con los errores.
-                                // Reemplazamos el contenido para mostrar esos errores.
-                                modalBody.innerHTML = data.html_form;
-                            }
-                        })
-                        .catch(error => console.error('Error en fetch (POST):', error));
-                    }
+                fetch(url, {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al cargar el formulario.');
+                    return response.json();
+                })
+                .then(data => {
+                    modalBody.innerHTML = data.html_form;
+                })
+                .catch(error => {
+                    console.error('Error en fetch (GET):', error);
+                    modalBody.innerHTML = '<div class="alert alert-danger">No se pudo cargar el contenido. Por favor, inténtalo de nuevo.</div>';
                 });
             });
 
-        </script>
-    {% endblock script_js %}
-
-
-    
+            modalBody.addEventListener('submit', event => {
+                if (event.target.matches('#editarTablonForm')) {
+                    event.preventDefault();
+                    const form = event.target;
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            bootstrapModal.hide();
+                            window.location.reload();
+                        } else {
+                            modalBody.innerHTML = data.html_form;
+                        }
+                    })
+                    .catch(error => console.error('Error en fetch (POST):', error));
+                }
+            });
+        });
+    </script>
+{% endblock script_js %}

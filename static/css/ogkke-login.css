@@ -1,36 +1,104 @@
+/* ==========================================================================
+   OGKKE Login Stylesheet (cargado sin @layer tras bootstrap.min.css)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+:root {
+  color-scheme: dark;
+  --login-accent: #f0b429;
+  --login-accent-hover: #f7c948;
+}
+
 html,
 body {
-  height: 100%;
-  background-image: url("img/onaga.webp");
+  min-block-size: 100dvh;
+}
+
+body.login-body {
+  background-color: #0b0e14;
+  background-image:
+    radial-gradient(circle at 50% 25%, rgba(11, 14, 20, 0.45), rgba(7, 9, 14, 0.84)),
+    url("img/onaga.webp");
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
+  line-height: 1.5;
 }
 
 .form-signin {
-  max-width: 400px;
-  padding: 1rem;
-  border: 3px solid #8d8c8c;
-  border-radius: 10px;
-  background-color: #021020;
-  opacity: 0.8;
+  max-inline-size: 420px;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border: 1px solid rgba(240, 180, 41, 0.28);
+  border-radius: 1rem;
+  /* Fondo translúcido real con blur sin degradar la opacidad del texto hijo */
+  background-color: rgba(13, 17, 24, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 24px 48px -12px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  color: #f3f4f6;
 }
 
-.form-signin .form-floating:focus-within {
-  z-index: 2;
-}
-
-.form-signin input[type="email"] {
-  margin-bottom: 10px;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.form-signin input[type="password"] {
-  margin-bottom: 10px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
+.form-signin .login-logo {
+  display: block;
+  margin-inline: auto;
+  max-inline-size: 100%;
+  block-size: auto;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45));
 }
 
 .form-signin h1 {
-  color: #ffc107;
+  color: var(--login-accent);
+  letter-spacing: 0.04em;
+  text-wrap: balance;
+}
+
+.form-signin .login-subtitle {
+  color: rgba(243, 244, 246, 0.72);
+  text-wrap: balance;
+}
+
+.form-signin .form-control {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.form-signin .form-control:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--login-accent);
+  box-shadow: 0 0 0 0.2rem rgba(240, 180, 41, 0.22);
+}
+
+.form-signin .password-toggle-btn {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(243, 244, 246, 0.8);
+}
+
+.form-signin .password-toggle-btn:hover,
+.form-signin .password-toggle-btn:focus-visible {
+  background-color: rgba(240, 180, 41, 0.15);
+  border-color: var(--login-accent);
+  color: var(--login-accent);
+}
+
+.form-signin .btn-login-submit {
+  background-color: var(--login-accent);
+  border-color: var(--login-accent);
+  color: #111317;
+  transition: background-color 0.18s ease, transform 0.15s ease;
+}
+
+.form-signin .btn-login-submit:hover,
+.form-signin .btn-login-submit:focus-visible {
+  background-color: var(--login-accent-hover);
+  border-color: var(--login-accent-hover);
+  color: #111317;
 }

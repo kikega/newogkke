@@ -1,239 +1,495 @@
-.color-background {
-    /*background-color: #2a2926;*/
-    background-color: var(--bs-tertiary-bg);
+/* ==========================================================================
+   OGKKE Core Stylesheet
+   Nota: Cargado tras bootstrap.min.css sin envolver overrides en @layer para
+   que nuestras reglas superen en cascada al CSS no-capado de Bootstrap 5.3
+   sin recurrir a !important.
+   ========================================================================== */
+
+/* 1. THEME & DESIGN TOKENS (Preparado para marca blanca futura por Dojo) */
+:root {
+  /* Tier 1: Tokens literales (Paleta Okinawa Budo Moderno) */
+  --gold-light-mode: #9e7408;
+  --gold-dark-mode: #f0b429;
+  --gold-hover-light: #7d5b05;
+  --gold-hover-dark: #f7c948;
+
+  --canvas-light: #f6f5f1;
+  --canvas-dark: #111317;
+  --surface-1-light: #ffffff;
+  --surface-1-dark: #191c22;
+  --surface-2-light: #eeece6;
+  --surface-2-dark: #22262f;
+
+  --text-primary-light: #181a1f;
+  --text-primary-dark: #f1f3f5;
+  --text-muted-light: #59606d;
+  --text-muted-dark: #9ca3af;
+
+  --border-light: rgba(24, 26, 31, 0.12);
+  --border-dark: rgba(255, 255, 255, 0.1);
+
+  --nav-glass-light: rgba(255, 255, 255, 0.86);
+  --nav-glass-dark: rgba(17, 19, 23, 0.86);
+
+  --scrollbar-track-light: #eae8e1;
+  --scrollbar-track-dark: #16191e;
+  --scrollbar-thumb-light: #b5b0a4;
+  --scrollbar-thumb-dark: #3b4250;
+
+  /* Tier 2: Tokens semánticos con fallback para navegadores sin light-dark() */
+  --brand-accent: var(--gold-light-mode);
+  --brand-accent-hover: var(--gold-hover-light);
+  --surface-canvas: var(--canvas-light);
+  --surface-card: var(--surface-1-light);
+  --surface-subtle: var(--surface-2-light);
+  --text-main: var(--text-primary-light);
+  --text-secondary-ink: var(--text-muted-light);
+  --border-subtle: var(--border-light);
+  --surface-navbar: var(--nav-glass-light);
+  --scrollbar-track: var(--scrollbar-track-light);
+  --scrollbar-thumb: var(--scrollbar-thumb-light);
+
+  @media (prefers-color-scheme: dark) {
+    --brand-accent: var(--gold-dark-mode);
+    --brand-accent-hover: var(--gold-hover-dark);
+    --surface-canvas: var(--canvas-dark);
+    --surface-card: var(--surface-1-dark);
+    --surface-subtle: var(--surface-2-dark);
+    --text-main: var(--text-primary-dark);
+    --text-secondary-ink: var(--text-muted-dark);
+    --border-subtle: var(--border-dark);
+    --surface-navbar: var(--nav-glass-dark);
+    --scrollbar-track: var(--scrollbar-track-dark);
+    --scrollbar-thumb: var(--scrollbar-thumb-dark);
+  }
+
+  /* Sincronización con el <meta name="color-scheme"> para overrides manuales */
+  color-scheme: light dark;
+
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+    --brand-accent: var(--gold-dark-mode);
+    --brand-accent-hover: var(--gold-hover-dark);
+    --surface-canvas: var(--canvas-dark);
+    --surface-card: var(--surface-1-dark);
+    --surface-subtle: var(--surface-2-dark);
+    --text-main: var(--text-primary-dark);
+    --text-secondary-ink: var(--text-muted-dark);
+    --border-subtle: var(--border-dark);
+    --surface-navbar: var(--nav-glass-dark);
+    --scrollbar-track: var(--scrollbar-track-dark);
+    --scrollbar-thumb: var(--scrollbar-thumb-dark);
+  }
+
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+    --brand-accent: var(--gold-light-mode);
+    --brand-accent-hover: var(--gold-hover-light);
+    --surface-canvas: var(--canvas-light);
+    --surface-card: var(--surface-1-light);
+    --surface-subtle: var(--surface-2-light);
+    --text-main: var(--text-primary-light);
+    --text-secondary-ink: var(--text-muted-light);
+    --border-subtle: var(--border-light);
+    --surface-navbar: var(--nav-glass-light);
+    --scrollbar-track: var(--scrollbar-track-light);
+    --scrollbar-thumb: var(--scrollbar-thumb-light);
+  }
+
+  /* Mejora progresiva con light-dark() nativo */
+  @supports (color: light-dark(white, black)) {
+    --brand-accent: light-dark(var(--gold-light-mode), var(--gold-dark-mode));
+    --brand-accent-hover: light-dark(var(--gold-hover-light), var(--gold-hover-dark));
+    --surface-canvas: light-dark(var(--canvas-light), var(--canvas-dark));
+    --surface-card: light-dark(var(--surface-1-light), var(--surface-1-dark));
+    --surface-subtle: light-dark(var(--surface-2-light), var(--surface-2-dark));
+    --text-main: light-dark(var(--text-primary-light), var(--text-primary-dark));
+    --text-secondary-ink: light-dark(var(--text-muted-light), var(--text-muted-dark));
+    --border-subtle: light-dark(var(--border-light), var(--border-dark));
+    --surface-navbar: light-dark(var(--nav-glass-light), var(--nav-glass-dark));
+    --scrollbar-track: light-dark(var(--scrollbar-track-light), var(--scrollbar-track-dark));
+    --scrollbar-thumb: light-dark(var(--scrollbar-thumb-light), var(--scrollbar-thumb-dark));
+  }
+
+  /* Integración de controles nativos del navegador */
+  accent-color: var(--brand-accent);
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-.color-texto {
-    color: #ffc107;
+/* Puente hacia variables de Bootstrap 5.3 (superando [data-bs-theme=dark/light] de Bootstrap) */
+:root,
+[data-bs-theme="light"],
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--surface-canvas);
+  --bs-body-color: var(--text-main);
+  --bs-secondary-color: var(--text-secondary-ink);
+  --bs-tertiary-bg: var(--surface-subtle);
+  --bs-border-color: var(--border-subtle);
+  --bs-link-color: var(--brand-accent);
+  --bs-link-hover-color: var(--brand-accent-hover);
 }
 
-/* Timeline */
-.timeline-with-icons {
-    border-left: 1px solid #ffc107;
-    position: relative;
-    list-style: none;
+/* ==========================================================================
+   2. BASE, TIPOGRAFÍA Y VIEW TRANSITIONS
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
 }
 
-.timeline-with-icons .timeline-item {
-    position: relative;
+body {
+  background-color: var(--surface-canvas);
+  color: var(--text-main);
+  line-height: 1.5;
+  text-align: start;
+  overflow-wrap: break-word;
 }
 
-.timeline-with-icons .timeline-item:after {
-    position: absolute;
-    display: block;
-    top: 0;
+:where(h1, h2, h3, th) {
+  text-wrap: balance;
 }
 
-.timeline-with-icons .timeline-icon {
-    position: absolute;
-    left: -48px;
-    background-color: #ffc107;
-    border-color: #ffc107;
-    color: black;
-    border-radius: 50%;
-    height: 31px;
-    width: 31px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+:where(p, .lead, .card-text) {
+  text-wrap: pretty;
 }
 
-/* Estilos para la foto de perfil o icono en Detalle Cinto Negro*/
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+}
+
+/* ==========================================================================
+   3. COMPONENTES CORE OGKKE
+   ========================================================================== */
+
+/* Barra de navegación sticky translúcida */
+.ogkke-header {
+  background-color: var(--surface-navbar);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-block-end: 1px solid var(--border-subtle);
+}
+
+.ogkke-navbar {
+  padding-block: 0.6rem;
+}
+
+.ogkke-navbar .nav-link {
+  color: var(--text-secondary-ink);
+  font-weight: 500;
+  padding-inline: 0.85rem;
+  border-radius: 0.5rem;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.ogkke-navbar .nav-link:hover,
+.ogkke-navbar .nav-link:focus-visible {
+  color: var(--brand-accent);
+  background-color: var(--surface-subtle);
+}
+
+.ogkke-navbar .nav-link.active {
+  color: var(--brand-accent);
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--brand-accent) 12%, transparent);
+}
+
+/* Selector de tema en menú de usuario */
+.theme-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background-color: var(--surface-subtle);
+  border-radius: 0.5rem;
+}
+
+.theme-switcher button {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary-ink);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-switcher button:hover {
+  color: var(--text-main);
+}
+
+.theme-switcher button.active {
+  background-color: var(--surface-card);
+  color: var(--brand-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+/* Hero Institucional */
+.ogkke-hero {
+  padding-block: 1.5rem 2rem;
+  border-block-end: 1px solid var(--border-subtle);
+}
+
+.ogkke-hero-logo {
+  display: block;
+  margin-inline: auto;
+  max-inline-size: min(420px, 82vw);
+  block-size: auto;
+}
+
+.ogkke-hero-title {
+  font-size: clamp(1.65rem, 1.15rem + 2.2vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--brand-accent);
+  margin-block-end: 0.75rem;
+}
+
+.ogkke-hero-subtitle {
+  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.18rem);
+  color: var(--text-secondary-ink);
+  max-inline-size: 65ch;
+  margin-inline: auto;
+}
+
+.ogkke-hero-subtitle strong {
+  color: var(--text-main);
+}
+
+/* Tarjetas generales y KPIs de Portada */
+.card {
+  --bs-card-bg: var(--surface-card);
+  --bs-card-border-color: var(--border-subtle);
+  --bs-card-border-radius: 0.85rem;
+  --bs-card-inner-border-radius: calc(0.85rem - 1px);
+  background-color: var(--surface-card);
+  border-color: var(--border-subtle);
+  border-radius: 0.85rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, translate 0.2s ease;
+}
+
+.kpi-card {
+  overflow: clip;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .kpi-card:hover {
+    border-color: color-mix(in srgb, var(--brand-accent) 60%, var(--border-subtle));
+    translate: 0 -3px;
+    box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.28);
+  }
+}
+
+.kpi-card-media {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 639 / 309;
+  object-fit: cover;
+  border-block-end: 1px solid var(--border-subtle);
+}
+
+.kpi-stat-value {
+  font-size: clamp(1.5rem, 1.25rem + 0.8vw, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--brand-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tarjetas de Actividades Oficiales */
+.activity-card {
+  border-inline-start: 4px solid var(--brand-accent);
+}
+
+.activity-card .card-header {
+  background-color: transparent;
+  border-block-end-color: var(--border-subtle);
+  padding-block: 0.9rem;
+}
+
+.activity-card .card-text {
+  max-inline-size: 80ch;
+}
+
+/* Breadcrumbs */
+.breadcrumb-item.active {
+  color: var(--brand-accent);
+  font-weight: 500;
+}
+
+/* Fotos de perfil / Iconos */
 .profile-picture-container {
-    margin-bottom: 1.5rem;
-    /* Espacio debajo de la foto/icono */
+  margin-block-end: 1.5rem;
 }
 
 .profile-picture {
-    width: 120px;
-    /* Tamaño deseado */
-    height: 120px;
-    object-fit: cover;
-    /* Evita distorsión de la imagen */
+  inline-size: 120px;
+  block-size: 120px;
+  object-fit: cover;
 }
 
 .profile-icon {
-    font-size: 6rem;
-    /* Tamaño grande para el icono */
-    line-height: 1;
-    width: 120px;
-    /* Para ocupar espacio similar a la imagen */
-    height: 120px;
-    display: flex;
-    /* Centrar el icono dentro del contenedor */
-    align-items: center;
-    justify-content: center;
-    /* Opcional: un fondo/borde ligero si quieres que el icono siempre tenga un 'marco' circular */
-    /* background-color: #f8f9fa; */
-    /* border-radius: 50%; */
-    margin: 0 auto;
-    /* Centrar el icono si es flex/inline-block */
+  font-size: 6rem;
+  line-height: 1;
+  inline-size: 120px;
+  block-size: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
 }
 
-/* Placeholder para el gráfico */
- #yearsPerGradeChartPlaceholder {
-    height: 300px; /* Altura deseada para el gráfico */
-    background-color: #e9ecef; /* Color gris claro de fondo */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d; /* Color de texto muted */
-    border-radius: 0.375rem; /* Igual que el card */
-    font-style: italic;
-}
-
-/* Color del menú activo en la barra de navegación */
-.nav-link.active {
-    color: #ffc107 !important;
-}
-
-.nav-link:hover {
-    color: #ffc107;
-}
-
-.breadcrumb-item.active {
-    color: #ffc107 !important;
-}
-
-.card:hover {
-    border-color: #ffc107;
-    transform: scale(1.01);
-}
-
-
-/* Para centrar el menú principal de forma más robusta si es necesario */
-@media (min-width: 768px) { /* md breakpoint */
-    .navbar-nav.centered-nav {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-}
-
-/*Estilos básicos para el Timeline */
+/* Timeline de exámenes */
 .timeline {
-    position: relative;
-    padding-left: 50px;
-    border-left: 2px solid #ffc107;
+  position: relative;
+  padding-inline-start: 50px;
+  border-inline-start: 2px solid var(--brand-accent);
 }
 
 .timeline-item {
-    position: relative;
-    margin-bottom: 30px;
+  position: relative;
+  margin-block-end: 30px;
 }
 
 .timeline-marker {
-    position: absolute;
-    left: -60px;
-    top: 5px;
-    width: 18px;
-    height: 18px;
-    background-color: #0d6efd;
-    border: 1px solid #ffc107;
-    border-radius: 50%;
-    z-index: 1;
+  position: absolute;
+  inset-inline-start: -60px;
+  inset-block-start: 5px;
+  inline-size: 18px;
+  block-size: 18px;
+  background-color: var(--brand-accent);
+  border: 2px solid var(--surface-canvas);
+  border-radius: 50%;
+  z-index: 1;
 }
 
 .timeline-item.start .timeline-marker {
-    background-color: #198754;
+  background-color: #198754;
 }
 
 .timeline-item.exam .timeline-marker {
-    background-color: #ffc107;
+  background-color: var(--brand-accent);
 }
 
 .timeline-content .card-title {
-    margin-bottom: 0.25rem;
+  margin-block-end: 0.25rem;
 }
 
 .timeline-date {
-    font-size: 0.85em;
-    margin-bottom: 0.5rem;
-    display: block;
+  font-size: 0.875rem;
+  margin-block-end: 0.5rem;
+  display: block;
 }
 
-
-
-/* Gráfico años en grado */
+/* Contenedor de gráficos Chart.js */
 .chart-container {
-    width: auto; /* O un valor fijo como 600px */
-    max-width: 600px; /* Límite superior */
-    height: 300px; /* O déjalo en 'auto' si quieres que la altura dependa del aspect ratio */
-    margin: auto; /* Centrar y añadir margen */
-    position: relative; /* Importante para la responsividad de Chart.js */
-}
-
-/* Ajustar el CSS del widget Admin */
-.selector {
-    display: flex !important;
-    flex-grow: 1 !important;
-    gap: 0 10px !important;
-    width: auto !important;
-    float: none !important;
-}
-
-.selector .selector-filter {
-    border: var(--bs-border-width) solid var(--bs-border-color) !important;
-    border-radius: var(--bs-border-radius) !important;
-    font-size: 1rem !important;
-    line-height: 1.5 !important;
-    margin-bottom: 30px !important;
-}
-
-.selector select {
-    flex: 1 0 auto !important;
-    overflow: scroll;
-    width: 100% !important;
-    border: var(--bs-border-width) solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius);
-    background-color: var(--bs-body-bg);
-    font-size: 1rem;
-    margin-bottom: 30px;
-    height: 35.7em !important; /* Aumentado y forzado para sobreescribir widgets.css */
-}
-
-.selector-available, .selector-chosen {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    flex: 1 1;
-}
-
-.selector .selector-available input {
-    background-color: var(--bs-body-bg);
-    border: 0;
-}
-
-.selector .selector-chosen input {
-    background-color: var(--bs-body-bg);
-    border: 0;
-}
-
-a.selector-chooseall, a.selector-clearall {
-    margin-bottom: 30px;
-}
-
-/* Reset de la contraseña */
-#id_new_password1, #id_new_password2 {
-    border: var(--bs-border-width) solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius);
-    font-size: 1rem;
-    line-height: 1.5;
-    margin-bottom: 1.5rem !important;
-    margin-top: .25rem !important;
-    display: block;
-    width: 100%;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    background-color: var(--bs-body-bg);
-    background-clip: padding-box;
-    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  inline-size: 100%;
+  max-inline-size: 600px;
+  block-size: 300px;
+  margin-inline: auto;
+  position: relative;
 }
 
 .card-img-horizontal {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* La propiedad mágica */
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* Footer */
+.ogkke-footer {
+  background-color: var(--surface-card);
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+/* Inputs de recuperación de contraseña Django */
+:where(#id_new_password1, #id_new_password2) {
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-block: 0.25rem 1.5rem;
+  display: block;
+  inline-size: 100%;
+  padding: 0.375rem 0.75rem;
+  background-color: var(--bs-body-bg);
+  color: var(--text-main);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Soporte transitorio para widget FilteredSelectMultiple hasta Fase 3 */
+.selector {
+  display: flex !important;
+  flex-grow: 1 !important;
+  gap: 0 10px !important;
+  width: auto !important;
+  float: none !important;
+}
+
+.selector .selector-filter {
+  border: var(--bs-border-width) solid var(--bs-border-color) !important;
+  border-radius: var(--bs-border-radius) !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  margin-bottom: 30px !important;
+}
+
+.selector select {
+  flex: 1 0 auto !important;
+  overflow: auto;
+  width: 100% !important;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-body-bg);
+  color: var(--text-main);
+  font-size: 1rem;
+  margin-bottom: 30px;
+  height: 35.7em !important;
+}
+
+.selector-available,
+.selector-chosen {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1;
+}
+
+.selector .selector-available input,
+.selector .selector-chosen input {
+  background-color: var(--bs-body-bg);
+  color: var(--text-main);
+  border: 0;
+}
+
+a.selector-chooseall,
+a.selector-clearall {
+  margin-bottom: 30px;
+}
+
+/* ==========================================================================
+   4. UTILIDADES DE COMPATIBILIDAD
+   ========================================================================== */
+.color-background {
+  background-color: var(--surface-card);
+}
+
+.color-texto {
+  color: var(--brand-accent);
 }

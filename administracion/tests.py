@@ -282,3 +282,52 @@ class AdministracionSecurityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('grados_posibles', response.context)
 
+    def test_actividad_creation_saves_tipo(self):
+        """Verifica que al crear una actividad se guarda el campo tipo."""
+        self.client.force_login(self.staff_user)
+        response = self.client.post(reverse('administracion:actividades'), {
+            'tipo': 'Seminario',
+            'titulo': 'Seminario de Kata',
+            'descripcion': 'Práctica avanzada',
+            'fecha': '2026-11-15',
+            'lugar': 'Polideportivo Municipal',
+            'ciudad': 'Alicante',
+            'provincia': 'Alicante',
+            'pais': 'España'
+        })
+        self.assertEqual(response.status_code, 302)
+        actividad_creada = Actividad.objects.get(titulo='Seminario de Kata')
+        self.assertEqual(actividad_creada.tipo, 'Seminario')
+
+    def test_navbar_context_instructor_flag(self):
+        """Verifica que usuario_es_instructor está disponible globalmente para instructores."""
+        self.client.force_login(self.instructor_user)
+        response = self.client.get(reverse('home'))
+        self.assertTrue(response.context['usuario_es_instructor'])
+
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse('home'))
+        self.assertFalse(response.context['usuario_es_instructor'])
+
+    def test_home_core_decoupled_from_tablon_and_dojo_links_tablon(self):
+        """Verifica que la portada nacional ya no expone la pestaña del Tablón y que el Dojo enlaza su Tablón local."""
+        self.client.force_login(self.regular_user)
+
+        home_res = self.client.get(reverse('home'))
+        self.assertEqual(home_res.status_code, 200)
+        self.assertNotContains(home_res, 'Tablón Anuncios')
+        self.assertContains(home_res, 'Próximas Actividades Oficiales')
+
+        dojo_res = self.client.get(reverse('administracion:dojo_detalle', kwargs={'pk': self.dojo.pk}))
+        self.assertEqual(dojo_res.status_code, 200)
+        self.assertEqual(dojo_res.context['numero_anuncios_tablon'], 1)
+        self.assertContains(dojo_res, f"?dojo={self.dojo.pk}")
+
+        tablon_other = self.client.get(f"{reverse('administracion:tablon')}?dojo={self.other_dojo.pk}")
+        self.assertEqual(tablon_other.status_code, 200)
+        self.assertEqual(tablon_other.context['dojo_usuario'], self.other_dojo)
+        self.assertEqual(tablon_other.context['tablon'].count(), 0)
+        self.assertFalse(tablon_other.context['puede_gestionar_tablon'])
+
+
+

@@ -103,12 +103,15 @@ def cambio_password(request):
             logger.info("Cambio de contraseña exitoso - Usuario: %s, IP: %s", request.user.email, get_client_ip(request))
             # Una vez salvada la nueva contraseña hacemos logout del usuario
             logout(request)
+            messages.success(request, "Contraseña actualizada correctamente. Por favor, inicie sesión con su nueva contraseña.")
             return redirect('login')
         else:
             return render(request, 'usuarios/cambio_password.html', {
                 'error': 'Contraseña actual incorrecta',
                 'usuario_foto': foto_url,
             })
+
+    return redirect('home')
 
 # class ResetPasswordView(FormView):
 #     """

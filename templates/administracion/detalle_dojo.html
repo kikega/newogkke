@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block vendor_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css">
+{% endblock %}
+
+{% block vendor_js %}
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}
+
 {% block container %}
     <!-- Breadcrumb -->
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
@@ -61,7 +71,7 @@
                     </h4>
                 </div>
                 <div class="card-body text-center">
-                    <div class="d-none d-md-block d-flex justify-content-center chart-container">
+                    <div class="d-flex justify-content-center chart-container">
                         <canvas id="graficoCintosNegrosDojo"></canvas>
                     </div>
                 </div>
@@ -70,25 +80,26 @@
 
     </section> <!-- Fin Sección Superior -->
 
-    <!-- Seccion de botones para Tablon de anuncios y peticiones-->
-    <!-- Solo si eres staff, superuser o instructor -->
-    {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
-        <div class="container col-md-4 justify-content-center mt-5">
-            <div class="row">
-                <div class="btn-group btn-group-lg" role="group" aria-label="Default button group">
-                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalTablon">
-                        <i class="bi bi-list-ul"></i> Tablón</button>
-                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPeticiones">
-                        <i class="bi bi-person-raised-hand"></i> Peticiones 
-                        {% if numero_peticiones > 0 %}
-                            <span class="badge text-bg-info rounded-circle">{{ numero_peticiones }}</span>
-                        {% endif %}
-                    </button>
-                </div>
-            </div>  
-        </div>
-    {% endif %}
-    <!-- Fin de sección de botones -->
+    <!-- Acciones del Dojo: Acceso al Tablón local y gestión de instructor/staff -->
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+        <a href="{% url 'administracion:tablon' %}?dojo={{ dojo.id }}" class="btn btn-outline-warning">
+            <i class="bi bi-pin-angle-fill me-1" aria-hidden="true"></i>Ver Tablón del Dojo
+            {% if numero_anuncios_tablon > 0 %}
+                <span class="badge text-bg-secondary ms-1">{{ numero_anuncios_tablon }}</span>
+            {% endif %}
+        </a>
+        {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
+            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalTablon">
+                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Publicar aviso
+            </button>
+            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalPeticiones">
+                <i class="bi bi-person-raised-hand me-1" aria-hidden="true"></i>Peticiones
+                {% if numero_peticiones > 0 %}
+                    <span class="badge text-bg-info ms-1">{{ numero_peticiones }}</span>
+                {% endif %}
+            </button>
+        {% endif %}
+    </div>
 
     <!-- SECCIÓN INFERIOR: Listado alumnos del Dojo -->
     <section class="row justify-content-center">

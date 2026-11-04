@@ -1,17 +1,22 @@
 {% load static %}
 
-<section class="mb-5 color-texto">
-    <div class="text-center">
-        <img class="my-4 img-fluid" src={% static "img/logo.png" %} alt="Logo OGKKE">
+<section class="ogkke-hero mb-4 text-center">
+    <div class="mb-3">
+        <img
+            class="img-fluid ogkke-hero-logo"
+            src="{% static 'img/logo.png' %}"
+            alt="Emblema Okinawa Goju-Ryu Karate-Do Kyokai España"
+            width="488"
+            height="135"
+            fetchpriority="high"
+        >
     </div>
-    <div class="text-center">
-        <div class="container py-3">
-            <h1>Okinawa Goju-Ryu Karate-Do Kyokai España<h1>
-            <h2 class="col-lg-8 mx-auto lead">
-                <strong>Sensei Ryoichi Onaga</strong>, Hanshi 10º Dan. 
-                <br>
-                <strong>Sensei Toshiro Fujioka</strong>, Hanshi 9º Dan. Director Técnico OGKKE
-            </h2>
-        </div>
+    <div class="container">
+        <h1 class="ogkke-hero-title">Okinawa Goju-Ryu Karate-Do Kyokai España</h1>
+        <p class="ogkke-hero-subtitle mb-0">
+            <strong>Sensei Ryoichi Onaga</strong>, Hanshi 10º Dan
+            <br>
+            <strong>Sensei Toshiro Fujioka</strong>, Hanshi 9º Dan · Director Técnico OGKKE
+        </p>
     </div>
 </section>

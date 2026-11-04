@@ -1,7 +1,7 @@
 """Configuración URLs de usuarios"""
 
 # Django
-from django.urls import path
+from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
 
 # App usuarios
@@ -25,7 +25,7 @@ urlpatterns = [
         from_email="ogkke@egalvez.es",
         html_email_template_name="usuarios/emails/email_reset_password.html",
         subject_template_name="usuarios/emails/email_reset_subject.txt",
-        success_url="password_reset_hecho",
+        success_url=reverse_lazy("password_reset_hecho"),
     ), name="password_reset"),
     # Olvido contraseña. Paso 2: confirmacion de que se envió el email
     path("password_reset/password_reset_hecho/", auth_views.PasswordResetDoneView.as_view(
@@ -34,6 +34,7 @@ urlpatterns = [
     # Olvido contraseña. Paso 3: usuario introduce la contraseña
     path("password_reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
         template_name="usuarios/password_reset_confirm.html",
+        success_url=reverse_lazy("password_reset_completo"),
     ), name="password_reset_confirm"),
     # Olvido contraseña. Paso 4: confirmación usuario ingresa la nueva contraseña
     path("password_reset/completo/", auth_views.PasswordResetCompleteView.as_view(

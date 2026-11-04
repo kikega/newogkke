@@ -11,7 +11,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from django.db.models import Count
 
 # App administracion
-from administracion.models import Alumno, Dojo, Peticion
+from administracion.models import Alumno, Dojo, Peticion, Tablon
 
 # Formularios
 from administracion.forms import  TablonNuevoForm
@@ -90,11 +90,12 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
         })
         context['total_cintos_negros'] = sum(values)
 
-        # Obtenemos las peticiones pendientes por dojo
+        # Obtenemos las peticiones pendientes y anuncios del tablón por dojo
         peticiones = Peticion.objects.filter(dojo=dojo_actual, finalizada=False)
         numero_peticiones = peticiones.count()
         context['peticiones'] = peticiones
         context['numero_peticiones'] = numero_peticiones
+        context['numero_anuncios_tablon'] = Tablon.objects.filter(dojo=dojo_actual).count()
         context["form"] = TablonNuevoForm()
 
         return context
