@@ -47,17 +47,18 @@
             label: 'Cintos Negros'
         });
 
-        document.addEventListener('htmx:afterSwap', (event) => {
-            const panel = event.detail?.target?.id === 'panelAlumnosGrado'
-                ? event.detail.target
-                : document.getElementById('panelAlumnosGrado');
+        const syncChartHighlight = () => {
+            const panel = document.getElementById('panelAlumnosGrado');
             if (panel && panel.dataset.selectedGrado) {
                 const selected = parseInt(panel.dataset.selectedGrado, 10);
                 if (!Number.isNaN(selected)) {
                     window.OGKKECharts?.setHighlightIndex('graficoDanes', selected - 1);
                 }
             }
-        });
+        };
+
+        document.addEventListener('htmx:afterSwap', syncChartHighlight);
+        document.addEventListener('htmx:historyRestore', syncChartHighlight);
     })();
 </script>
 {% endblock script_js %}

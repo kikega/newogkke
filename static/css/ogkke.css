@@ -596,9 +596,9 @@ body {
 }
 
 .table-wrapper {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   max-inline-size: 100%;
-  max-block-size: min(680px, 78dvh);
   container-type: inline-size;
   border: 1px solid var(--border-subtle);
   border-radius: 0.85rem;
@@ -615,6 +615,11 @@ body {
   margin-block-end: 0;
   border-collapse: separate;
   border-spacing: 0;
+}
+
+.ogkke-data-table tr[hidden],
+.ogkke-data-table [hidden] {
+  display: none;
 }
 
 .ogkke-data-table thead {
@@ -672,7 +677,9 @@ body {
 }
 
 .ogkke-data-table tbody tr:last-child th,
-.ogkke-data-table tbody tr:last-child td {
+.ogkke-data-table tbody tr:last-child td,
+.ogkke-data-table tbody tr:nth-last-child(1 of :not([hidden])) th,
+.ogkke-data-table tbody tr:nth-last-child(1 of :not([hidden])) td {
   border-block-end: 0;
 }
 
