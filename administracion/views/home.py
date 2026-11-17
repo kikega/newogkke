@@ -14,10 +14,24 @@ from django.db.models import Count, Q
 # App administracion
 from administracion.models import Alumno, Cursillo, Dojo, Actividad
 
-@login_required
 def home(request):
     """
-    Home de la aplicación
+    Punto de entrada raíz (/):
+    - Si la petición llega por el subdominio o dominio propio de un Dojo activo,
+      sirve directamente su Portal de Dojo autónomo.
+    - Si llega por el dominio del Core Nacional, requiere autenticación y muestra
+      el panel nacional de OGKKE.
+    """
+    if getattr(request, "is_dojo_host", False) and getattr(request, "current_dojo", None):
+        from administracion.views.dojo_portal import DojoPortalView
+        return DojoPortalView.as_view()(request, slug=request.current_dojo.slug)
+    return _core_home(request)
+
+
+@login_required
+def _core_home(request):
+    """
+    Home del Core Nacional de la aplicación.
     Devuelve datos globales agregados y mapa de alumnos por grado.
     """
     hoy = datetime.date.today()

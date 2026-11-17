@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ campeonato.nombre }} · Campeonato OGKKE{% endblock %}
+
+{% block container %}
+<nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'campeonatos:lista' %}">Campeonatos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ campeonato.nombre }}</li>
+    </ol>
+</nav>
+
+<header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 my-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            {% if campeonato.ambito == 'GENERAL' %}
+                <span class="badge text-bg-warning">Campeonato General OGKKE</span>
+            {% else %}
+                <span class="badge text-bg-info">Torneo Local · {{ campeonato.dojo_organizador.nombre }}</span>
+            {% endif %}
+            <span class="badge text-bg-secondary">{{ campeonato.get_estado_display }}</span>
+        </div>
+        <h1 class="color-texto mb-1">{{ campeonato.nombre }}</h1>
+        <p class="text-body-secondary mb-0">
+            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ campeonato.lugar }} ({{ campeonato.ciudad }}) ·
+            <i class="bi bi-calendar-event ms-2 me-1" aria-hidden="true"></i>{{ campeonato.fecha_inicio|date:"d/m/Y" }} al {{ campeonato.fecha_fin|date:"d/m/Y" }}
+            <span class="small ms-2">(Edad calculada por fecha de cumpleaños al {{ campeonato.fecha_inicio|date:"d/m/Y" }})</span>
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-outline-info" commandfor="modalAyudaCampeonatos" command="show-modal">
+            <i class="bi bi-question-circle-fill me-1" aria-hidden="true"></i>Ayuda
+        </button>
+        {% if puede_administrar %}
+        <button type="button" class="btn btn-outline-warning" commandfor="modalNuevoTatami" command="show-modal">
+            <i class="bi bi-grid-1x2-fill me-1" aria-hidden="true"></i>Añadir Tatami / Juez
+        </button>
+        <button type="button" class="btn btn-warning fw-semibold" commandfor="modalNuevaCategoria" command="show-modal">
+            <i class="bi bi-plus-circle-fill me-1" aria-hidden="true"></i>Nueva Categoría
+        </button>
+        {% endif %}
+    </div>
+</header>
+
+<!-- SECCIÓN 1: TATAMIS Y JUECES EFÍMEROS -->
+<section class="mb-5" aria-labelledby="tatamisHeading">
+    <h2 id="tatamisHeading" class="h5 color-texto mb-3">
+        <i class="bi bi-display me-2" aria-hidden="true"></i>Tatamis y Mesas de Puntuación
+    </h2>
+    {% if tatamis %}
+        <div class="row g-3">
+            {% for tat in tatamis %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm h-100 border-warning-subtle">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="h6 fw-bold mb-0 color-texto">Tatami {{ tat.numero }} · {{ tat.nombre }}</h3>
+                            <span class="badge text-bg-dark">{{ tat.num_jueces_mesa }} Jueces</span>
+                        </div>
+                        <p class="small text-body-secondary mb-2">
+                            Categorías asignadas: <strong>{{ tat.categorias.count }}</strong>
+                        </p>
+                        {% if puede_administrar %}
+                            <div class="p-2 rounded bg-body-tertiary small mb-3">
+                                <span class="d-block text-body-secondary">Operador efímero (válido {{ campeonato.fecha_inicio|date:"d/m" }} - {{ campeonato.fecha_fin|date:"d/m" }}):</span>
+                                {% if tat.juez_operador %}
+                                    <code>{{ tat.juez_operador.email }}</code>
+                                {% else %}
+                                    <em>Sin juez asignado</em>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <div class="d-flex gap-2 mt-auto">
+                            <a href="{% url 'campeonatos:tatami_live' tatami_id=tat.id %}" class="btn btn-warning btn-sm fw-semibold flex-grow-1">
+                                <i class="bi bi-play-circle-fill me-1" aria-hidden="true"></i>Abrir Mesa en Vivo
+                            </a>
+                            {% if puede_administrar %}
+                            <form action="{% url 'campeonatos:tatami_regenerar_credenciales' tatami_id=tat.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Generar nueva clave temporal para el Juez">
+                                    <i class="bi bi-key-fill" aria-hidden="true"></i>Clave
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-secondary">
+            No se han configurado tatamis todavía. Añada al menos un Tatami para asignar categorías y jueces de mesa.
+        </div>
+    {% endif %}
+</section>
+
+<!-- SECCIÓN 2: CATEGORÍAS E INSCRIPCIONES -->
+<section class="mb-5" aria-labelledby="categoriasHeading">
+    <h2 id="categoriasHeading" class="h5 color-texto mb-3">
+        <i class="bi bi-list-Check me-2" aria-hidden="true"></i>Categorías del Campeonato
+    </h2>
+    {% if categorias %}
+        <div tabindex="0" role="region" aria-labelledby="categoriasHeading" class="table-wrapper shadow-sm">
+            <table
+                class="ogkke-data-table"
+                data-ogkke-table
+                style="--label-2: 'Modalidad'; --label-3: 'Sistema'; --label-4: 'Edad (Torneo)'; --label-5: 'Tatami'; --label-6: 'Inscritos'; --label-7: 'Acción';"
+            >
+                <thead>
+                    <tr>
+                        <th scope="col">Categoría</th>
+                        <th scope="col">Modalidad</th>
+                        <th scope="col">Sistema</th>
+                        <th scope="col">Rango Edad</th>
+                        <th scope="col">Tatami</th>
+                        <th scope="col">Inscritos</th>
+                        <th scope="col">Gestión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in categorias %}
+                    <tr>
+                        <th scope="row">
+                            <a href="{% url 'campeonatos:categoria_detalle' pk=cat.id %}" class="fw-semibold">
+                                {{ cat.nombre }}
+                            </a>
+                        </th>
+                        <td>
+                            {% if cat.modalidad == 'KUMITE' %}
+                                <span class="badge text-bg-danger">Kumite (+18)</span>
+                            {% else %}
+                                <span class="badge text-bg-primary">Kata</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cat.sistema == 'PUNTOS' %}
+                                Puntuación (Top {{ cat.clasificados_siguiente_ronda }})
+                            {% else %}
+                                Banderas (Aka vs Ao)
+                            {% endif %}
+                        </td>
+                        <td>{{ cat.edad_min }} a {{ cat.edad_max }} años</td>
+                        <td>
+                            {% if cat.tatami %}
+                                <a href="{% url 'campeonatos:tatami_live' tatami_id=cat.tatami.id %}?categoria={{ cat.id }}">
+                                    Tatami {{ cat.tatami.numero }}
+                                </a>
+                            {% else %}
+                                <span class="text-body-secondary">Sin asignar</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge rounded-pill text-bg-secondary">{{ cat.inscripciones.count }}</span></td>
+                        <td>
+                            <a href="{% url 'campeonatos:categoria_detalle' pk=cat.id %}" class="btn btn-sm btn-outline-warning">
+                                Inscribir / Ver ({{ cat.get_estado_display }})
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body py-4 text-center text-body-secondary">
+                No hay categorías configuradas en este campeonato.
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<!-- SECCIÓN 3: PODIOS CONSOLIDADOS DEL TORNEO -->
+{% if resultados_historicos %}
+<section class="mb-4" aria-labelledby="podiosHeading">
+    <h2 id="podiosHeading" class="h5 color-texto mb-3">
+        <i class="bi bi-award-fill me-2" aria-hidden="true"></i>Resultados y Podios Consolidados
+    </h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for res in resultados_historicos %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge {% if res.puesto == 1 %}text-bg-warning{% elif res.puesto == 2 %}text-bg-secondary{% elif res.puesto == 3 %}text-bg-danger{% else %}text-bg-dark{% endif %} me-2">
+                            {{ res.get_puesto_display }}
+                        </span>
+                        <strong>{{ res.nombre_competidor_snapshot }}</strong>
+                        <span class="text-body-secondary small ms-2">{{ res.dojo_nombre_snapshot }} · {{ res.grado_snapshot }}</span>
+                        <div class="small text-body-secondary">{{ res.categoria.nombre }}</div>
+                    </div>
+                    <span class="fw-semibold">{{ res.puntuacion_final_snapshot }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if puede_administrar %}
+<!-- Diálogo Nuevo Tatami -->
+<dialog class="ogkke-dialog" id="modalNuevoTatami" closedby="any" aria-labelledby="modalNuevoTatamiLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalNuevoTatamiLabel">Añadir Tatami y Juez Efímero</h2>
+        <button type="button" class="btn-close" commandfor="modalNuevoTatami" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'campeonatos:tatami_nuevo' slug=campeonato.slug %}" method="post" id="formNuevoTatami">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ form_tatami.numero.id_for_label }}">Número de Tatami *</label>
+                {{ form_tatami.numero }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="{{ form_tatami.nombre.id_for_label }}">Nombre identificativo *</label>
+                {{ form_tatami.nombre }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="{{ form_tatami.num_jueces_mesa.id_for_label }}">Jueces en mesa</label>
+                {{ form_tatami.num_jueces_mesa }}
+            </div>
+            <div class="form-check">
+                {{ form_tatami.generar_credenciales }}
+                <label class="form-check-label" for="{{ form_tatami.generar_credenciales.id_for_label }}">
+                    Generar usuario temporal de Juez (bloqueado fuera de las fechas del campeonato)
+                </label>
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalNuevoTatami" command="close">Cancelar</button>
+        <button type="submit" form="formNuevoTatami" class="btn btn-warning fw-semibold">Crear Tatami</button>
+    </div>
+</dialog>
+
+<!-- Diálogo Nueva Categoría -->
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalNuevaCategoria" closedby="any" aria-labelledby="modalNuevaCategoriaLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalNuevaCategoriaLabel">Crear Categoría de Competición</h2>
+        <button type="button" class="btn-close" commandfor="modalNuevaCategoria" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'campeonatos:categoria_nueva' slug=campeonato.slug %}" method="post" id="formNuevaCategoria">
+            {% csrf_token %}
+            <div class="alert alert-warning small py-2">
+                <strong>Nota normativa:</strong> La modalidad de <strong>Kumite</strong> está restringida exclusivamente a mayores de edad (mínimo 18 años cumplidos en la fecha del torneo).
+            </div>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label" for="{{ form_categoria.nombre.id_for_label }}">Nombre de la categoría *</label>
+                    {{ form_categoria.nombre }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.tatami.id_for_label }}">Tatami asignado</label>
+                    {{ form_categoria.tatami }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.modalidad.id_for_label }}">Modalidad *</label>
+                    {{ form_categoria.modalidad }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.sistema.id_for_label }}">Sistema *</label>
+                    {{ form_categoria.sistema }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.genero.id_for_label }}">Género</label>
+                    {{ form_categoria.genero }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.edad_min.id_for_label }}">Edad mínima (en torneo) *</label>
+                    {{ form_categoria.edad_min }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.edad_max.id_for_label }}">Edad máxima (en torneo) *</label>
+                    {{ form_categoria.edad_max }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.clasificados_siguiente_ronda.id_for_label }}">Corte Top N (Puntuación)</label>
+                    {{ form_categoria.clasificados_siguiente_ronda }}
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mt-4">
+                        {{ form_categoria.admite_cintos_color }}
+                        <label class="form-check-label" for="{{ form_categoria.admite_cintos_color.id_for_label }}">
+                            Admite Cintos de Color (Kyu)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.grado_kyu_min.id_for_label }}">Kyu mínimo</label>
+                    {{ form_categoria.grado_kyu_min }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.grado_kyu_max.id_for_label }}">Kyu máximo</label>
+                    {{ form_categoria.grado_kyu_max }}
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mt-4">
+                        {{ form_categoria.admite_cintos_negros }}
+                        <label class="form-check-label" for="{{ form_categoria.admite_cintos_negros.id_for_label }}">
+                            Admite Cintos Negros (DAN)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.grado_dan_min.id_for_label }}">DAN mínimo</label>
+                    {{ form_categoria.grado_dan_min }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.grado_dan_max.id_for_label }}">DAN máximo</label>
+                    {{ form_categoria.grado_dan_max }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_categoria.orden_ejecucion.id_for_label }}">Orden en Tatami</label>
+                    {{ form_categoria.orden_ejecucion }}
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalNuevaCategoria" command="close">Cancelar</button>
+        <button type="submit" form="formNuevaCategoria" class="btn btn-warning fw-semibold">Guardar Categoría</button>
+    </div>
+</dialog>
+{% endif %}
+{% include "campeonatos/partials/modal_ayuda_contextual.html" %}
+{% endblock container %}

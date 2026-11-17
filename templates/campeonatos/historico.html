@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Histórico Oficial de Clasificaciones y Podios · OGKKE{% endblock %}
+
+{% block container %}
+<nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'campeonatos:lista' %}">Campeonatos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Histórico de Clasificaciones</li>
+    </ol>
+</nav>
+
+<header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 my-4">
+    <div>
+        <h1 class="color-texto mb-1">Histórico Inmutable de Campeonatos</h1>
+        <p class="text-body-secondary mb-0">
+            Archivo oficial de podios y clasificaciones de torneos finalizados (con instantánea histórica de Dojo y Grado).
+        </p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-outline-info" commandfor="modalAyudaCampeonatos" command="show-modal">
+            <i class="bi bi-question-circle-fill me-1" aria-hidden="true"></i>¿Cómo funciona el Histórico?
+        </button>
+    </div>
+</header>
+
+<section class="card shadow-sm mb-4" aria-label="Filtros del histórico">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label for="filtroCamp" class="form-label small fw-semibold">Campeonato</label>
+                <select name="campeonato" id="filtroCamp" class="form-select">
+                    <option value="">Todos los campeonatos</option>
+                    {% for c in campeonatos_disponibles %}
+                        <option value="{{ c.id }}" {% if campeonato_seleccionado == c.id|stringformat:"s" %}selected{% endif %}>
+                            {{ c.nombre }} ({{ c.fecha_inicio|date:"d/m/Y" }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="filtroMod" class="form-label small fw-semibold">Modalidad</label>
+                <select name="modalidad" id="filtroMod" class="form-select">
+                    <option value="">Todas (Kata y Kumite)</option>
+                    <option value="KATA" {% if modalidad_seleccionada == 'KATA' %}selected{% endif %}>Kata</option>
+                    <option value="KUMITE" {% if modalidad_seleccionada == 'KUMITE' %}selected{% endif %}>Kumite (+18)</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-warning flex-grow-1">Filtrar</button>
+                <a href="{% url 'campeonatos:historico' %}" class="btn btn-outline-secondary">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section aria-labelledby="historicoTableCaption">
+    <h2 id="historicoTableCaption" class="h5 mb-3 color-texto">Actas y Podios Registrados</h2>
+    {% if resultados %}
+        <div tabindex="0" role="region" aria-labelledby="historicoTableCaption" class="table-wrapper shadow-sm">
+            <table
+                class="ogkke-data-table"
+                data-ogkke-table
+                style="--label-2: 'Campeonato'; --label-3: 'Categoría'; --label-4: 'Modalidad'; --label-5: 'Dojo'; --label-6: 'Grado'; --label-7: 'Marca';"
+            >
+                <thead>
+                    <tr>
+                        <th scope="col">Puesto y Competidor</th>
+                        <th scope="col">Campeonato</th>
+                        <th scope="col">Categoría</th>
+                        <th scope="col">Modalidad</th>
+                        <th scope="col">Dojo</th>
+                        <th scope="col">Grado</th>
+                        <th scope="col">Resultado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in resultados %}
+                    <tr>
+                        <th scope="row">
+                            <span class="badge {% if res.puesto == 1 %}text-bg-warning{% elif res.puesto == 2 %}text-bg-secondary{% elif res.puesto == 3 %}text-bg-danger{% else %}text-bg-dark{% endif %} me-2">
+                                {{ res.puesto }}º
+                            </span>
+                            {{ res.nombre_competidor_snapshot }}
+                        </th>
+                        <td>{{ res.campeonato.nombre }} ({{ res.campeonato.fecha_inicio|date:"Y" }})</td>
+                        <td>{{ res.categoria.nombre }}</td>
+                        <td>{{ res.modalidad_snapshot }}</td>
+                        <td>{{ res.dojo_nombre_snapshot }}</td>
+                        <td>{{ res.grado_snapshot }}</td>
+                        <td>{{ res.puntuacion_final_snapshot }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body py-5 text-center text-body-secondary">
+                No existen resultados históricos registrados con los criterios seleccionados.
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% include "campeonatos/partials/modal_ayuda_contextual.html" %}
+{% endblock container %}

@@ -23,7 +23,10 @@ from administracion import views as administracion_views
 
 urlpatterns = [
     path("", administracion_views.home, name='home'),
+    path("dojo/<slug:slug>/", administracion_views.DojoPortalView.as_view(), name="dojo_portal_public"),
+    path("internal/tls-check/", administracion_views.tls_domain_check, name="tls_domain_check"),
     path("usuarios/", include("usuarios.urls")),
     path("administracion/", include("administracion.urls")),
+    path("campeonatos/", include("campeonatos.urls")),
     path('admin/', admin.site.urls),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

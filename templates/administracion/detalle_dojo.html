@@ -50,9 +50,15 @@
                         <p class="card-text text-body-secondary mb-0"><em>Sin instructor asignado</em></p>
                     {% endif %}
                 </div>
-                <div class="card-footer text-body-secondary small text-center">
-                    <i class="bi bi-envelope me-1" aria-hidden="true"></i>
-                    {% if instructor and instructor.usuario %}{{ instructor.usuario.email }}{% else %}Correo no disponible{% endif %}
+                <div class="card-footer text-body-secondary small text-center d-flex flex-column gap-1">
+                    <div>
+                        <i class="bi bi-envelope me-1" aria-hidden="true"></i>
+                        {% if dojo.email_contacto %}{{ dojo.email_contacto }}{% elif instructor and instructor.usuario %}{{ instructor.usuario.email }}{% else %}Correo no disponible{% endif %}
+                    </div>
+                    <div>
+                        <i class="bi bi-globe2 me-1 color-texto" aria-hidden="true"></i>
+                        <code>{{ dojo.dominio_principal }}</code>
+                    </div>
                 </div>
             </div>
         </div>
@@ -72,18 +78,31 @@
         </div>
     </section>
 
-    <!-- Acciones del Dojo: Acceso al Tablón local y gestión de instructor/staff -->
+    <!-- Acciones del Dojo: Acceso al Portal autónomo, Tablón local y gestión de instructor/staff -->
     <div class="d-flex flex-wrap justify-content-center gap-2 my-4">
+        {% if dojo.slug %}
+            <a href="{% url 'administracion:dojo_portal' slug=dojo.slug %}" class="btn btn-warning fw-semibold">
+                <i class="bi bi-globe2 me-1" aria-hidden="true"></i>Abrir Portal del Dojo
+            </a>
+        {% endif %}
         <a href="{% url 'administracion:tablon' %}?dojo={{ dojo.id }}" class="btn btn-outline-warning">
             <i class="bi bi-pin-angle-fill me-1" aria-hidden="true"></i>Ver Tablón del Dojo
             {% if numero_anuncios_tablon > 0 %}
                 <span class="badge text-bg-secondary ms-1">{{ numero_anuncios_tablon }}</span>
             {% endif %}
         </a>
-        {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
-            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalTablon">
+        {% if puede_gestionar_dojo %}
+            <a href="{% url 'administracion:alumnos_color' %}?dojo={{ dojo.id }}" class="btn btn-outline-warning">
+                <i class="bi bi-shield-lock-fill me-1" aria-hidden="true"></i>Cintos de Color (Kyu)
+            </a>
+            <button type="button" class="btn btn-outline-warning" commandfor="modalTablon" command="show-modal">
                 <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Publicar aviso
             </button>
+            <button type="button" class="btn btn-outline-warning" commandfor="modalConfigurarDojo" command="show-modal">
+                <i class="bi bi-sliders me-1" aria-hidden="true"></i>Dominio y Portal
+            </button>
+        {% endif %}
+        {% if usuario_es_instructor or user.is_staff or user.is_superuser %}
             <button type="button" class="btn btn-outline-warning" commandfor="modalPeticiones" command="show-modal">
                 <i class="bi bi-person-raised-hand me-1" aria-hidden="true"></i>Peticiones
                 {% if numero_peticiones > 0 %}
@@ -144,73 +163,10 @@
         {% endif %}
     </section>
 
-    <!-- Modal Tablón de anuncios (conservada hasta migración a app local de Dojos) -->
-    <div class="modal fade" id="modalTablon" tabindex="-1" aria-labelledby="modalTablonLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5 color-texto" id="modalTablonLabel">Tablón de anuncios {{ dojo.nombre }}</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form class="needs-validation" action="{% url 'administracion:tablon' %}" method="post" enctype="multipart/form-data" id="tablonNuevo" novalidate>
-                        {% csrf_token %}
-                        <input type="hidden" value="{{ dojo.id }}" name="dojo">
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                {{ form.tipo.label }}
-                                {{ form.tipo }}
-                                <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca el tipo de actividad.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                {{ form.titulo.label }}
-                                {{ form.titulo }}
-                                <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca un nombre para la actividad.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                {{ form.descripcion.label }}
-                                {{ form.descripcion }}
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                {{ form.fecha.label }}
-                                {{ form.fecha }}
-                                <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca la fecha.
-                                </div>
-                            </div>
-                            <div class="col mb-3">
-                                {{ form.lugar.label }}
-                                {{ form.lugar }}
-                                <div class="invalid-feedback">
-                                    Este campo no puede estar vacío, introduzca el lugar dónde se desarrollará.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row input-group">
-                            <div class="col mb-3">
-                                {{ form.informacion.label }}
-                                {{ form.informacion }}
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill" aria-hidden="true"></i> Cancelar</button>
-                    <button type="submit" form="tablonNuevo" class="btn btn-outline-warning"><i class="bi bi-database-fill-add" aria-hidden="true"></i> Crear</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% if puede_gestionar_dojo %}
+        {% include "administracion/partials/dojo_config_dialog.html" %}
+        {% include "administracion/partials/dojo_tablon_dialogs.html" with dojo_target=dojo tablon_form_obj=form %}
+    {% endif %}
 
     <!-- Diálogo nativo de Peticiones del Dojo -->
     <dialog class="ogkke-dialog ogkke-dialog-lg" id="modalPeticiones" aria-labelledby="modalPeticionesLabel">
@@ -260,16 +216,6 @@
             labels: data.labels,
             values: data.values,
             label: 'Cintos Negros'
-        });
-
-        // Conservado únicamente para #tablonNuevo (módulo heredado de Dojo)
-        const tablonForm = document.getElementById('tablonNuevo');
-        tablonForm?.addEventListener('submit', (event) => {
-            if (!tablonForm.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            tablonForm.classList.add('was-validated');
         });
     })();
 </script>

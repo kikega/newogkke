@@ -1,0 +1,83 @@
+<!-- Diálogo nativo de Ayuda Rápida Contextual para Campeonatos y Mesa de Tatami -->
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalAyudaCampeonatos" closedby="any" aria-labelledby="modalAyudaCampeonatosLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalAyudaCampeonatosLabel">
+            <i class="bi bi-question-circle-fill me-2" aria-hidden="true"></i>Guía Rápida · Campeonatos y Tatami
+        </h2>
+        <button type="button" class="btn-close" commandfor="modalAyudaCampeonatos" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <div class="row g-3">
+            <!-- Bloque 1: Anotadores y Jueces de Mesa -->
+            <div class="col-12">
+                <div class="p-3 rounded-3 border border-warning-subtle bg-body-tertiary">
+                    <h3 class="h6 fw-bold color-texto mb-2">
+                        <i class="bi bi-tablet-landscape me-1" aria-hidden="true"></i>1. Para Anotadores y Jueces de Mesa (Tatami en Vivo)
+                    </h3>
+                    <ul class="small mb-0 ps-3">
+                        <li class="mb-1">
+                            <strong>Iniciar Categoría:</strong> Seleccione la categoría en la fila superior del Tatami y pulse <em>"Iniciar Competición"</em> para generar la Ronda 1.
+                        </li>
+                        <li class="mb-1">
+                            <strong>Sistema de Puntuación (Kata):</strong> Introduzca la nota de cada juez (`0.0` a `10.0`) y pulse <strong>Guardar</strong>. Si comete un error al teclear, puede volver a introducir las notas del competidor y pulsar <strong>Guardar</strong> tantas veces como necesite <em>mientras la ronda siga abierta</em>.
+                        </li>
+                        <li class="mb-1">
+                            <strong>Corte Top N y Desempates Automáticos:</strong> Cuando todos los competidores tengan nota, pulse <em>"Cerrar Ronda y Calcular Clasificados / Podio"</em>. Pasan los <strong>N mejores</strong> configurados en la categoría. Si hay empate en la línea de corte o en puestos de medalla (1.º, 2.º o 3.º), el sistema <strong>crea automáticamente una nueva Ronda de Desempate</strong> solo con los empatados.
+                        </li>
+                        <li class="mb-0">
+                            <strong>Banderas (Aka/Ao) y Kumite (+18):</strong> Indique las banderas o puntos de <strong>AKA (Rojo)</strong> y <strong>AO (Azul)</strong> y pulse <em>"Gana AKA"</em> o <em>"Gana AO"</em>. Si el número de inscritos es impar, un competidor avanza por <em>Bye</em> (pase directo). En semifinales se genera automáticamente tanto la Final como el combate por el 3.º puesto (Bronce).
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bloque 2: Instructores de Dojo -->
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100">
+                    <h3 class="h6 fw-bold color-texto mb-2">
+                        <i class="bi bi-person-check-fill me-1" aria-hidden="true"></i>2. Para Instructores (Inscripciones)
+                    </h3>
+                    <ul class="small mb-0 ps-3">
+                        <li class="mb-1">
+                            <strong>Cálculo de Edad (Cumpleaños):</strong> La categoría se valida según los años cumplidos <strong>exactamente el día de inicio del torneo</strong>. Si cumple años después del campeonato, competirá en la nueva edad en el siguiente torneo.
+                        </li>
+                        <li class="mb-1">
+                            <strong>Menores y RGPD (LOPDGDD):</strong> Todo menor requiere tener activada en su ficha de <em>Cintos de Color</em> la casilla de <strong>Autorización RGPD firmada</strong> y <strong>Autorizado para campeonatos</strong> (con fecha de firma obligatoria para menores de 14 años).
+                        </li>
+                        <li class="mb-0">
+                            <strong>Kumite (+18):</strong> La modalidad de Kumite solo admite competidores con <strong>18 años o más</strong> cumplidos en la fecha del torneo.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bloque 3: Dirección del Torneo / Staff -->
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100">
+                    <h3 class="h6 fw-bold color-texto mb-2">
+                        <i class="bi bi-sliders me-1" aria-hidden="true"></i>3. Para Dirección del Torneo
+                    </h3>
+                    <ul class="small mb-0 ps-3">
+                        <li class="mb-1">
+                            <strong>Usuarios Efímeros de Tatami:</strong> Al crear un Tatami se genera un usuario temporal (`tatami1_...@tatami.ogkke.es`). Solo puede iniciar sesión durante las fechas del torneo y solo ve su Tatami.
+                        </li>
+                        <li class="mb-1">
+                            <strong>¿Olvidaron la clave en la mesa?:</strong> Pulse el botón <em>"Clave"</em> en la tarjeta del Tatami para generar una nueva contraseña al instante.
+                        </li>
+                        <li class="mb-0">
+                            <strong>Histórico Inmutable:</strong> Al finalizar la última ronda de una categoría, el podio queda guardado con instantánea (*snapshot*) del Dojo y cinturón que tenía el alumno ese día.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalAyudaCampeonatos" command="close">
+            Cerrar ventana
+        </button>
+        <a href="{% url 'campeonatos:ayuda' %}" class="btn btn-warning fw-semibold">
+            <i class="bi bi-book-half me-1" aria-hidden="true"></i>Abrir Manual Completo y Preguntas Frecuentes
+        </a>
+    </div>
+</dialog>

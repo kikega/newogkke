@@ -1,0 +1,92 @@
+{% if puede_gestionar_dojo and config_form %}
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalConfigurarDojo" aria-labelledby="modalConfigurarDojoLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalConfigurarDojoLabel">
+            <i class="bi bi-sliders me-2" aria-hidden="true"></i>Configurar Portal y Dominio · {{ dojo.nombre }}
+        </h2>
+        <button type="button" class="btn-close" commandfor="modalConfigurarDojo" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'administracion:dojo_portal_config' dojo.slug %}" method="post" enctype="multipart/form-data" id="dojoConfigForm">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+            <div class="p-3 rounded-3 mb-3 border bg-body-tertiary">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <span class="fw-semibold small text-uppercase text-body-secondary">
+                        <i class="bi bi-globe2 me-1 color-texto" aria-hidden="true"></i>Enrutamiento Multi-Dominio y TLS Automático
+                    </span>
+                    <div class="form-check form-switch mb-0">
+                        {{ config_form.sitio_activo }}
+                        <label class="form-check-label small fw-semibold" for="{{ config_form.sitio_activo.id_for_label }}">
+                            {{ config_form.sitio_activo.label }}
+                        </label>
+                    </div>
+                </div>
+                <p class="small text-body-secondary mb-2">
+                    Subdominio oficial asignado automáticamente:
+                    <code class="text-body">{{ dojo.subdominio_oficial }}</code>
+                </p>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-8">
+                        <label for="{{ config_form.dominio_personalizado.id_for_label }}" class="form-label small fw-semibold">
+                            {{ config_form.dominio_personalizado.label }}
+                        </label>
+                        {{ config_form.dominio_personalizado }}
+                        <div class="form-text">
+                            Apunta un registro DNS <code>CNAME</code> o <code>A</code> hacia <code>{{ dojo_base_domain|default:"ogkke.es" }}</code>. El certificado HTTPS se emite al vuelo.
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ config_form.color_primario.id_for_label }}" class="form-label small fw-semibold">
+                            {{ config_form.color_primario.label }}
+                        </label>
+                        {{ config_form.color_primario }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="{{ config_form.lema.id_for_label }}" class="form-label">{{ config_form.lema.label }}</label>
+                    {{ config_form.lema }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ config_form.logo.id_for_label }}" class="form-label">{{ config_form.logo.label }}</label>
+                    {{ config_form.logo }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ config_form.descripcion_publica.id_for_label }}" class="form-label">{{ config_form.descripcion_publica.label }}</label>
+                {{ config_form.descripcion_publica }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ config_form.horario_resumen.id_for_label }}" class="form-label">{{ config_form.horario_resumen.label }}</label>
+                {{ config_form.horario_resumen }}
+                <div class="form-text">Escribe cada turno o grupo en una línea independiente.</div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ config_form.telefono_contacto.id_for_label }}" class="form-label">{{ config_form.telefono_contacto.label }}</label>
+                    {{ config_form.telefono_contacto }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ config_form.email_contacto.id_for_label }}" class="form-label">{{ config_form.email_contacto.label }}</label>
+                    {{ config_form.email_contacto }}
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalConfigurarDojo" command="close">
+            <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancelar
+        </button>
+        <button type="submit" form="dojoConfigForm" class="btn btn-warning fw-semibold">
+            <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Guardar configuración
+        </button>
+    </div>
+</dialog>
+{% endif %}

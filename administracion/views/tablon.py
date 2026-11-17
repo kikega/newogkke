@@ -41,12 +41,16 @@ class TablonView(LoginRequiredMixin, TemplateView):
             pass
 
         dojo_param = self.request.GET.get('dojo')
+        current_dojo = getattr(self.request, 'current_dojo', None)
         if dojo_param and dojo_param.isdigit():
             dojo = get_object_or_404(Dojo, pk=int(dojo_param))
-            tablon_qs = Tablon.objects.filter(dojo=dojo)
+            tablon_qs = Tablon.objects.for_dojo(dojo)
+        elif current_dojo is not None:
+            dojo = current_dojo
+            tablon_qs = Tablon.objects.for_dojo(current_dojo)
         elif dojo_alumno is not None:
             dojo = dojo_alumno
-            tablon_qs = Tablon.objects.filter(dojo=dojo_alumno)
+            tablon_qs = Tablon.objects.for_dojo(dojo_alumno)
         else:
             dojo = None
             tablon_qs = Tablon.objects.select_related('dojo').all() if (user.is_staff or user.is_superuser) else Tablon.objects.none()
@@ -62,6 +66,7 @@ class TablonView(LoginRequiredMixin, TemplateView):
         context["tablon"] = tablon_qs
         context["usuario_es_instructor"] = es_instructor
         context["puede_gestionar_tablon"] = puede_gestionar
+        context["form"] = TablonNuevoForm()
 
         return context
 
@@ -108,6 +113,9 @@ class TablonView(LoginRequiredMixin, TemplateView):
                 )
 
                 messages.success(self.request, "¡Notificación creada exitosamente!")
+                next_url = request.POST.get('next')
+                if next_url and next_url.startswith('/'):
+                    return redirect(next_url)
                 return redirect(f"{reverse_lazy('administracion:tablon')}?dojo={dojo.id}")
             except PermissionDenied as pe:
                 raise pe
@@ -128,6 +136,14 @@ class TablonEditarView(LoginRequiredMixin, UpdateView):
     form_class = TablonEditForm
     template_name = 'administracion/home-tablon.html'
     success_url = reverse_lazy("administracion:tablon")
+
+    def get_success_url(self):
+        next_url = self.request.POST.get('next')
+        if next_url and next_url.startswith('/'):
+            return next_url
+        if self.object and self.object.dojo_id:
+            return f"{reverse_lazy('administracion:tablon')}?dojo={self.object.dojo_id}"
+        return str(self.success_url)
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -200,6 +216,14 @@ class TablonEliminarView(LoginRequiredMixin, DeleteView):
     # URL a la que se redirigirá después de una eliminación exitosa.
     # Usamos reverse_lazy para que la URL se resuelva cuando sea necesario.
     success_url = reverse_lazy('administracion:tablon')
+
+    def get_success_url(self):
+        next_url = self.request.POST.get('next')
+        if next_url and next_url.startswith('/'):
+            return next_url
+        if self.object and self.object.dojo_id:
+            return f"{reverse_lazy('administracion:tablon')}?dojo={self.object.dojo_id}"
+        return str(self.success_url)
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()

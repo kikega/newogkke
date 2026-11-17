@@ -6,7 +6,7 @@ from django import forms
 from django.core.validators import FileExtensionValidator
 
 # Modelos
-from administracion.models import Alumno, Cursillo, Tablon, Actividad
+from administracion.models import Alumno, AlumnoColor, Cursillo, Dojo, GradoKyu, Tablon, Actividad
 
 class EmailInstructoresForm(forms.Form):
     """
@@ -268,3 +268,170 @@ class InscripcionAlumnosForm(forms.Form):
                     )
                 except Alumno.DoesNotExist:
                     self.fields['alumnos'].queryset = Alumno.objects.none()
+
+
+class DojoPortalConfigForm(forms.ModelForm):
+    """
+    Formulario para que el instructor titular o el staff configuren la identidad visual,
+    los datos públicos y el dominio propio de su Dojo.
+    """
+
+    class Meta:
+        model = Dojo
+        fields = [
+            'sitio_activo',
+            'dominio_personalizado',
+            'color_primario',
+            'logo',
+            'lema',
+            'descripcion_publica',
+            'horario_resumen',
+            'telefono_contacto',
+            'email_contacto',
+        ]
+        widgets = {
+            'sitio_activo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            'dominio_personalizado': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'ej. karatebudokan.es',
+                'autocorrect': 'off',
+                'autocapitalize': 'off',
+                'spellcheck': 'false',
+                'autocomplete': 'off',
+            }),
+            'color_primario': forms.TextInput(attrs={
+                'type': 'color',
+                'class': 'form-control form-control-color w-100',
+            }),
+            'logo': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.jpg,.jpeg,.png,.gif,.webp',
+            }),
+            'lema': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej. Okinawa Goju-Ryu Karate-Do Tradicional',
+            }),
+            'descripcion_publica': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Presentación del Dojo, historia y metodología de enseñanza...',
+            }),
+            'horario_resumen': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Ej. Lunes, Miércoles y Viernes: Infantil 18:00–19:00 · Adultos 20:00–21:30',
+            }),
+            'telefono_contacto': forms.TextInput(attrs={
+                'type': 'tel',
+                'class': 'form-control',
+                'placeholder': '+34 600 000 000',
+                'autocomplete': 'tel',
+            }),
+            'email_contacto': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'info@midojo.es',
+                'autocorrect': 'off',
+                'autocapitalize': 'off',
+                'spellcheck': 'false',
+                'autocomplete': 'email',
+            }),
+        }
+
+
+class AlumnoColorForm(forms.ModelForm):
+    """
+    Formulario para el alta y edición de alumnos de Cinturón de Color (Kyu) y Menores.
+    Aplica minimización de datos (RGPD) y control de autorización paterna (LOPDGDD Art. 7).
+    """
+
+    class Meta:
+        model = AlumnoColor
+        fields = [
+            'dojo',
+            'nombre',
+            'apellidos',
+            'fecha_nacimiento',
+            'genero',
+            'grado_actual',
+            'fecha_ultimo_grado',
+            'consentimiento_firmado',
+            'consentimiento_campeonatos',
+            'fecha_firma_consentimiento',
+            'referencia_consentimiento',
+            'documento_consentimiento',
+            'activo',
+        ]
+        widgets = {
+            'dojo': forms.Select(attrs={'class': 'form-select'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'apellidos': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'fecha_nacimiento': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date', 'required': True},
+                format='%Y-%m-%d',
+            ),
+            'genero': forms.Select(attrs={'class': 'form-select'}),
+            'grado_actual': forms.Select(attrs={'class': 'form-select', 'required': True}),
+            'fecha_ultimo_grado': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'},
+                format='%Y-%m-%d',
+            ),
+            'consentimiento_firmado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'consentimiento_campeonatos': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'fecha_firma_consentimiento': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'},
+                format='%Y-%m-%d',
+            ),
+            'referencia_consentimiento': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Ej. Exp. RGPD-2026-042'}
+            ),
+            'documento_consentimiento': forms.FileInput(
+                attrs={'class': 'form-control', 'accept': '.pdf'}
+            ),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        self.fields['grado_actual'].queryset = GradoKyu.objects.all().order_by('orden')
+
+        if self.user and not (self.user.is_staff or self.user.is_superuser):
+            instructor = (
+                Alumno.objects.select_related('dojo')
+                .filter(usuario=self.user, instructor=True, activo=True)
+                .first()
+            )
+            if instructor:
+                self.fields['dojo'].queryset = Dojo.objects.filter(pk=instructor.dojo_id)
+                self.fields['dojo'].initial = instructor.dojo
+            else:
+                self.fields['dojo'].queryset = Dojo.objects.none()
+
+
+class AscensoGradoKyuForm(forms.Form):
+    """Formulario rápido para registrar un ascenso de grado Kyu de un alumno de color."""
+
+    nuevo_grado = forms.ModelChoiceField(
+        queryset=GradoKyu.objects.all().order_by('orden'),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Nuevo Cinturón de Color (Kyu)",
+        required=True,
+    )
+    fecha_examen = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+        label="Fecha de pase de grado",
+        required=True,
+    )
+    observaciones = forms.CharField(
+        max_length=250,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej. Examen trimestral en el Dojo',
+        }),
+        label="Observaciones",
+    )
+
+

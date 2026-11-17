@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ alumno_color.nombre }} {{ alumno_color.apellidos }} · Cinturón {{ alumno_color.grado_actual.nombre }}{% endblock %}
+
+{% block container %}
+<nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'administracion:alumnos_color' %}">Cinturones de Color</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ alumno_color.apellidos }}, {{ alumno_color.nombre }}</li>
+    </ol>
+</nav>
+
+<div class="row g-4 mt-2">
+    <!-- Ficha principal y estado RGPD -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <span class="fw-semibold">Ficha Confidencial Kyu</span>
+                {% if alumno_color.activo %}
+                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Alta Activa</span>
+                {% else %}
+                    <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Inactivo</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <h1 class="h4 color-texto mb-1">{{ alumno_color.nombre }} {{ alumno_color.apellidos }}</h1>
+                <p class="text-body-secondary mb-3">
+                    <i class="bi bi-building me-1" aria-hidden="true"></i>Dojo: <strong>{{ alumno_color.dojo.nombre }}</strong>
+                </p>
+
+                <div class="p-3 rounded-3 border mb-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="small text-body-secondary d-block">Cinturón Actual</span>
+                        <strong class="fs-5">{{ alumno_color.grado_actual.nombre }}</strong>
+                        <span class="text-body-secondary small ms-1">({{ alumno_color.grado_actual.kyu_referencia }})</span>
+                    </div>
+                    <span class="badge rounded-pill border px-3 py-2"
+                          style="background: {% if alumno_color.grado_actual.color_hex_secundario %}linear-gradient(135deg, {{ alumno_color.grado_actual.color_hex_primario }} 50%, {{ alumno_color.grado_actual.color_hex_secundario }} 50%){% else %}{{ alumno_color.grado_actual.color_hex_primario }}{% endif %}; color: #111;">
+                        Nivel {{ alumno_color.grado_actual.orden }}
+                    </span>
+                </div>
+
+                <dl class="row small mb-3">
+                    <dt class="col-6 text-body-secondary">Fecha de nacimiento:</dt>
+                    <dd class="col-6 fw-semibold">{{ alumno_color.fecha_nacimiento|date:"d/m/Y" }} ({{ alumno_color.edad }} años)</dd>
+
+                    <dt class="col-6 text-body-secondary">Clasificación legal:</dt>
+                    <dd class="col-6">
+                        {% if alumno_color.es_menor_14 %}
+                            <span class="badge text-bg-info">Menor de 14 años (Art. 7 LOPDGDD)</span>
+                        {% elif alumno_color.es_menor_edad %}
+                            <span class="badge text-bg-secondary">Menor de edad (14-17 años)</span>
+                        {% else %}
+                            <span class="badge text-bg-dark">Mayor de edad (18+ años)</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-6 text-body-secondary">Autorización RGPD:</dt>
+                    <dd class="col-6">
+                        {% if alumno_color.consentimiento_firmado %}
+                            <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Firmada ({{ alumno_color.fecha_firma_consentimiento|default:"-" }})</span>
+                        {% else %}
+                            <span class="text-danger fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Pendiente</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-6 text-body-secondary">Apto para Campeonatos:</dt>
+                    <dd class="col-6">
+                        {% if alumno_color.puede_competir %}
+                            <span class="badge bg-success-subtle text-success-emphasis">Habilitado para competir</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger-emphasis">Bloqueado (Falta autorización)</span>
+                        {% endif %}
+                    </dd>
+
+                    {% if alumno_color.referencia_consentimiento %}
+                    <dt class="col-6 text-body-secondary">Ref. Expediente:</dt>
+                    <dd class="col-6"><code>{{ alumno_color.referencia_consentimiento }}</code></dd>
+                    {% endif %}
+                </dl>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button type="button" class="btn btn-warning fw-semibold" commandfor="modalAscensoKyu" command="show-modal">
+                        <i class="bi bi-award-fill me-1" aria-hidden="true"></i>Registrar Pase de Grado
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" commandfor="modalEditarAlumnoColor" command="show-modal">
+                        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Editar / RGPD
+                    </button>
+                    <button type="button" class="btn btn-outline-danger ms-auto" commandfor="modalEliminarAlumnoColor" command="show-modal">
+                        <i class="bi bi-trash3 me-1" aria-hidden="true"></i>Suprimir (RGPD)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Grados Kyu y Participación en Campeonatos -->
+    <div class="col-lg-7 d-flex flex-column gap-4">
+        <div class="card shadow-sm">
+            <div class="card-header py-3">
+                <h2 class="h6 mb-0 fw-semibold">Historial de Ascensos de Cinturón (Kyu)</h2>
+            </div>
+            <div class="card-body">
+                {% if historial_grados %}
+                    <ul class="list-group list-group-flush">
+                        {% for item in historial_grados %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <strong>{{ item.grado.nombre }}</strong>
+                                <span class="text-body-secondary small ms-1">({{ item.grado.kyu_referencia }})</span>
+                                {% if item.observaciones %}
+                                    <div class="small text-body-secondary">{{ item.observaciones }}</div>
+                                {% endif %}
+                            </div>
+                            <span class="badge text-bg-secondary">{{ item.fecha_examen|date:"d/m/Y" }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-body-secondary mb-0">Sin registros adicionales de examen.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header py-3">
+                <h2 class="h6 mb-0 fw-semibold">Participaciones en Campeonatos</h2>
+            </div>
+            <div class="card-body">
+                {% if inscripciones_torneos %}
+                    <ul class="list-group list-group-flush">
+                        {% for insc in inscripciones_torneos %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <a href="{% url 'campeonatos:detalle' slug=insc.categoria.campeonato.slug %}" class="fw-semibold">
+                                    {{ insc.categoria.campeonato.nombre }}
+                                </a>
+                                <div class="small text-body-secondary">
+                                    {{ insc.categoria.nombre }} · Dorsal #{{ insc.dorsal }}
+                                </div>
+                            </div>
+                            <span class="badge text-bg-dark">{{ insc.categoria.campeonato.fecha_inicio|date:"d/m/Y" }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-body-secondary mb-0">El alumno aún no ha sido inscrito en campeonatos.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Diálogo de Pase de Grado Kyu -->
+<dialog class="ogkke-dialog" id="modalAscensoKyu" closedby="any" aria-labelledby="modalAscensoKyuLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalAscensoKyuLabel">Registrar Pase de Grado Kyu</h2>
+        <button type="button" class="btn-close" commandfor="modalAscensoKyu" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'administracion:alumno_color_ascenso' codigo=alumno_color.codigo_interno %}" method="post" id="formAscensoKyu">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ form_ascenso.nuevo_grado.id_for_label }}">Nuevo Cinturón</label>
+                {{ form_ascenso.nuevo_grado }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="{{ form_ascenso.fecha_examen.id_for_label }}">Fecha de examen</label>
+                {{ form_ascenso.fecha_examen }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="{{ form_ascenso.observaciones.id_for_label }}">Observaciones</label>
+                {{ form_ascenso.observaciones }}
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalAscensoKyu" command="close">Cancelar</button>
+        <button type="submit" form="formAscensoKyu" class="btn btn-warning fw-semibold">Guardar Ascenso</button>
+    </div>
+</dialog>
+
+<!-- Diálogo de Edición de Ficha y Consentimiento RGPD -->
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalEditarAlumnoColor" closedby="any" aria-labelledby="modalEditarAlumnoColorLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalEditarAlumnoColorLabel">Editar Ficha y Autorización RGPD</h2>
+        <button type="button" class="btn-close" commandfor="modalEditarAlumnoColor" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'administracion:alumno_color_editar' codigo=alumno_color.codigo_interno %}" method="post" enctype="multipart/form-data" id="formEditarAlumnoColor">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_edicion.nombre.id_for_label }}">Nombre *</label>
+                    {{ form_edicion.nombre }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_edicion.apellidos.id_for_label }}">Apellidos *</label>
+                    {{ form_edicion.apellidos }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_edicion.fecha_nacimiento.id_for_label }}">Fecha de nacimiento *</label>
+                    {{ form_edicion.fecha_nacimiento }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_edicion.genero.id_for_label }}">Género</label>
+                    {{ form_edicion.genero }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_edicion.dojo.id_for_label }}">Dojo *</label>
+                    {{ form_edicion.dojo }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_edicion.grado_actual.id_for_label }}">Cinturón actual *</label>
+                    {{ form_edicion.grado_actual }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_edicion.fecha_ultimo_grado.id_for_label }}">Fecha obtención grado</label>
+                    {{ form_edicion.fecha_ultimo_grado }}
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{ form_edicion.consentimiento_firmado }}
+                        <label class="form-check-label" for="{{ form_edicion.consentimiento_firmado.id_for_label }}">
+                            Autorización RGPD / Paterna firmada
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{ form_edicion.consentimiento_campeonatos }}
+                        <label class="form-check-label" for="{{ form_edicion.consentimiento_campeonatos.id_for_label }}">
+                            Autorizado para participar en campeonatos
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_edicion.fecha_firma_consentimiento.id_for_label }}">Fecha de firma</label>
+                    {{ form_edicion.fecha_firma_consentimiento }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_edicion.referencia_consentimiento.id_for_label }}">Referencia documento</label>
+                    {{ form_edicion.referencia_consentimiento }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form_edicion.activo }}
+                        <label class="form-check-label" for="{{ form_edicion.activo.id_for_label }}">
+                            Ficha en alta activa
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalEditarAlumnoColor" command="close">Cancelar</button>
+        <button type="submit" form="formEditarAlumnoColor" class="btn btn-warning fw-semibold">Guardar Cambios</button>
+    </div>
+</dialog>
+
+<!-- Diálogo de Supresión RGPD -->
+<dialog class="ogkke-dialog" id="modalEliminarAlumnoColor" closedby="any" aria-labelledby="modalEliminarAlumnoColorLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 text-danger" id="modalEliminarAlumnoColorLabel">Confirmar Supresión de Datos (RGPD)</h2>
+        <button type="button" class="btn-close" commandfor="modalEliminarAlumnoColor" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <p class="mb-0">
+            ¿Confirma que desea eliminar definitivamente la ficha de <strong>{{ alumno_color.nombre }} {{ alumno_color.apellidos }}</strong>? Esta acción aplica el derecho de supresión y no se puede deshacer.
+        </p>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalEliminarAlumnoColor" command="close">Cancelar</button>
+        <form action="{% url 'administracion:alumno_color_eliminar' codigo=alumno_color.codigo_interno %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger fw-semibold">Eliminar Ficha</button>
+        </form>
+    </div>
+</dialog>
+{% endblock container %}

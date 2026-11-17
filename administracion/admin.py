@@ -5,8 +5,41 @@ from django.utils.html import mark_safe
 from .models import *
 
 class DojoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'direccion', 'poblacion', 'provincia', 'codigo_postal')
-    search_fields = ('nombre',)
+    list_display = (
+        'nombre',
+        'slug',
+        'dominio_personalizado',
+        'sitio_activo',
+        'poblacion',
+        'provincia',
+        'codigo_postal',
+    )
+    list_filter = ('sitio_activo', 'provincia')
+    search_fields = ('nombre', 'slug', 'dominio_personalizado', 'poblacion')
+    prepopulated_fields = {'slug': ('nombre',)}
+    fieldsets = (
+        ('Datos oficiales del Dojo (Core OGKKE)', {
+            'fields': ('nombre', 'direccion', 'poblacion', 'provincia', 'codigo_postal'),
+        }),
+        ('Portal del Dojo y Dominio Propio (Multi-Tenant)', {
+            'fields': (
+                'sitio_activo',
+                'slug',
+                'dominio_personalizado',
+                'color_primario',
+                'logo',
+                'lema',
+                'descripcion_publica',
+                'horario_resumen',
+                'telefono_contacto',
+                'email_contacto',
+            ),
+            'description': (
+                'Configura el subdominio automático (<slug>.ogkke.es), el dominio personalizado con '
+                'certificado TLS bajo demanda y la identidad visual del portal del Dojo.'
+            ),
+        }),
+    )
 
 class AlumnoAdmin(admin.ModelAdmin):
     list_display = ('apellidos','nombre','dojo','grado','instructor', 'activo')
@@ -101,8 +134,30 @@ admin.site.site_header = 'Panel de control OGKKE'
 admin.site.index_title = 'Administración OGKKE'
 admin.site.site_title = 'Admin OGKKE'
 
+
+class GradoKyuAdmin(admin.ModelAdmin):
+    list_display = ('orden', 'nombre', 'kyu_referencia', 'es_intermedio_infantil', 'color_hex_primario', 'color_hex_secundario')
+    list_filter = ('es_intermedio_infantil',)
+    ordering = ('orden',)
+
+
+class AlumnoColorAdmin(admin.ModelAdmin):
+    list_display = ('apellidos', 'nombre', 'dojo', 'grado_actual', 'fecha_nacimiento', 'consentimiento_firmado', 'consentimiento_campeonatos', 'activo')
+    list_filter = ('dojo', 'grado_actual', 'consentimiento_firmado', 'consentimiento_campeonatos', 'activo')
+    search_fields = ('nombre', 'apellidos', 'referencia_consentimiento')
+
+
+class HistorialGradoKyuAdmin(admin.ModelAdmin):
+    list_display = ('alumno_color', 'grado', 'fecha_examen', 'evaluador')
+    list_filter = ('grado', 'fecha_examen')
+    search_fields = ('alumno_color__nombre', 'alumno_color__apellidos')
+
+
 admin.site.register(Dojo, DojoAdmin)
 admin.site.register(Alumno, AlumnoAdmin)
+admin.site.register(GradoKyu, GradoKyuAdmin)
+admin.site.register(AlumnoColor, AlumnoColorAdmin)
+admin.site.register(HistorialGradoKyu, HistorialGradoKyuAdmin)
 admin.site.register(Cursillo, CursilloAdmin)
 admin.site.register(Examen, ExamenAdmin)
 admin.site.register(Peticion, PeticionAdmin)

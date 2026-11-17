@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Campeonatos Oficiales y Torneos · OGKKE{% endblock %}
+
+{% block container %}
+<nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Campeonatos</li>
+    </ol>
+</nav>
+
+<header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 my-4">
+    <div>
+        <h1 class="color-texto mb-1">Campeonatos OGKKE</h1>
+        <p class="text-body-secondary mb-0">
+            Gestión de torneos generales de la asociación y campeonatos internos de Dojo (Kata y Kumite +18).
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-outline-info" commandfor="modalAyudaCampeonatos" command="show-modal">
+            <i class="bi bi-question-circle-fill me-1" aria-hidden="true"></i>¿Dudas? Guía Rápida
+        </button>
+        <a href="{% url 'campeonatos:ayuda' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-book me-1" aria-hidden="true"></i>Manual de Ayuda
+        </a>
+        <a href="{% url 'campeonatos:historico' %}" class="btn btn-outline-warning">
+            <i class="bi bi-trophy me-1" aria-hidden="true"></i>Histórico de Clasificaciones
+        </a>
+        {% if puede_crear_campeonato %}
+            <button type="button" class="btn btn-warning fw-semibold" commandfor="modalNuevoCampeonato" command="show-modal">
+                <i class="bi bi-plus-circle-fill me-1" aria-hidden="true"></i>Nuevo Campeonato
+            </button>
+        {% endif %}
+    </div>
+</header>
+
+<section class="row g-4 mb-5" aria-label="Listado de campeonatos">
+    {% if campeonatos %}
+        {% for camp in campeonatos %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    {% if camp.ambito == 'GENERAL' %}
+                        <span class="badge text-bg-warning">Asociación OGKKE</span>
+                    {% else %}
+                        <span class="badge text-bg-info">Dojo: {{ camp.dojo_organizador.nombre }}</span>
+                    {% endif %}
+                    <span class="badge rounded-pill {% if camp.estado == 'EN_CURSO' %}text-bg-success{% elif camp.estado == 'FINALIZADO' %}text-bg-secondary{% else %}text-bg-primary{% endif %}">
+                        {{ camp.get_estado_display }}
+                    </span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h2 class="h5 card-title color-texto mb-2">{{ camp.nombre }}</h2>
+                    <p class="small text-body-secondary mb-3">
+                        <i class="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>{{ camp.lugar }} ({{ camp.ciudad }})<br>
+                        <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>{{ camp.fecha_inicio|date:"d/m/Y" }} — {{ camp.fecha_fin|date:"d/m/Y" }}
+                    </p>
+                    <div class="d-flex justify-content-between small text-body-secondary border-top pt-2 mt-auto mb-3">
+                        <span><strong>{{ camp.tatamis.count }}</strong> Tatamis</span>
+                        <span><strong>{{ camp.categorias.count }}</strong> Categorías</span>
+                    </div>
+                    <a href="{% url 'campeonatos:detalle' slug=camp.slug %}" class="btn btn-outline-warning w-100">
+                        Abrir Panel del Torneo
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body py-5 text-center text-body-secondary">
+                    <i class="bi bi-trophy fs-1 d-block mb-2" aria-hidden="true"></i>
+                    No hay campeonatos registrados actualmente.
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+{% if puede_crear_campeonato and form_campeonato %}
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalNuevoCampeonato" closedby="any" aria-labelledby="modalNuevoCampeonatoLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalNuevoCampeonatoLabel">Crear Nuevo Campeonato</h2>
+        <button type="button" class="btn-close" commandfor="modalNuevoCampeonato" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'campeonatos:nuevo' %}" method="post" id="formNuevoCampeonato">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label" for="{{ form_campeonato.nombre.id_for_label }}">Nombre del Campeonato *</label>
+                    {{ form_campeonato.nombre }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_campeonato.estado.id_for_label }}">Estado inicial</label>
+                    {{ form_campeonato.estado }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_campeonato.ambito.id_for_label }}">Ámbito</label>
+                    {{ form_campeonato.ambito }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_campeonato.dojo_organizador.id_for_label }}">Dojo Organizador (si es Local)</label>
+                    {{ form_campeonato.dojo_organizador }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_campeonato.fecha_inicio.id_for_label }}">Fecha de inicio *</label>
+                    {{ form_campeonato.fecha_inicio }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_campeonato.fecha_fin.id_for_label }}">Fecha de clausura *</label>
+                    {{ form_campeonato.fecha_fin }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_campeonato.sistema_puntuacion_default.id_for_label }}">Sistema por defecto</label>
+                    {{ form_campeonato.sistema_puntuacion_default }}
+                </div>
+                <div class="col-md-7">
+                    <label class="form-label" for="{{ form_campeonato.lugar.id_for_label }}">Pabellón / Lugar *</label>
+                    {{ form_campeonato.lugar }}
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label" for="{{ form_campeonato.ciudad.id_for_label }}">Ciudad *</label>
+                    {{ form_campeonato.ciudad }}
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalNuevoCampeonato" command="close">Cancelar</button>
+        <button type="submit" form="formNuevoCampeonato" class="btn btn-warning fw-semibold">Crear Campeonato</button>
+    </div>
+</dialog>
+{% endif %}
+{% include "campeonatos/partials/modal_ayuda_contextual.html" %}
+{% endblock container %}

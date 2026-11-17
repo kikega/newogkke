@@ -8,23 +8,35 @@ from django.core.cache import cache
 
 # Importamos los modelos de Alumno y Peticion
 from administracion.models import Alumno, Peticion
+from administracion.permissions import es_usuario_juez_efimero, obtener_tatamis_activos_juez
 
 def common_navbar_context(request):
     """
-    Añade información común para la barra de navegación al contexto.
+    Añade información común para la barra de navegación y contexto multi-tenant de Dojo.
     """
     context_data = {
         'usuario_foto': None,
         'peticiones_totales': 0,
         'usuario_es_instructor': False,
+        'usuario_es_juez_tatami': False,
+        'tatami_juez_activo': None,
+        'usuario_dojo': None,
+        'current_dojo': getattr(request, 'current_dojo', None),
+        'is_dojo_host': getattr(request, 'is_dojo_host', False),
     }
 
-    # Obtenemos la foto y estado de instructor del usuario que esta logado
+    # Obtenemos la foto, dojo y estado de instructor del usuario logado
     if request.user.is_authenticated:
+        if es_usuario_juez_efimero(request.user):
+            context_data['usuario_es_juez_tatami'] = True
+            context_data['tatami_juez_activo'] = obtener_tatamis_activos_juez(request.user).first()
+            return context_data
+
         es_instructor = request.user.groups.filter(name='Instructor').exists()
         try:
-            alumno_obj = Alumno.objects.select_related('usuario').get(usuario=request.user)
+            alumno_obj = Alumno.objects.select_related('usuario', 'dojo').get(usuario=request.user)
             context_data['usuario_foto'] = alumno_obj.foto
+            context_data['usuario_dojo'] = alumno_obj.dojo
             es_instructor = es_instructor or alumno_obj.instructor
         except Alumno.DoesNotExist: # pylint: disable=no-member
             pass

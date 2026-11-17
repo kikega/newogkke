@@ -6,15 +6,17 @@ Vistas relacionadas con la gestión de los dojos
 import json
 
 # Django
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import Count
 
 # App administracion
 from administracion.models import Alumno, Dojo, Peticion, Tablon
+from administracion.views.dojo_portal import usuario_puede_gestionar_dojo
 
 # Formularios
-from administracion.forms import  TablonNuevoForm
+from administracion.forms import DojoPortalConfigForm, TablonNuevoForm
 
 class DojosView(LoginRequiredMixin, ListView):
     """Listado de gimnasios de la asociación"""
@@ -91,12 +93,16 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
         context['total_cintos_negros'] = sum(values)
 
         # Obtenemos las peticiones pendientes y anuncios del tablón por dojo
-        peticiones = Peticion.objects.filter(dojo=dojo_actual, finalizada=False)
+        peticiones = Peticion.objects.for_dojo(dojo_actual).filter(finalizada=False)
         numero_peticiones = peticiones.count()
+        puede_gestionar_dojo = usuario_puede_gestionar_dojo(user, dojo_actual)
         context['peticiones'] = peticiones
         context['numero_peticiones'] = numero_peticiones
-        context['numero_anuncios_tablon'] = Tablon.objects.filter(dojo=dojo_actual).count()
+        context['numero_anuncios_tablon'] = Tablon.objects.for_dojo(dojo_actual).count()
         context["form"] = TablonNuevoForm()
+        context["puede_gestionar_dojo"] = puede_gestionar_dojo
+        context["config_form"] = DojoPortalConfigForm(instance=dojo_actual) if puede_gestionar_dojo else None
+        context["dojo_base_domain"] = getattr(settings, "DOJO_BASE_DOMAIN", "ogkke.es")
 
         return context
 

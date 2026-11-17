@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mesa {{ tatami.nombre }} · {{ campeonato.nombre }}{% endblock %}
+
+{% block container %}
+<!-- Cabecera operativa para Tablet / Móvil en Tatami -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4 p-3 rounded-3 border bg-body-tertiary shadow-sm">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge text-bg-warning">TATAMI {{ tatami.numero }} EN VIVO</span>
+            <span class="badge text-bg-dark">{{ tatami.num_jueces_mesa }} Jueces</span>
+        </div>
+        <h1 class="h4 color-texto mb-0">{{ tatami.nombre }} · {{ campeonato.nombre }}</h1>
+        <span class="small text-body-secondary">
+            Fechas habilitadas: {{ campeonato.fecha_inicio|date:"d/m/Y" }} — {{ campeonato.fecha_fin|date:"d/m/Y" }}
+        </span>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-outline-info btn-sm fw-semibold" commandfor="modalAyudaCampeonatos" command="show-modal">
+            <i class="bi bi-question-circle-fill me-1" aria-hidden="true"></i>Ayuda Anotador / Juez
+        </button>
+        {% if puede_administrar %}
+        <a href="{% url 'campeonatos:detalle' slug=campeonato.slug %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver a Dirección del Torneo
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Selector táctil de Categorías asignadas a este Tatami -->
+<section class="mb-4" aria-label="Categorías asignadas al Tatami">
+    <h2 class="h6 text-uppercase text-body-secondary mb-2">Categorías Asignadas al Tatami {{ tatami.numero }}</h2>
+    {% if categorias_tatami %}
+        <div class="d-flex flex-wrap gap-2">
+            {% for cat in categorias_tatami %}
+                <a href="{% url 'campeonatos:tatami_live' tatami_id=tatami.id %}?categoria={{ cat.id }}"
+                   class="btn {% if categoria_activa and categoria_activa.id == cat.id %}btn-warning fw-bold{% else %}btn-outline-warning{% endif %} py-2 px-3">
+                    {{ cat.orden_ejecucion }}. {{ cat.nombre }}
+                    <span class="badge {% if cat.estado == 'FINALIZADA' %}text-bg-success{% elif cat.estado == 'EN_CURSO' %}text-bg-danger{% else %}text-bg-secondary{% endif %} ms-1">
+                        {{ cat.get_estado_display }}
+                    </span>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-secondary mb-0">
+            No hay categorías asignadas a este Tatami todavía.
+        </div>
+    {% endif %}
+</section>
+
+{% if categoria_activa %}
+<div class="card shadow-sm border-warning-subtle mb-4">
+    <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-3">
+        <div>
+            <span class="badge {% if categoria_activa.modalidad == 'KUMITE' %}text-bg-danger{% else %}text-bg-primary{% endif %} me-2">
+                {{ categoria_activa.get_modalidad_display }}
+            </span>
+            <strong class="fs-5 color-texto">{{ categoria_activa.nombre }}</strong>
+            <span class="text-body-secondary small ms-2">
+                ({{ categoria_activa.get_sistema_display }}{% if categoria_activa.sistema == 'PUNTOS' %} · Pasan Top {{ categoria_activa.clasificados_siguiente_ronda }}{% endif %})
+            </span>
+        </div>
+
+        {% if categoria_activa.estado == 'PENDIENTE' %}
+            <form action="{% url 'campeonatos:tatami_iniciar_categoria' tatami_id=tatami.id categoria_id=categoria_activa.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-lg fw-semibold">
+                    <i class="bi bi-play-fill me-1" aria-hidden="true"></i>Iniciar Competición ({{ categoria_activa.inscripciones.count }} competidores)
+                </button>
+            </form>
+        {% elif categoria_activa.estado == 'FINALIZADA' %}
+            <span class="badge text-bg-success fs-6 px-3 py-2">
+                <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Categoría Finalizada (Acta Cerrada)
+            </span>
+        {% endif %}
+    </div>
+
+    <div class="card-body">
+        {% if categoria_activa.estado == 'FINALIZADA' %}
+            <!-- Podio Final Inmutable -->
+            <h3 class="h5 color-texto mb-3"><i class="bi bi-trophy-fill me-2" aria-hidden="true"></i>Podio Oficial Consolidado</h3>
+            <div class="row g-3 mb-4">
+                {% for res in categoria_activa.resultados_historicos.all %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="p-3 rounded-3 border h-100 {% if res.puesto == 1 %}border-warning bg-warning-subtle text-warning-emphasis{% endif %}">
+                        <div class="fw-bold small text-uppercase mb-1">{{ res.get_puesto_display }}</div>
+                        <div class="fs-5 fw-bold">{{ res.nombre_competidor_snapshot }}</div>
+                        <div class="small">{{ res.dojo_nombre_snapshot }} · {{ res.grado_snapshot }}</div>
+                        <div class="mt-2 badge text-bg-dark">{{ res.puntuacion_final_snapshot }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if ronda_activa %}
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 p-3 rounded bg-body-tertiary">
+                <div>
+                    <h3 class="h5 mb-0 color-texto">
+                        Ronda {{ ronda_activa.numero }}: {{ ronda_activa.nombre }}
+                        {% if ronda_activa.es_desempate %}
+                            <span class="badge text-bg-danger ms-2">DESEMPATE</span>
+                        {% elif ronda_activa.es_final %}
+                            <span class="badge text-bg-warning ms-2">FINAL</span>
+                        {% endif %}
+                    </h3>
+                </div>
+                {% if not ronda_activa.cerrada and categoria_activa.estado != 'FINALIZADA' %}
+                    <form action="{% url 'campeonatos:tatami_cerrar_ronda' tatami_id=tatami.id ronda_id=ronda_activa.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning fw-bold px-4 py-2">
+                            <i class="bi bi-check2-all me-1" aria-hidden="true"></i>Cerrar Ronda y Calcular Clasificados / Podio
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            {% if categoria_activa.sistema == 'PUNTOS' %}
+                <!-- PANEL DE PUNTUACIÓN NUMÉRICA (KATA) -->
+                <div class="row g-3">
+                    {% for act in ronda_activa.actuaciones.all %}
+                    <div class="col-12">
+                        <div class="p-3 rounded-3 border {% if act.evaluado %}border-success-subtle{% else %}border-secondary-subtle{% endif %}">
+                            <div class="row align-items-center g-3">
+                                <div class="col-lg-4">
+                                    <span class="badge text-bg-dark me-2">Salida #{{ act.orden_salida }} · Dorsal #{{ act.inscripcion.dorsal }}</span>
+                                    <div class="fs-5 fw-bold mt-1">{{ act.inscripcion.nombre_competidor }}</div>
+                                    <div class="small text-body-secondary">
+                                        Dojo: <strong>{{ act.inscripcion.dojo_nombre }}</strong> · Cinturón: <strong>{{ act.inscripcion.grado_mostrable }}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-5">
+                                    {% if not ronda_activa.cerrada %}
+                                    <form action="{% url 'campeonatos:tatami_puntuar' tatami_id=tatami.id actuacion_id=act.id %}" method="post" class="row g-2 align-items-end">
+                                        {% csrf_token %}
+                                        {% for j_num in rango_jueces %}
+                                        <div class="col">
+                                            <label class="form-label small mb-1" for="nota_{{ act.id }}_{{ j_num }}">Juez {{ j_num }}</label>
+                                            <input type="number" step="0.1" min="0" max="10"
+                                                   name="notas_jueces"
+                                                   id="nota_{{ act.id }}_{{ j_num }}"
+                                                   class="form-control form-control-lg text-center fw-bold"
+                                                   placeholder="7.0"
+                                                   required>
+                                        </div>
+                                        {% endfor %}
+                                        <div class="col-auto">
+                                            <button type="submit" class="btn btn-warning btn-lg fw-semibold">
+                                                Guardar
+                                            </button>
+                                        </div>
+                                    </form>
+                                    {% else %}
+                                        <div class="small text-body-secondary">
+                                            Notas Jueces: {{ act.notas_jueces|join:" · " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-lg-3 text-lg-end">
+                                    {% if act.evaluado %}
+                                        <span class="small text-body-secondary d-block">Total Acumulado</span>
+                                        <span class="fs-3 fw-bold color-texto">{{ act.nota_total }} pts</span>
+                                        <span class="small text-body-secondary d-block">Media: {{ act.nota_media }}</span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary py-2 px-3">Pendiente de puntuar</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- PANEL DE BANDERAS (AKA vs AO) Y KUMITE (+18) -->
+                <div class="row g-3">
+                    {% for comb in ronda_activa.enfrentamientos.all %}
+                    <div class="col-12">
+                        <div class="p-3 rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge text-bg-dark">
+                                    Cruce #{{ comb.orden_combate }}{% if comb.es_tercer_puesto %} · Disputa 3º Puesto (Bronce){% endif %}
+                                </span>
+                                {% if comb.finalizado %}
+                                    <span class="badge text-bg-success">Ganador: {{ comb.ganador.nombre_competidor }} ({{ comb.marcador_resumen }})</span>
+                                {% endif %}
+                            </div>
+
+                            {% if comb.ao_inscripcion %}
+                            <form action="{% url 'campeonatos:tatami_combate' tatami_id=tatami.id combate_id=comb.id %}" method="post" class="row g-3 align-items-center">
+                                {% csrf_token %}
+                                <!-- AKA (ROJO) -->
+                                <div class="col-md-5 p-3 rounded border border-danger bg-danger-subtle text-danger-emphasis">
+                                    <div class="fw-bold small text-uppercase">AKA (Rojo) · Dorsal #{{ comb.aka_inscripcion.dorsal }}</div>
+                                    <div class="fs-5 fw-bold">{{ comb.aka_inscripcion.nombre_competidor }}</div>
+                                    <div class="small mb-2">{{ comb.aka_inscripcion.dojo_nombre }} · {{ comb.aka_inscripcion.grado_mostrable }}</div>
+                                    {% if categoria_activa.modalidad == 'KUMITE' %}
+                                        <label class="form-label small mb-1" for="pts_aka_{{ comb.id }}">Puntos Kumite Aka</label>
+                                        <input type="number" min="0" max="30" name="puntos_aka" id="pts_aka_{{ comb.id }}" value="{{ comb.puntos_aka }}" class="form-control form-control-lg fw-bold">
+                                    {% else %}
+                                        <label class="form-label small mb-1" for="ban_aka_{{ comb.id }}">Banderas Aka</label>
+                                        <input type="number" min="0" max="{{ tatami.num_jueces_mesa }}" name="banderas_aka" id="ban_aka_{{ comb.id }}" value="{{ comb.banderas_aka }}" class="form-control form-control-lg fw-bold">
+                                    {% endif %}
+                                </div>
+
+                                <!-- AO (AZUL) -->
+                                <div class="col-md-5 p-3 rounded border border-primary bg-primary-subtle text-primary-emphasis">
+                                    <div class="fw-bold small text-uppercase">AO (Azul) · Dorsal #{{ comb.ao_inscripcion.dorsal }}</div>
+                                    <div class="fs-5 fw-bold">{{ comb.ao_inscripcion.nombre_competidor }}</div>
+                                    <div class="small mb-2">{{ comb.ao_inscripcion.dojo_nombre }} · {{ comb.ao_inscripcion.grado_mostrable }}</div>
+                                    {% if categoria_activa.modalidad == 'KUMITE' %}
+                                        <label class="form-label small mb-1" for="pts_ao_{{ comb.id }}">Puntos Kumite Ao</label>
+                                        <input type="number" min="0" max="30" name="puntos_ao" id="pts_ao_{{ comb.id }}" value="{{ comb.puntos_ao }}" class="form-control form-control-lg fw-bold">
+                                    {% else %}
+                                        <label class="form-label small mb-1" for="ban_ao_{{ comb.id }}">Banderas Ao</label>
+                                        <input type="number" min="0" max="{{ tatami.num_jueces_mesa }}" name="banderas_ao" id="ban_ao_{{ comb.id }}" value="{{ comb.banderas_ao }}" class="form-control form-control-lg fw-bold">
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-2 d-flex flex-column gap-2">
+                                    {% if not ronda_activa.cerrada %}
+                                    <button type="submit" name="ganador_side" value="AKA" class="btn btn-danger fw-bold py-2">
+                                        Gana AKA
+                                    </button>
+                                    <button type="submit" name="ganador_side" value="AO" class="btn btn-primary fw-bold py-2">
+                                        Gana AO
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </form>
+                            {% else %}
+                                <div class="p-2">
+                                    <strong>{{ comb.aka_inscripcion.nombre_competidor }}</strong> ({{ comb.aka_inscripcion.dojo_nombre }}) pasa directamente a la siguiente ronda (<em>Bye</em>).
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="text-body-secondary mb-0">
+                Pulse <strong>Iniciar Competición</strong> para generar la primera ronda de llamadas al tatami.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% include "campeonatos/partials/modal_ayuda_contextual.html" %}
+{% endblock container %}

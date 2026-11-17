@@ -1,6 +1,7 @@
 from .home import home
 from .alumnos import AlumnosView, AlumnoDetailView
 from .dojos import DojosView, DojoDetailView
+from .dojo_portal import DojoPortalView, DojoPortalConfigUpdateView, tls_domain_check
 from .cursillos import (
     CursillosView, CursilloDetailView, CursoNuevoView,
     CursilloExaminaListView, CursilloEstadisticasView,

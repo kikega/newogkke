@@ -25,13 +25,14 @@
                 id="tbdojo"
                 class="ogkke-data-table"
                 data-ogkke-table
-                style="--label-2: 'Población'; --label-3: 'Provincia';"
+                style="--label-2: 'Población'; --label-3: 'Provincia'; --label-4: 'Portal Web';"
             >
                 <thead>
                     <tr>
                         <th scope="col">Nombre</th>
                         <th scope="col">Población</th>
                         <th scope="col">Provincia</th>
+                        <th scope="col">Portal Web</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -45,6 +46,15 @@
                         </th>
                         <td>{{ dojo.poblacion }}</td>
                         <td>{{ dojo.provincia }}</td>
+                        <td>
+                            {% if dojo.slug %}
+                                <a href="{% url 'administracion:dojo_portal' slug=dojo.slug %}" class="btn btn-outline-warning btn-sm py-0 px-2">
+                                    <i class="bi bi-globe2 me-1" aria-hidden="true"></i>{{ dojo.dominio_principal }}
+                                </a>
+                            {% else %}
+                                <span class="text-body-secondary small">—</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

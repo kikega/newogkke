@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Cinturones de Color (Kyu) y Menores · OGKKE{% endblock %}
+
+{% block container %}
+<nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cinturones de Color (Kyu)</li>
+    </ol>
+</nav>
+
+<header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 my-4">
+    <div>
+        <span class="badge rounded-pill text-bg-warning mb-2">
+            <i class="bi bi-shield-check me-1" aria-hidden="true"></i>Protección de Datos RGPD / LOPDGDD (Menores)
+        </span>
+        <h1 class="color-texto mb-1">Cinturones de Color (Grados Kyu)</h1>
+        <p class="text-body-secondary mb-0">
+            {% if es_staff_asociacion %}
+                Supervisión nacional de practicantes Kyu y autorizaciones paternas por Dojo.
+            {% else %}
+                Gestión privada de practicantes de <strong>{{ dojo_instructor.nombre }}</strong> (visibilidad exclusiva del Dojo).
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-warning fw-semibold" commandfor="modalNuevoAlumnoColor" command="show-modal">
+            <i class="bi bi-person-plus-fill me-1" aria-hidden="true"></i>Dar de alta Alumno Kyu
+        </button>
+    </div>
+</header>
+
+<!-- Tarjetas resumen RGPD / Censo Kyu -->
+<section class="row g-3 mb-4" aria-label="Indicadores de cinturones de color">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-body-secondary small d-block">Total Alumnos Kyu (Vista actual)</span>
+                    <span class="h3 fw-bold mb-0 color-texto">{{ total_alumnos_color }}</span>
+                </div>
+                <i class="bi bi-people-fill fs-2 text-warning" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-body-secondary small d-block">Menores de 14 años (Art. 7 LOPDGDD)</span>
+                    <span class="h3 fw-bold mb-0">{{ menores_14_count }}</span>
+                </div>
+                <i class="bi bi-person-hearts fs-2 text-info" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-body-secondary small d-block">Autorizaciones Pendientes</span>
+                    <span class="h3 fw-bold mb-0 {% if pendientes_rgpd_count > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ pendientes_rgpd_count }}
+                    </span>
+                </div>
+                <i class="bi bi-file-earmark-check-fill fs-2 {% if pendientes_rgpd_count > 0 %}text-danger{% else %}text-success{% endif %}" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filtros por Dojo y Cinturón -->
+<section class="card shadow-sm mb-4" aria-label="Filtros de listado Kyu">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            {% if es_staff_asociacion %}
+            <div class="col-md-4">
+                <label for="filtroDojo" class="form-label small fw-semibold">Filtrar por Dojo</label>
+                <select name="dojo" id="filtroDojo" class="form-select">
+                    <option value="">Todos los Dojos</option>
+                    {% for dj in dojos_disponibles %}
+                        <option value="{{ dj.id }}" {% if dojo_seleccionado == dj.id|stringformat:"s" %}selected{% endif %}>{{ dj.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="col-md-4">
+                <label for="filtroGrado" class="form-label small fw-semibold">Filtrar por Cinturón (Kyu)</label>
+                <select name="grado" id="filtroGrado" class="form-select">
+                    <option value="">Todos los cinturones de color</option>
+                    {% for gr in grados_kyu %}
+                        <option value="{{ gr.id }}" {% if grado_seleccionado == gr.id|stringformat:"s" %}selected{% endif %}>
+                            {{ gr.nombre }} ({{ gr.kyu_referencia }}){% if gr.es_intermedio_infantil %} · Infantil{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-warning flex-grow-1">
+                    <i class="bi bi-funnel-fill me-1" aria-hidden="true"></i>Filtrar
+                </button>
+                <a href="{% url 'administracion:alumnos_color' %}" class="btn btn-outline-secondary">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Tabla de Alumnos de Cinturón de Color -->
+<section aria-labelledby="alumnosColorCaption">
+    <h2 id="alumnosColorCaption" class="h5 mb-3 color-texto">Listado Confidencial de Practicantes Kyu</h2>
+    {% if alumnos_color %}
+        <div tabindex="0" role="region" aria-labelledby="alumnosColorCaption" class="table-wrapper shadow-sm">
+            <table
+                id="tbAlumnosColor"
+                class="ogkke-data-table"
+                data-ogkke-table
+                style="--label-2: 'Dojo'; --label-3: 'Cinturón'; --label-4: 'Edad'; --label-5: 'RGPD / Torneos'; --label-6: 'Estado';"
+            >
+                <thead>
+                    <tr>
+                        <th scope="col">Apellidos y Nombre</th>
+                        <th scope="col">Dojo</th>
+                        <th scope="col">Cinturón (Kyu)</th>
+                        <th scope="col">Edad</th>
+                        <th scope="col">Consentimiento RGPD</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alm in alumnos_color %}
+                    <tr>
+                        <th scope="row">
+                            <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover fw-semibold"
+                               href="{% url 'administracion:alumno_color_detalle' codigo=alm.codigo_interno %}">
+                                {{ alm.apellidos }}, {{ alm.nombre }}
+                            </a>
+                        </th>
+                        <td>{{ alm.dojo.nombre }}</td>
+                        <td data-order="{{ alm.grado_actual.orden }}">
+                            <span class="badge rounded-pill border px-2 py-1"
+                                  style="background: {% if alm.grado_actual.color_hex_secundario %}linear-gradient(135deg, {{ alm.grado_actual.color_hex_primario }} 50%, {{ alm.grado_actual.color_hex_secundario }} 50%){% else %}{{ alm.grado_actual.color_hex_primario }}{% endif %}; color: #111; text-shadow: 0 0 2px #fff;">
+                                {{ alm.grado_actual.nombre }}
+                            </span>
+                        </td>
+                        <td data-order="{{ alm.edad }}">
+                            {{ alm.edad }} años
+                            {% if alm.es_menor_14 %}
+                                <span class="badge text-bg-info ms-1" title="Menor de 14 años (Art. 7 LOPDGDD)">&lt;14</span>
+                            {% elif alm.es_menor_edad %}
+                                <span class="badge text-bg-secondary ms-1">Menor</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if alm.tiene_autorizacion_valida and alm.consentimiento_firmado %}
+                                <span class="badge bg-success-subtle text-success-emphasis">
+                                    <i class="bi bi-shield-fill-check me-1" aria-hidden="true"></i>RGPD Firmado
+                                </span>
+                                {% if alm.consentimiento_campeonatos %}
+                                    <span class="badge bg-primary-subtle text-primary-emphasis ms-1">Apto Torneos</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger-emphasis">
+                                    <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>Sin firma paterna
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if alm.activo %}
+                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Activo</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Inactivo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body py-5 text-center text-body-secondary">
+                <i class="bi bi-person-badge fs-1 d-block mb-2" aria-hidden="true"></i>
+                No hay alumnos de cinturón de color registrados con los filtros seleccionados.
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Diálogo nativo de Alta de Alumno de Cinturón de Color -->
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalNuevoAlumnoColor" closedby="any" aria-labelledby="modalNuevoAlumnoColorLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalNuevoAlumnoColorLabel">Alta de Alumno de Cinturón de Color (Kyu)</h2>
+        <button type="button" class="btn-close" commandfor="modalNuevoAlumnoColor" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'administracion:alumno_color_nuevo' %}" method="post" enctype="multipart/form-data" id="formNuevoAlumnoColor">
+            {% csrf_token %}
+            <div class="alert alert-info small py-2">
+                <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
+                <strong>Minimización de datos (RGPD / LOPDGDD):</strong> Solo se almacenan los datos estrictamente necesarios. Para menores de 14 años, el alta activa requiere autorización paterna/tutorial firmada y su fecha de firma.
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_alta.nombre.id_for_label }}">Nombre *</label>
+                    {{ form_alta.nombre }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_alta.apellidos.id_for_label }}">Apellidos *</label>
+                    {{ form_alta.apellidos }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_alta.fecha_nacimiento.id_for_label }}">Fecha de nacimiento *</label>
+                    {{ form_alta.fecha_nacimiento }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_alta.genero.id_for_label }}">Género</label>
+                    {{ form_alta.genero }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_alta.dojo.id_for_label }}">Dojo *</label>
+                    {{ form_alta.dojo }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_alta.grado_actual.id_for_label }}">Cinturón de Color actual *</label>
+                    {{ form_alta.grado_actual }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form_alta.fecha_ultimo_grado.id_for_label }}">Fecha obtención grado</label>
+                    {{ form_alta.fecha_ultimo_grado }}
+                </div>
+
+                <div class="col-12"><hr class="my-1"></div>
+                <div class="col-12">
+                    <h3 class="h6 color-texto mb-2">Autorización Paterna / RGPD</h3>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{ form_alta.consentimiento_firmado }}
+                        <label class="form-check-label" for="{{ form_alta.consentimiento_firmado.id_for_label }}">
+                            Autorización RGPD / Paterna firmada
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{ form_alta.consentimiento_campeonatos }}
+                        <label class="form-check-label" for="{{ form_alta.consentimiento_campeonatos.id_for_label }}">
+                            Autorizado para participar en campeonatos
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_alta.fecha_firma_consentimiento.id_for_label }}">Fecha de firma</label>
+                    {{ form_alta.fecha_firma_consentimiento }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_alta.referencia_consentimiento.id_for_label }}">Referencia de archivo</label>
+                    {{ form_alta.referencia_consentimiento }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form_alta.documento_consentimiento.id_for_label }}">PDF firmado (opcional)</label>
+                    {{ form_alta.documento_consentimiento }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form_alta.activo }}
+                        <label class="form-check-label" for="{{ form_alta.activo.id_for_label }}">
+                            Ficha en alta activa
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalNuevoAlumnoColor" command="close">Cancelar</button>
+        <button type="submit" form="formNuevoAlumnoColor" class="btn btn-warning fw-semibold">
+            <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Registrar Alumno
+        </button>
+    </div>
+</dialog>
+{% endblock container %}

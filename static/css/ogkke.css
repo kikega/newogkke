@@ -1051,7 +1051,112 @@ dialog.ogkke-dialog[open] {
 }
 
 /* ==========================================================================
-   6. UTILIDADES DE COMPATIBILIDAD
+   6. PORTAL AUTÓNOMO DE DOJO Y THEMING REACTIVO (MULTI-TENANT)
+   ========================================================================== */
+.dojo-portal-shell {
+  --dojo-accent: var(--brand-accent);
+  --dojo-theme: default;
+}
+
+/* Fallback con :where() de especificidad cero + mejora progresiva con @container style() */
+:where([data-dojo-theme="custom"]) .dojo-portal-scope {
+  --brand-accent: var(--dojo-accent);
+  --brand-accent-soft: color-mix(in srgb, var(--dojo-accent) 16%, transparent);
+}
+
+@container style(--dojo-theme: custom) {
+  .dojo-portal-scope {
+    --brand-accent: var(--dojo-accent);
+    --brand-accent-soft: color-mix(in srgb, var(--dojo-accent) 16%, transparent);
+  }
+}
+
+.dojo-portal-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--brand-accent) 35%, var(--border-subtle));
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--brand-accent) 18%, transparent),
+      transparent 60%
+    ),
+    var(--surface-card);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.dojo-logo-badge {
+  inline-size: 96px;
+  block-size: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--brand-accent);
+  background-color: var(--surface-subtle);
+  flex-shrink: 0;
+}
+
+.dojo-logo-placeholder {
+  inline-size: 96px;
+  block-size: 96px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.25rem;
+  color: var(--brand-accent);
+  border: 2px solid color-mix(in srgb, var(--brand-accent) 50%, var(--border-subtle));
+  background-color: color-mix(in srgb, var(--brand-accent) 12%, var(--surface-subtle));
+  flex-shrink: 0;
+}
+
+.dojo-affiliation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--brand-accent);
+  background-color: color-mix(in srgb, var(--brand-accent) 14%, var(--surface-subtle));
+  border: 1px solid color-mix(in srgb, var(--brand-accent) 40%, var(--border-subtle));
+}
+
+.dojo-domain-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 0.5rem;
+  font-family: var(--bs-font-monospace, monospace);
+  font-size: 0.82rem;
+  color: var(--text-main);
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+}
+
+.dojo-module-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.85rem;
+  background-color: var(--surface-card);
+  padding: 1.1rem 1.25rem;
+  block-size: 100%;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.dojo-module-card.is-active {
+  border-color: color-mix(in srgb, var(--brand-accent) 45%, var(--border-subtle));
+}
+
+.dojo-module-card.is-roadmap {
+  border-style: dashed;
+  opacity: 0.88;
+}
+
+/* ==========================================================================
+   7. UTILIDADES DE COMPATIBILIDAD
    ========================================================================== */
 .color-background {
   background-color: var(--surface-card);

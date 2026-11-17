@@ -9,7 +9,18 @@ class AdministracionConfig(AppConfig):
         """
         Se ejecuta cuando Django termina de cargar la aplicación
         """
+        from django.conf import settings
         import administracion.signals
+        from administracion.middleware.dojo_tenant import DynamicDojoAllowedHosts
+
+        base_hosts = list(settings.ALLOWED_HOSTS)
+        base_domain = getattr(settings, "DOJO_BASE_DOMAIN", "ogkke.es")
+        for extra_host in (base_domain, f".{base_domain}", ".localhost", "localhost", "127.0.0.1", "testserver"):
+            if extra_host not in base_hosts:
+                base_hosts.append(extra_host)
+        if not isinstance(settings.ALLOWED_HOSTS, DynamicDojoAllowedHosts):
+            settings.ALLOWED_HOSTS = DynamicDojoAllowedHosts(base_hosts)
+
         self._patch_template_context_copy()
 
     def _patch_template_context_copy(self):

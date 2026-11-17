@@ -1,0 +1,163 @@
+{% if dojo_target %}
+<!-- Diálogo nativo: Publicar aviso en el Tablón del Dojo -->
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalTablon" aria-labelledby="modalTablonLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalTablonLabel">
+            <i class="bi bi-pin-angle-fill me-2" aria-hidden="true"></i>Publicar en el Tablón · {{ dojo_target.nombre }}
+        </h2>
+        <button type="button" class="btn-close" commandfor="modalTablon" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <form action="{% url 'administracion:tablon' %}" method="post" enctype="multipart/form-data" id="tablonNuevo">
+            {% csrf_token %}
+            <input type="hidden" value="{{ dojo_target.id }}" name="dojo">
+            <input type="hidden" value="{{ request.get_full_path }}" name="next">
+            <div class="mb-3">
+                <label for="{{ tablon_form_obj.tipo.id_for_label }}" class="form-label">{{ tablon_form_obj.tipo.label }}</label>
+                {{ tablon_form_obj.tipo }}
+                <div class="invalid-feedback">
+                    Este campo no puede estar vacío, introduzca el tipo de actividad.
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="{{ tablon_form_obj.titulo.id_for_label }}" class="form-label">{{ tablon_form_obj.titulo.label }}</label>
+                {{ tablon_form_obj.titulo }}
+                <div class="invalid-feedback">
+                    Este campo no puede estar vacío, introduzca un nombre para la actividad.
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="{{ tablon_form_obj.descripcion.id_for_label }}" class="form-label">{{ tablon_form_obj.descripcion.label }}</label>
+                {{ tablon_form_obj.descripcion }}
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="{{ tablon_form_obj.fecha.id_for_label }}" class="form-label">{{ tablon_form_obj.fecha.label }}</label>
+                    {{ tablon_form_obj.fecha }}
+                    <div class="invalid-feedback">
+                        Este campo no puede estar vacío, introduzca la fecha.
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ tablon_form_obj.lugar.id_for_label }}" class="form-label">{{ tablon_form_obj.lugar.label }}</label>
+                    {{ tablon_form_obj.lugar }}
+                    <div class="invalid-feedback">
+                        Este campo no puede estar vacío, introduzca el lugar dónde se desarrollará.
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label for="{{ tablon_form_obj.informacion.id_for_label }}" class="form-label">{{ tablon_form_obj.informacion.label }}</label>
+                {{ tablon_form_obj.informacion }}
+            </div>
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalTablon" command="close">
+            <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancelar
+        </button>
+        <button type="submit" form="tablonNuevo" class="btn btn-warning fw-semibold">
+            <i class="bi bi-database-fill-add me-1" aria-hidden="true"></i>Publicar aviso
+        </button>
+    </div>
+</dialog>
+{% endif %}
+
+<!-- Diálogo nativo: Editar aviso del Tablón -->
+<dialog class="ogkke-dialog ogkke-dialog-lg" id="modalEditarTablon" aria-labelledby="modalEditarTablonLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalEditarTablonLabel">Editar anuncio del Tablón</h2>
+        <button type="button" class="btn-close" commandfor="modalEditarTablon" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div id="modalEditarTablonBody"></div>
+</dialog>
+
+<!-- Diálogo nativo: Eliminar aviso del Tablón -->
+<dialog class="ogkke-dialog" id="modalBorrarTablon" closedby="any" aria-labelledby="modalBorrarTablonLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 text-danger" id="modalBorrarTablonLabel">Eliminar anuncio del Tablón</h2>
+        <button type="button" class="btn-close" commandfor="modalBorrarTablon" command="close" aria-label="Cerrar"></button>
+    </div>
+    <div class="ogkke-dialog-body">
+        <p class="mb-2">¿Estás seguro de querer eliminar el aviso <strong id="deleteTablonTitle">seleccionado</strong> del Tablón?</p>
+        <p class="small text-body-secondary mb-0">Esta acción no se puede deshacer.</p>
+        <form method="post" id="deleteForm" action="">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        </form>
+    </div>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalBorrarTablon" command="close" autofocus>
+            <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancelar
+        </button>
+        <button type="submit" form="deleteForm" class="btn btn-danger">
+            <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Eliminar
+        </button>
+    </div>
+</dialog>
+
+<script>
+    (() => {
+        const editDialog = document.getElementById("modalEditarTablon");
+        const editBody = document.getElementById("modalEditarTablonBody");
+        const deleteDialog = document.getElementById("modalBorrarTablon");
+        const deleteForm = document.getElementById("deleteForm");
+        const deleteTitle = document.getElementById("deleteTablonTitle");
+
+        document.addEventListener("click", (event) => {
+            const deleteBtn = event.target.closest("[data-delete-url]");
+            if (deleteBtn && deleteDialog && deleteForm) {
+                deleteForm.action = deleteBtn.getAttribute("data-delete-url");
+                if (deleteTitle) {
+                    deleteTitle.textContent = deleteBtn.getAttribute("data-delete-title") || "seleccionado";
+                }
+                deleteDialog.showModal();
+                return;
+            }
+
+            const editBtn = event.target.closest("[data-update-url]");
+            if (editBtn && editDialog && editBody) {
+                const url = editBtn.getAttribute("data-update-url");
+                editBody.innerHTML = '<div class="ogkke-dialog-body text-center py-4 text-body-secondary">Cargando formulario…</div>';
+                editDialog.showModal();
+
+                fetch(url, {
+                    method: "GET",
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                })
+                    .then((res) => {
+                        if (!res.ok) throw new Error("Error al cargar el formulario.");
+                        return res.json();
+                    })
+                    .then((data) => {
+                        editBody.innerHTML = data.html_form;
+                    })
+                    .catch(() => {
+                        editBody.innerHTML = '<div class="ogkke-dialog-body"><div class="alert alert-danger mb-0">No se pudo cargar el contenido. Por favor, inténtalo de nuevo.</div></div>';
+                    });
+            }
+        });
+
+        editBody?.addEventListener("submit", (event) => {
+            if (!event.target.matches("#editarTablonForm")) return;
+            event.preventDefault();
+            const form = event.target;
+
+            fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    if (data.success) {
+                        editDialog?.close();
+                        window.location.reload();
+                    } else if (data.html_form) {
+                        editBody.innerHTML = data.html_form;
+                    }
+                })
+                .catch((err) => console.error("Error al actualizar anuncio del tablón:", err));
+        });
+    })();
+</script>

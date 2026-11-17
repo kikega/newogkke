@@ -28,6 +28,14 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
+# Dominio base del Core Nacional y soporte multi-dominio para Dojos locales
+DOJO_BASE_DOMAIN = config('DOJO_BASE_DOMAIN', default='ogkke.es')
+CORE_HOSTS = config(
+    'CORE_HOSTS',
+    default=f"{DOJO_BASE_DOMAIN},www.{DOJO_BASE_DOMAIN},localhost,127.0.0.1,testserver",
+    cast=Csv(),
+)
+
 # Variables para tráfico HTTPS
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split()
 
@@ -53,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'usuarios.apps.UsuariosConfig',
     'administracion.apps.AdministracionConfig',
+    'campeonatos.apps.CampeonatosConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -62,6 +71,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'administracion.middleware.dojo_tenant.DojoTenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ categoria.nombre }} · {{ categoria.campeonato.nombre }}{% endblock %}
+
+{% block container %}
+<nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'campeonatos:lista' %}">Campeonatos</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'campeonatos:detalle' slug=categoria.campeonato.slug %}">{{ categoria.campeonato.nombre }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ categoria.nombre }}</li>
+    </ol>
+</nav>
+
+<header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 my-4">
+    <div>
+        <span class="badge {% if categoria.modalidad == 'KUMITE' %}text-bg-danger{% else %}text-bg-primary{% endif %} mb-2">
+            {{ categoria.get_modalidad_display }} · {{ categoria.get_sistema_display }}
+        </span>
+        <h1 class="h3 color-texto mb-1">{{ categoria.nombre }}</h1>
+        <p class="text-body-secondary mb-0">
+            Edad requerida el {{ categoria.campeonato.fecha_inicio|date:"d/m/Y" }}: <strong>{{ categoria.edad_min }} a {{ categoria.edad_max }} años</strong> ·
+            Total inscritos: <strong>{{ total_inscritos_categoria }}</strong>
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-outline-info" commandfor="modalAyudaCampeonatos" command="show-modal">
+            <i class="bi bi-question-circle-fill me-1" aria-hidden="true"></i>¿Dudas sobre Inscripción?
+        </button>
+        {% if categoria.tatami %}
+        <a href="{% url 'campeonatos:tatami_live' tatami_id=categoria.tatami.id %}?categoria={{ categoria.id }}" class="btn btn-warning fw-semibold">
+            <i class="bi bi-display me-1" aria-hidden="true"></i>Ir al Panel del Tatami {{ categoria.tatami.numero }}
+        </a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="row g-4">
+    <!-- Formulario de Inscripción -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header py-3">
+                <h2 class="h6 mb-0 fw-semibold">Inscribir Competidor en la Categoría</h2>
+            </div>
+            <div class="card-body">
+                {% if categoria.estado == 'FINALIZADA' %}
+                    <div class="alert alert-secondary mb-0">La categoría ya ha finalizado y el acta está cerrada.</div>
+                {% else %}
+                    <form action="{% url 'campeonatos:inscribir' categoria_id=categoria.id %}" method="post">
+                        {% csrf_token %}
+                        {% if categoria.admite_cintos_color %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form_inscripcion.alumno_color.id_for_label }}">
+                                Practicante de Cinturón de Color (Kyu)
+                            </label>
+                            {{ form_inscripcion.alumno_color }}
+                            <div class="form-text">
+                                Solo se muestran los alumnos de su Dojo. Los menores requieren autorización RGPD y de campeonatos firmada.
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if categoria.admite_cintos_negros %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form_inscripcion.alumno_dan.id_for_label }}">
+                                Practicante de Cinturón Negro (DAN)
+                            </label>
+                            {{ form_inscripcion.alumno_dan }}
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-warning fw-semibold w-100">
+                            <i class="bi bi-person-plus-fill me-1" aria-hidden="true"></i>Inscribir Competidor
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Competidores Inscritos -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <h2 class="h6 mb-0 fw-semibold">Competidores Inscritos</h2>
+                <span class="badge rounded-pill text-bg-secondary">{{ inscripciones|length }} mostrados</span>
+            </div>
+            <div class="card-body">
+                {% if inscripciones %}
+                    <ul class="list-group list-group-flush">
+                        {% for insc in inscripciones %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <span class="badge text-bg-dark me-2">Dorsal #{{ insc.dorsal }}</span>
+                                <strong>{{ insc.nombre_competidor }}</strong>
+                                <span class="text-body-secondary small ms-2">
+                                    {{ insc.dojo_nombre }} · {{ insc.grado_mostrable }} · {{ insc.edad_en_torneo }} años en torneo
+                                </span>
+                            </div>
+                            {% if categoria.estado != 'FINALIZADA' %}
+                            <form action="{% url 'campeonatos:inscripcion_eliminar' pk=insc.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Retirar inscripción">
+                                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-body-secondary mb-0">No hay competidores inscritos todavía.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% include "campeonatos/partials/modal_ayuda_contextual.html" %}
+{% endblock container %}

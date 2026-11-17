@@ -14,6 +14,22 @@
             </button>
             <div class="collapse navbar-collapse" id="mainNavContent">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-1">
+                    {% if usuario_es_juez_tatami %}
+                        {% if tatami_juez_activo %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'tatami_live' %}active fw-semibold{% endif %}"
+                               href="{% url 'campeonatos:tatami_live' tatami_id=tatami_juez_activo.id %}">
+                                <i class="bi bi-trophy-fill me-1" aria-hidden="true"></i>Mesa {{ tatami_juez_activo.nombre }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'ayuda' %}active fw-semibold{% endif %}"
+                               href="{% url 'campeonatos:ayuda' %}?rol=juez">
+                                <i class="bi bi-question-circle me-1" aria-hidden="true"></i>Ayuda Mesa / Juez
+                            </a>
+                        </li>
+                    {% else %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
                            {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}
@@ -23,6 +39,12 @@
                         <a class="nav-link {% if request.resolver_match.url_name == 'alumnos' or request.resolver_match.url_name == 'alumno_detalle' or request.resolver_match.url_name == 'alumnos_grado' %}active{% endif %}"
                            href="{% url 'administracion:alumnos' %}">Cintos Negros</a>
                     </li>
+                    {% if user.is_staff or user.is_superuser or usuario_es_instructor %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'alumnos_color' or request.resolver_match.url_name == 'alumno_color_detalle' %}active{% endif %}"
+                           href="{% url 'administracion:alumnos_color' %}">Cintos de Color</a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'dojos' or request.resolver_match.url_name == 'dojo_detalle' or request.resolver_match.url_name == 'tablon' %}active{% endif %}"
                            href="{% url 'administracion:dojos' %}">Dojos</a>
@@ -30,6 +52,10 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'cursillos' or request.resolver_match.url_name == 'cursillo_detalle' or request.resolver_match.url_name == 'cursillo_examinados' or request.resolver_match.url_name == 'cursillo_estadisticas' %}active{% endif %}"
                            href="{% url 'administracion:cursillos' %}">Cursillos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.namespace == 'campeonatos' %}active{% endif %}"
+                           href="{% url 'campeonatos:lista' %}">Campeonatos</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'directiva' %}active{% endif %}"
@@ -58,6 +84,7 @@
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2" aria-hidden="true"></i>Administración</a></li>
                             </ul>
                         </li>
+                    {% endif %}
                     {% endif %}
                 </ul>
 
@@ -89,6 +116,13 @@
                                     </div>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
+                                {% if usuario_dojo and usuario_dojo.slug %}
+                                <li>
+                                    <a class="dropdown-item rounded-2" href="{% url 'administracion:dojo_portal' slug=usuario_dojo.slug %}">
+                                        <i class="bi bi-globe2 me-2 color-texto" aria-hidden="true"></i>Portal de mi Dojo ({{ usuario_dojo.nombre }})
+                                    </a>
+                                </li>
+                                {% endif %}
                                 <li>
                                     <button type="button" class="dropdown-item rounded-2" commandfor="modalCambioPassword" command="show-modal">
                                         <i class="bi bi-key me-2" aria-hidden="true"></i>Cambiar contraseña

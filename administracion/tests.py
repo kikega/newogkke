@@ -494,6 +494,107 @@ class AdministracionSecurityTests(TestCase):
         self.assertContains(err_res, 'data-history-back')
         self.assertNotContains(err_res, 'onclick=')
 
+    def test_dojo_slug_and_custom_domain_normalization_and_scoped_manager(self):
+        """Verifica generación de slug único, normalización de dominio propio y aislamiento DojoScopedManager."""
+        self.assertEqual(self.dojo.slug, "dojo-test")
+        self.assertEqual(self.other_dojo.slug, "dojo-secundario")
+
+        duplicate = Dojo.objects.create(
+            nombre="Dojo Test",
+            direccion="Otra Calle 1",
+            poblacion="Valencia",
+            provincia="Valencia",
+            codigo_postal="46001",
+            dominio_personalizado="https://WWW.KarateValencia.es:8443/inicio",
+        )
+        self.assertEqual(duplicate.slug, "dojo-test-2")
+        self.assertEqual(duplicate.dominio_personalizado, "karatevalencia.es")
+        self.assertEqual(duplicate.dominio_principal, "karatevalencia.es")
+
+        # DojoScopedManager filtra estrictamente por dojo
+        self.assertEqual(Tablon.objects.for_dojo(self.dojo).count(), 1)
+        self.assertEqual(Tablon.objects.for_dojo(self.other_dojo).count(), 0)
+        self.assertEqual(Tablon.objects.for_dojo(None).count(), 0)
+
+    def test_dojo_portal_routing_by_path_subdomain_and_custom_domain(self):
+        """Verifica que el portal del Dojo responde por ruta /dojo/<slug>/, subdominio y dominio propio."""
+        self.dojo.dominio_personalizado = "karatebudokan.es"
+        self.dojo.color_primario = "#b91c1c"
+        self.dojo.lema = "Camino de la mano vacía"
+        self.dojo.horario_resumen = "Lunes y Miércoles 20:00 - 21:30"
+        self.dojo.save()
+
+        # 1. Acceso público anónimo por ruta directa /dojo/<slug>/
+        public_res = self.client.get(reverse('dojo_portal_public', kwargs={'slug': self.dojo.slug}))
+        self.assertEqual(public_res.status_code, 200)
+        self.assertTemplateUsed(public_res, 'administracion/dojo_portal.html')
+        self.assertContains(public_res, 'Dojo Oficial Afiliado a OGKKE')
+        self.assertContains(public_res, 'Camino de la mano vacía')
+        self.assertContains(public_res, 'data-dojo-theme="custom"')
+        self.assertContains(public_res, '--dojo-accent: #b91c1c')
+
+        # 2. Acceso por subdominio automático (dojo-test.ogkke.es) en la raíz /
+        sub_res = self.client.get('/', HTTP_HOST='dojo-test.ogkke.es')
+        self.assertEqual(sub_res.status_code, 200)
+        self.assertTemplateUsed(sub_res, 'administracion/dojo_portal.html')
+        self.assertEqual(sub_res.context['dojo'], self.dojo)
+
+        # 3. Acceso por dominio propio (karatebudokan.es) en la raíz / sin reiniciar servidor
+        custom_res = self.client.get('/', HTTP_HOST='karatebudokan.es')
+        self.assertEqual(custom_res.status_code, 200)
+        self.assertTemplateUsed(custom_res, 'administracion/dojo_portal.html')
+        self.assertEqual(custom_res.context['dojo'], self.dojo)
+
+    def test_dojo_portal_configuration_authorization_and_update(self):
+        """Verifica que solo el instructor titular del Dojo o el Staff pueden configurar su portal y dominio."""
+        config_url = reverse('administracion:dojo_portal_config', kwargs={'slug': self.dojo.slug})
+
+        # Alumno normal recibe 403
+        self.client.force_login(self.regular_user)
+        forbidden_res = self.client.post(config_url, {
+            'sitio_activo': 'on',
+            'dominio_personalizado': 'pirata.es',
+            'color_primario': '#123456',
+        })
+        self.assertEqual(forbidden_res.status_code, 403)
+
+        # Instructor titular sí puede actualizar su configuración
+        self.client.force_login(self.instructor_user)
+        ok_res = self.client.post(config_url, {
+            'sitio_activo': 'on',
+            'dominio_personalizado': 'https://www.DojoTestMadrid.es/',
+            'color_primario': '#1d4ed8',
+            'lema': 'Goju-Ryu Madrid',
+            'descripcion_publica': 'Dojo tradicional en el centro de Madrid.',
+            'horario_resumen': 'Martes y Jueves 19:30 - 21:00',
+            'telefono_contacto': '+34 600 111 222',
+            'email_contacto': 'contacto@dojotestmadrid.es',
+        })
+        self.assertEqual(ok_res.status_code, 302)
+        self.dojo.refresh_from_db()
+        self.assertEqual(self.dojo.dominio_personalizado, 'dojotestmadrid.es')
+        self.assertEqual(self.dojo.color_primario, '#1d4ed8')
+        self.assertEqual(self.dojo.lema, 'Goju-Ryu Madrid')
+
+    def test_on_demand_tls_check_endpoint(self):
+        """Verifica el endpoint /internal/tls-check/ para Caddy On-Demand TLS."""
+        self.dojo.dominio_personalizado = "karatesakura.es"
+        self.dojo.sitio_activo = True
+        self.dojo.save()
+
+        tls_url = reverse('tls_domain_check')
+        self.assertEqual(self.client.get(tls_url).status_code, 400)
+        self.assertEqual(self.client.get(f"{tls_url}?domain=ogkke.es").status_code, 200)
+        self.assertEqual(self.client.get(f"{tls_url}?domain=dojo-test.ogkke.es").status_code, 200)
+        self.assertEqual(self.client.get(f"{tls_url}?domain=karatesakura.es").status_code, 200)
+        self.assertEqual(self.client.get(f"{tls_url}?domain=desconocido.es").status_code, 403)
+
+        # Si el portal del Dojo se desactiva, no autoriza emisión TLS
+        self.dojo.sitio_activo = False
+        self.dojo.save()
+        self.assertEqual(self.client.get(f"{tls_url}?domain=karatesakura.es").status_code, 403)
+
+
 
 
 

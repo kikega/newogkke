@@ -1,0 +1,40 @@
+# ==============================================================================
+# Caddyfile de referencia para OGKKE Core + Dojos con Dominio Propio (Zero-Touch)
+# ==============================================================================
+# 1. Caddy consulta a Django (/internal/tls-check/?domain=...) antes de emitir
+#    un certificado Let's Encrypt bajo demanda para cualquier subdominio o
+#    dominio personalizado configurado por un Dojo en la base de datos.
+# 2. Cuando un instructor registra su dominio (ej. karatebudokan.es) en su panel
+#    de Dojo y apunta su registro DNS A/CNAME hacia el servidor, Caddy emite y
+#    renueva el certificado HTTPS automáticamente sin reiniciar servicios.
+# ==============================================================================
+
+{
+    on_demand_tls {
+        ask http://127.0.0.1:8000/internal/tls-check/
+    }
+}
+
+https:// {
+    tls {
+        on_demand
+    }
+
+    encode zstd gzip
+
+    handle_path /static/* {
+        root * /home/kike/Proyectos/Django/ogkke/collectstatic
+        file_server
+    }
+
+    handle_path /media/* {
+        root * /home/kike/Proyectos/Django/ogkke/media
+        file_server
+    }
+
+    reverse_proxy 127.0.0.1:8000 {
+        header_up Host {host}
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}

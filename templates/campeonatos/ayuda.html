@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Centro de Ayuda y Manual de Campeonatos · OGKKE{% endblock %}
+
+{% block container %}
+<nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+    <ol class="breadcrumb">
+        {% if es_juez_efimero and tatami_activo %}
+            <li class="breadcrumb-item">
+                <a href="{% url 'campeonatos:tatami_live' tatami_id=tatami_activo.id %}">Mesa {{ tatami_activo.nombre }}</a>
+            </li>
+        {% else %}
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'campeonatos:lista' %}">Campeonatos</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">Centro de Ayuda y Manual Operativo</li>
+    </ol>
+</nav>
+
+<header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 my-4">
+    <div>
+        <span class="badge rounded-pill text-bg-warning mb-2">
+            <i class="bi bi-life-preserver me-1" aria-hidden="true"></i>Guía Oficial de Operación
+        </span>
+        <h1 class="color-texto mb-1">Centro de Ayuda · Módulo de Campeonatos</h1>
+        <p class="text-body-secondary mb-0">
+            Manual paso a paso y resolución de dudas para <strong>Anotadores y Jueces de Mesa</strong>, <strong>Instructores de Dojo</strong> y <strong>Dirección del Torneo</strong>.
+        </p>
+    </div>
+    <div>
+        {% if es_juez_efimero and tatami_activo %}
+            <a href="{% url 'campeonatos:tatami_live' tatami_id=tatami_activo.id %}" class="btn btn-warning fw-semibold">
+                <i class="bi bi-arrow-left-circle-fill me-1" aria-hidden="true"></i>Volver a mi Tatami en Vivo
+            </a>
+        {% else %}
+            <a href="{% url 'campeonatos:lista' %}" class="btn btn-outline-warning">
+                <i class="bi bi-trophy me-1" aria-hidden="true"></i>Volver a Campeonatos
+            </a>
+        {% endif %}
+    </div>
+</header>
+
+<!-- Buscador instantáneo y selector de perfil -->
+<section class="card shadow-sm mb-4" aria-label="Buscador de ayuda y filtro por rol">
+    <div class="card-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-6">
+                <label for="buscadorAyudaCampeonatos" class="form-label small fw-semibold mb-1">
+                    <i class="bi bi-search me-1" aria-hidden="true"></i>Buscar duda o palabra clave
+                </label>
+                <input type="search" id="buscadorAyudaCampeonatos" class="form-control"
+                       placeholder="Ej. desempate, banderas, edad cumpleaños, RGPD menor, clave tatami, kumite...">
+            </div>
+            <div class="col-lg-6">
+                <span class="form-label small fw-semibold d-block mb-1">Filtrar manual por función en el campeonato:</span>
+                <div class="d-flex flex-wrap gap-2" role="group" aria-label="Selector de rol de ayuda">
+                    <button type="button" class="btn btn-sm {% if rol_activo == 'todos' %}btn-warning fw-semibold{% else %}btn-outline-warning{% endif %}" data-help-role-filter="all">
+                        Todos los perfiles
+                    </button>
+                    <button type="button" class="btn btn-sm {% if rol_activo == 'juez' %}btn-warning fw-semibold{% else %}btn-outline-warning{% endif %}" data-help-role-filter="juez">
+                        <i class="bi bi-tablet-landscape me-1" aria-hidden="true"></i>Anotador / Juez de Mesa
+                    </button>
+                    <button type="button" class="btn btn-sm {% if rol_activo == 'instructor' %}btn-warning fw-semibold{% else %}btn-outline-warning{% endif %}" data-help-role-filter="instructor">
+                        <i class="bi bi-person-badge me-1" aria-hidden="true"></i>Instructor de Dojo
+                    </button>
+                    <button type="button" class="btn btn-sm {% if rol_activo == 'direccion' %}btn-warning fw-semibold{% else %}btn-outline-warning{% endif %}" data-help-role-filter="direccion">
+                        <i class="bi bi-sliders me-1" aria-hidden="true"></i>Dirección / Staff
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =====================================================================
+     SECCIÓN 1: MANUAL DEL ANOTADOR Y JUEZ DE MESA (TATAMI EN VIVO)
+     ===================================================================== -->
+<section class="mb-5" data-help-section="juez" aria-labelledby="headingJuezMesa">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge text-bg-warning fs-6">1</span>
+        <h2 id="headingJuezMesa" class="h4 color-texto mb-0">
+            Manual para Anotadores y Jueces de Mesa (Operación de Tatami en Vivo)
+        </h2>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-warning-subtle">
+                <div class="card-body">
+                    <h3 class="h6 fw-bold color-texto">Paso 1 · Acceso e Inicio</h3>
+                    <p class="small text-body-secondary mb-0">
+                        Inicie sesión con el usuario y clave temporal entregados por la organización (ej. <code>tatami1_...@tatami.ogkke.es</code>). El sistema le llevará directamente a la pantalla de su <strong>Tatami</strong>. Seleccione la categoría que va a comenzar y pulse el botón verde <strong>"Iniciar Competición"</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-warning-subtle">
+                <div class="card-body">
+                    <h3 class="h6 fw-bold color-texto">Paso 2 · Anotar Puntuación o Combate</h3>
+                    <p class="small text-body-secondary mb-0">
+                        <strong>Si es Puntuación (Kata):</strong> Escriba las notas de los jueces (de <code>0.0</code> a <code>10.0</code>) y pulse <strong>Guardar</strong>.<br>
+                        <strong>Si es Banderas o Kumite (+18):</strong> Introduzca las banderas o puntos de <strong>AKA (Rojo)</strong> y <strong>AO (Azul)</strong> y pulse <strong>"Gana AKA"</strong> o <strong>"Gana AO"</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-warning-subtle">
+                <div class="card-body">
+                    <h3 class="h6 fw-bold color-texto">Paso 3 · Cerrar Ronda y Desempates</h3>
+                    <p class="small text-body-secondary mb-0">
+                        Una vez calificados todos los competidores de la ronda, pulse <strong>"Cerrar Ronda y Calcular Clasificados / Podio"</strong>. El sistema pasará automáticamente a los <strong>N mejores</strong> a la Final o creará una <strong>Ronda de Desempate</strong> si hay empate en el corte o en medallas.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preguntas Frecuentes del Anotador / Juez -->
+    <div class="card shadow-sm">
+        <div class="card-header py-3">
+            <h3 class="h6 mb-0 fw-semibold">Dudas frecuentes en la Mesa del Tatami</h3>
+        </div>
+        <div class="card-body d-flex flex-column gap-2">
+            <details class="p-3 rounded border" name="faq-juez" data-help-item open>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Qué hago si me equivoco al teclear la nota de un competidor o el ganador de un combate?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    Mientras la ronda <strong>no haya sido cerrada</strong>, puede corregir cualquier nota o combate en cualquier momento: simplemente vuelva a escribir las notas correctas de los jueces en la fila de ese competidor y pulse de nuevo <strong>Guardar</strong> (o vuelva a pulsar <em>Gana AKA / Gana AO</em> en el cruce). El sistema recalculará el total y la media inmediatamente.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-juez" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Cómo se resuelve un empate en el sistema de puntuación (en el corte Top N o en el podio)?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    El anotador no tiene que hacer cálculos manuales. Al pulsar <strong>"Cerrar Ronda y Calcular Clasificados / Podio"</strong>, el sistema comprueba si existe empate en la última plaza de corte (por ejemplo, si pasan 4 a la final y el 4.º y 5.º tienen exactamente la misma puntuación total) o empate en puestos de medalla (1.º, 2.º o 3.º en la Final). Cuando detecta un empate, muestra un aviso amarillo y <strong>genera automáticamente una nueva "Ronda de Desempate"</strong> en la que solo aparecen los competidores empatados para que vuelvan a actuar y ser puntuados.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-juez" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Por qué el botón "Cerrar Ronda" me avisa de que faltan competidores por evaluar?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    Para evitar que algún participante quede sin calificar por accidente, el sistema exige que todos los competidores de la ronda activa tengan su puntuación guardada (o que todos los enfrentamientos Aka/Ao tengan ganador asignado) antes de calcular el pase de ronda. Si un competidor no se presenta al llamado (<em>Kiken</em>), puede puntuarlo con <code>0.0</code> para dejar constancia en el acta y continuar.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-juez" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Qué significa que un competidor pasa por "Bye" en Banderas o Kumite?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    Cuando una categoría de eliminación directa (Aka vs Ao) tiene un número impar de competidores, el último emparejamiento de la ronda no tiene rival asignado en el lado Azul (<em>Ao</em>). El sistema lo marca automáticamente como <strong>Finalizado (Pase directo / Bye)</strong> para que avance a la siguiente ronda sin que el anotador tenga que intervenir.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-juez" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Por qué no puedo iniciar sesión con mi usuario de Tatami antes o después del campeonato?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    Por normativa de seguridad y protección de datos de menores (RGPD / LOPDGDD), las cuentas de los jueces/anotadores de mesa son <strong>efímeras</strong>: solo permiten iniciar sesión entre la <code>fecha_inicio</code> y la <code>fecha_fin</code> del campeonato y mientras el torneo no esté finalizado. Además, solo muestran los datos mínimos para el llamado a pista (Dorsal, Nombre, Dojo y Cinturón).
+                </p>
+            </details>
+        </div>
+    </div>
+</section>
+
+<!-- =====================================================================
+     SECCIÓN 2: MANUAL DEL INSTRUCTOR DE DOJO
+     ===================================================================== -->
+<section class="mb-5" data-help-section="instructor" aria-labelledby="headingInstructor">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge text-bg-info fs-6">2</span>
+        <h2 id="headingInstructor" class="h4 color-texto mb-0">
+            Manual para Instructores de Dojo (Inscripciones, Edad, RGPD y Torneos Locales)
+        </h2>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header py-3">
+            <h3 class="h6 mb-0 fw-semibold">Dudas frecuentes de Instructores de Dojo</h3>
+        </div>
+        <div class="card-body d-flex flex-column gap-2">
+            <details class="p-3 rounded border" name="faq-instructor" data-help-item open>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Cómo se calcula la edad de un alumno para saber en qué categoría le corresponde competir?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    La edad se calcula siempre por su <strong>fecha exacta de cumpleaños con respecto a la fecha de inicio del campeonato</strong>:<br>
+                    • Si el día del campeonato el alumno tiene <strong>7 años cumplidos</strong>, participa en la categoría de 7 años.<br>
+                    • Si cumple los 8 años unos días <em>después</em> del campeonato, para este torneo sigue teniendo 7 años, y ya pasará a la categoría de 8 años para el siguiente campeonato.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-instructor" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Por qué el sistema me bloquea al inscribir a un alumno menor de edad en un campeonato?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    En cumplimiento estricto del <strong>RGPD y la LOPDGDD (Art. 7 sobre protección de datos de menores en España)</strong>, para poder inscribir a un menor en un torneo debe acudir primero al menú <strong>Cintos de Color</strong>, abrir la ficha del alumno, pulsar <strong>"Editar / RGPD"</strong> y verificar que están marcadas:<br>
+                    1. <strong>Autorización RGPD / Paterna firmada</strong> (con su <strong>Fecha de firma</strong> obligatoria para menores de 14 años).<br>
+                    2. <strong>Autorizado para participar en campeonatos</strong>.<br>
+                    3. <strong>Ficha en alta activa</strong>.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-instructor" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Pueden otros instructores ver los datos de los niños o cinturones de color de mi Dojo?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    <strong>Nunca.</strong> El censo de <em>Cinturones de Color (Kyu)</em> está blindado por aislamiento Multi-Tenant por Dojo y URLs con identificadores UUID contra accesos cruzados (anti-IDOR). Ningún instructor de otro Dojo ni ningún visitante del portal público puede ver las fichas de sus alumnos de color. Únicamente cuando usted inscribe a un alumno autorizado en un campeonato general, la mesa del Tatami asignado verá su nombre, dorsal, dojo y cinturón durante las fechas del torneo para poder llamarlo al tatami.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-instructor" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Puedo inscribir a menores de 18 años en la modalidad de Kumite?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    <strong>No.</strong> Por normativa de la asociación, la modalidad de <strong>Kumite (combate)</strong> es exclusivamente para mayores de edad (mínimo <strong>18 años cumplidos</strong> en la fecha de inicio del campeonato). Los menores de 18 años compiten únicamente en la modalidad de <strong>Kata</strong> (por Puntuación o por Banderas Aka/Ao).
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-instructor" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Cómo organizo un torneo interno exclusivo para los alumnos de mi Dojo?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    En la pantalla principal de <strong>Campeonatos</strong>, pulse <strong>"Nuevo Campeonato"</strong>. Su formulario creará un torneo de ámbito <strong>Local (Dojo único)</strong> vinculado automáticamente a su Dojo. Podrá crear sus propios Tatamis, categorías, generar claves temporales para sus anotadores de mesa e inscribir a los alumnos de su centro.
+                </p>
+            </details>
+        </div>
+    </div>
+</section>
+
+<!-- =====================================================================
+     SECCIÓN 3: MANUAL DE DIRECCIÓN DEL TORNEO Y STAFF NACIONAL
+     ===================================================================== -->
+<section class="mb-5" data-help-section="direccion" aria-labelledby="headingDireccion">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge text-bg-secondary fs-6">3</span>
+        <h2 id="headingDireccion" class="h4 color-texto mb-0">
+            Manual para Dirección del Torneo y Staff Nacional
+        </h2>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header py-3">
+            <h3 class="h6 mb-0 fw-semibold">Configuración de Tatamis, Categorías e Histórico Inmutable</h3>
+        </div>
+        <div class="card-body d-flex flex-column gap-2">
+            <details class="p-3 rounded border" name="faq-direccion" data-help-item open>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Cuál es el orden recomendado para configurar un campeonato desde cero?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    1. <strong>Crear el Campeonato:</strong> Defina nombre, ámbito (<em>General</em> para toda la asociación o <em>Local</em> para un Dojo), fechas de inicio/fin y sede.<br>
+                    2. <strong>Añadir Tatamis y Jueces:</strong> Cree cada Tatami (Tatami 1, Tatami 2...) dejando marcada la casilla de generar credenciales efímeras. Anote el usuario y contraseña que aparecen en el aviso verde superior para entregárselos a la mesa el día del torneo.<br>
+                    3. <strong>Crear Categorías:</strong> Defina cada categoría indicando modalidad (Kata o Kumite +18), sistema (Puntuación con corte Top N o Banderas Aka/Ao), rango de edad y cinturones admitidos, y asígnela a su Tatami.<br>
+                    4. <strong>Inscripción:</strong> Los instructores (o el Staff) inscriben a los competidores en cada categoría.<br>
+                    5. <strong>Ejecución en Vivo y Cierre:</strong> Las mesas operan desde su tablet/portátil y, al cerrar la ronda final de cada categoría, el acta se consolida automáticamente en el <strong>Histórico de Clasificaciones</strong>.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-direccion" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Qué hago si hemos olvidado la contraseña del usuario efímero de un Tatami el día del torneo?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    Entre en el panel del campeonato y, dentro de la tarjeta del Tatami correspondiente, pulse el botón <strong>"Clave"</strong> (icono de llave). El sistema generará inmediatamente una nueva contraseña temporal y se la mostrará en pantalla en un mensaje destacado para que pueda dársela al anotador de esa mesa.
+                </p>
+            </details>
+
+            <details class="p-3 rounded border" name="faq-direccion" data-help-item>
+                <summary class="fw-semibold cursor-pointer">
+                    ¿Por qué el Histórico de Clasificaciones se denomina "Inmutable"?
+                </summary>
+                <p class="small text-body-secondary mt-2 mb-0">
+                    Cuando finaliza una categoría, el sistema guarda una instantánea (<em>snapshot</em>) con el nombre del competidor, el nombre de su Dojo y el cinturón exacto que ostentaba el día del campeonato. Así, aunque meses después el alumno ascienda de cinturón Amarillo a Naranja o pase a Cinturón Negro, el acta histórica de aquel campeonato conservará siempre el grado real con el que compitió y ganó su medalla.
+                </p>
+            </details>
+        </div>
+    </div>
+</section>
+{% endblock container %}
+
+{% block script_js %}
+<script>
+(() => {
+    const searchInput = document.getElementById('buscadorAyudaCampeonatos');
+    const roleButtons = document.querySelectorAll('[data-help-role-filter]');
+    const sections = document.querySelectorAll('[data-help-section]');
+    const faqItems = document.querySelectorAll('[data-help-item]');
+
+    function normalize(text) {
+        return (text || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
+
+    roleButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const targetRole = btn.getAttribute('data-help-role-filter');
+            roleButtons.forEach((b) => {
+                const active = b === btn;
+                b.classList.toggle('btn-warning', active);
+                b.classList.toggle('fw-semibold', active);
+                b.classList.toggle('btn-outline-warning', !active);
+            });
+            sections.forEach((sec) => {
+                const secRole = sec.getAttribute('data-help-section');
+                sec.hidden = targetRole !== 'all' && secRole !== targetRole;
+            });
+        });
+    });
+
+    searchInput?.addEventListener('input', () => {
+        const query = normalize(searchInput.value);
+        if (!query) {
+            faqItems.forEach((item) => {
+                item.hidden = false;
+            });
+            return;
+        }
+        sections.forEach((sec) => {
+            sec.hidden = false;
+        });
+        faqItems.forEach((item) => {
+            const matches = normalize(item.textContent).includes(query);
+            item.hidden = !matches;
+            if (matches) {
+                item.open = true;
+            }
+        });
+    });
+})();
+</script>
+{% endblock script_js %}

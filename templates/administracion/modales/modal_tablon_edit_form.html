@@ -1,44 +1,59 @@
 <form id="editarTablonForm" method="post" action="{% url 'administracion:editar_tablon' tablon.id %}" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="row input-group">
-        <div class="col mb-3">
-            {{ form.tipo.label }}
+    <div class="ogkke-dialog-body">
+        <div class="mb-3">
+            <label for="{{ form.tipo.id_for_label }}" class="form-label">{{ form.tipo.label }}</label>
             {{ form.tipo }}
+            <div class="invalid-feedback">
+                Este campo no puede estar vacío, introduzca el tipo de aviso.
+            </div>
         </div>
-    </div>
-    <div class="row input-group">
-        <div class="col mb-3">
-            {{ form.titulo.label }}
+        <div class="mb-3">
+            <label for="{{ form.titulo.id_for_label }}" class="form-label">{{ form.titulo.label }}</label>
             {{ form.titulo }}
+            <div class="invalid-feedback">
+                Este campo no puede estar vacío, introduzca un título para el aviso.
+            </div>
         </div>
-    </div>
-    <div class="row input-group">
-        <div class="col mb-3">
-            {{ form.descripcion.label }}
+        <div class="mb-3">
+            <label for="{{ form.descripcion.id_for_label }}" class="form-label">{{ form.descripcion.label }}</label>
             {{ form.descripcion }}
         </div>
-    </div>
-    <div class="row input-group">
-        <div class="col mb-3">
-            {{ form.fecha.label }}
-            {{ form.fecha }}
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="{{ form.fecha.id_for_label }}" class="form-label">{{ form.fecha.label }}</label>
+                {{ form.fecha }}
+                <div class="invalid-feedback">
+                    Este campo no puede estar vacío, introduzca la fecha.
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label for="{{ form.lugar.id_for_label }}" class="form-label">{{ form.lugar.label }}</label>
+                {{ form.lugar }}
+                <div class="invalid-feedback">
+                    Este campo no puede estar vacío, introduzca el lugar.
+                </div>
+            </div>
         </div>
-        <div class="col mb-3">
-            {{ form.lugar.label }}
-            {{ form.lugar }}
-        </div>
-    </div>
-    <div class="row input-group">
-        <div class="col mb-3">
-            {{ form.informacion.label }}
+        <div>
+            <label for="{{ form.informacion.id_for_label }}" class="form-label">{{ form.informacion.label }}</label>
             {{ form.informacion }}
             {% if tablon.informacion %}
-                <small class="text-muted d-block mt-1">Archivo actual: <a href="{{ tablon.informacion.url }}" target="_blank" class="text-warning">{{ tablon.informacion.name }}</a></small>
+                <small class="text-body-secondary d-block mt-1">
+                    Archivo actual:
+                    <a href="{{ tablon.informacion.url }}" target="_blank" rel="noopener" class="color-texto">
+                        {{ tablon.informacion.name }}
+                    </a>
+                </small>
             {% endif %}
         </div>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"></i> Cancelar</button>
-        <button type="submit" form="editarTablonForm" class="btn btn-outline-warning"><i class="bi bi-database-fill-add"></i> Actualizar</button>
+    <div class="ogkke-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" commandfor="modalEditarTablon" command="close">
+            <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancelar
+        </button>
+        <button type="submit" class="btn btn-warning fw-semibold">
+            <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Actualizar aviso
+        </button>
     </div>
 </form>

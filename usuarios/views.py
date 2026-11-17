@@ -16,7 +16,13 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 
 # Utilidades
+from django.urls import reverse
 from administracion.utils import get_client_ip
+from administracion.permissions import (
+    es_usuario_juez_efimero,
+    obtener_tatamis_activos_juez,
+    verificar_vigencia_login_juez,
+)
 
 # Modelos
 from administracion.models import Alumno
@@ -33,8 +39,25 @@ def login_view(request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            permitido, motivo_bloqueo = verificar_vigencia_login_juez(user)
+            if not permitido:
+                logger.warning(
+                    "Login bloqueado a juez efímero fuera de fecha - email: %s, IP: %s",
+                    user.email,
+                    get_client_ip(request),
+                )
+                return render(
+                    request,
+                    'usuarios/login.html',
+                    {'form': form, 'error': motivo_bloqueo},
+                )
+
             auth_login(request, user)
             logger.info("Login exitoso - email: %s, IP: %s", user.email, get_client_ip(request))
+            if es_usuario_juez_efimero(user):
+                tatami_activo = obtener_tatamis_activos_juez(user).first()
+                if tatami_activo:
+                    return redirect(reverse('campeonatos:tatami_live', kwargs={'tatami_id': tatami_activo.id}))
             return redirect('home')
         return render(request, 'usuarios/login.html', {'form': form, 'error': 'Usuario o password incorrecto'})
 
