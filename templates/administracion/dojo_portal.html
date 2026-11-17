@@ -79,6 +79,14 @@
                         <button type="button" class="btn btn-outline-warning btn-sm" commandfor="modalConfigurarDojo" command="show-modal">
                             <i class="bi bi-sliders me-1" aria-hidden="true"></i>Configurar Portal y Dominio
                         </button>
+                        <a href="{% url 'administracion:alumnos_color' %}?dojo={{ dojo.id }}" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-shield-lock-fill me-1" aria-hidden="true"></i>Cintos de Color
+                        </a>
+                        {% if user.is_superuser or user.is_staff %}
+                            <a href="{% url 'administracion:dojo_detalle' pk=dojo.id %}" class="btn btn-outline-info btn-sm">
+                                <i class="bi bi-building-gear me-1" aria-hidden="true"></i>Ficha Core del Dojo
+                            </a>
+                        {% endif %}
                         <button type="button" class="btn btn-outline-secondary btn-sm" commandfor="modalPeticiones" command="show-modal">
                             <i class="bi bi-person-raised-hand me-1" aria-hidden="true"></i>Peticiones a OGKKE
                             {% if peticiones_pendientes > 0 %}
@@ -200,7 +208,7 @@
                                     </span>
                                 {% endif %}
                             </div>
-                            {% if user.is_authenticated %}
+                            {% if user.is_superuser %}
                                 <a href="{% url 'administracion:alumno_detalle' pk=instructor.id %}" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-person-vcard me-1" aria-hidden="true"></i>Ver historial técnico OGKKE
                                 </a>
@@ -293,12 +301,14 @@
                                                 <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Eliminar
                                             </button>
                                         </div>
-                                    {% elif tab.es_actividad_general and user.is_staff %}
-                                        <div class="d-flex gap-2">
-                                            <a href="{% url 'administracion:actividades' %}" class="btn btn-outline-warning btn-sm">
-                                                <i class="bi bi-sliders me-1" aria-hidden="true"></i>Gestionar actividad general
-                                            </a>
-                                        </div>
+                                    {% elif tab.es_actividad_general %}
+                                        {% if user.is_staff or user.is_superuser %}
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'administracion:actividades' %}" class="btn btn-outline-warning btn-sm">
+                                                    <i class="bi bi-sliders me-1" aria-hidden="true"></i>Gestionar actividad general
+                                                </a>
+                                            </div>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </div>
@@ -335,9 +345,13 @@
                                         <div class="p-3 rounded-3 border bg-body-tertiary d-flex flex-column gap-2">
                                             <div class="d-flex justify-content-between align-items-start gap-2">
                                                 <div>
-                                                    <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
-                                                        {{ curso.evento }}
-                                                    </a>
+                                                    {% if user.is_superuser %}
+                                                        <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
+                                                            {{ curso.evento }}
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="fw-semibold text-body">{{ curso.evento }}</span>
+                                                    {% endif %}
                                                     <div class="small text-body-secondary">
                                                         {{ curso.fecha|date:"d/m/Y" }} · {{ curso.ciudad }} ({{ curso.pais }})
                                                     </div>
@@ -421,34 +435,34 @@
                                         class="ogkke-data-table"
                                         data-ogkke-table
                                         data-page-size="10"
-                                        style="--label-2: 'Grado'; --label-3: 'Exámenes DAN';"
+                                        style="--label-2: 'Grado'; --label-3: 'Último examen';"
                                     >
                                         <thead>
                                             <tr>
                                                 <th scope="col">Nombre</th>
                                                 <th scope="col">Grado</th>
-                                                <th scope="col">Exámenes DAN</th>
+                                                <th scope="col">Último examen</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for alm in cintos_negros_dojo %}
                                                 <tr>
                                                     <th scope="row">
-                                                        <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
-                                                           href="{% url 'administracion:alumno_detalle' pk=alm.id %}">
+                                                        {% if user.is_superuser %}
+                                                            <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                                               href="{% url 'administracion:alumno_detalle' pk=alm.id %}">
+                                                                {{ alm.apellidos }}, {{ alm.nombre }}
+                                                            </a>
+                                                        {% else %}
                                                             {{ alm.apellidos }}, {{ alm.nombre }}
-                                                        </a>
+                                                        {% endif %}
                                                     </th>
                                                     <td data-order="{{ alm.grado|default:0 }}">{{ alm.grado }}º DAN</td>
-                                                    <td>
-                                                        {% if alm.examenes_ordenados %}
-                                                            <div class="d-flex flex-wrap gap-1">
-                                                                {% for ex in alm.examenes_ordenados %}
-                                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis" title="{{ ex.evento.evento }}">
-                                                                        {{ ex.grado }}º DAN ({{ ex.evento.fecha|date:"d/m/Y" }})
-                                                                    </span>
-                                                                {% endfor %}
-                                                            </div>
+                                                    <td data-order="{{ alm.fecha_ultimo_examen|date:'Y-m-d'|default:'' }}">
+                                                        {% if alm.fecha_ultimo_examen %}
+                                                            <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                                                                {{ alm.fecha_ultimo_examen|date:"d/m/Y" }}
+                                                            </span>
                                                         {% else %}
                                                             <span class="text-body-secondary small">—</span>
                                                         {% endif %}
@@ -484,7 +498,7 @@
                                 {% endif %}
                             </p>
                         </div>
-                        {% if mi_alumno_dan %}
+                        {% if user.is_superuser and mi_alumno_dan %}
                             <a href="{% url 'administracion:alumno_detalle' pk=mi_alumno_dan.id %}" class="btn btn-outline-warning btn-sm">
                                 <i class="bi bi-bar-chart-steps me-1" aria-hidden="true"></i>Ver mi ficha completa y gráfica DAN
                             </a>
@@ -566,9 +580,13 @@
                                             {% for curso in mis_cursillos_asistidos %}
                                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
                                                     <div>
-                                                        <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
-                                                            {{ curso.evento }}
-                                                        </a>
+                                                        {% if user.is_superuser %}
+                                                            <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
+                                                                {{ curso.evento }}
+                                                            </a>
+                                                        {% else %}
+                                                            <span class="fw-semibold text-body">{{ curso.evento }}</span>
+                                                        {% endif %}
                                                         <div class="small text-body-secondary">
                                                             {{ curso.ciudad }} ({{ curso.pais }})
                                                         </div>

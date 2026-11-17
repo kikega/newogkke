@@ -14,11 +14,12 @@ from django.core.cache import cache
 
 # App administracion
 from administracion.models import Alumno, Dojo, Peticion
+from administracion.permissions import InstructorOrStaffRequiredMixin
 
 # Utilidades
 from administracion.utils import enviar_correo_html
 
-class PeticionView(LoginRequiredMixin, TemplateView):
+class PeticionView(InstructorOrStaffRequiredMixin, TemplateView):
     """
     Vista para realizar peticiones
     Procesa el formulario de petición y crea la petición en la BBDD.

@@ -15,6 +15,7 @@ from django.core.exceptions import PermissionDenied
 # App administracion
 from administracion.models import Alumno, Cursillo, Dojo, Tablon, obtener_tablon_intercalado
 from administracion.permissions import (
+    InstructorOrStaffRequiredMixin,
     obtener_alumno_instructor,
     obtener_dojo_usuario,
     usuario_es_instructor_o_staff,
@@ -26,7 +27,7 @@ from administracion.forms import TablonNuevoForm, TablonEditForm
 # Utilidades
 from administracion.utils import enviar_correo_html, validar_cadena, is_ajax
 
-class TablonView(LoginRequiredMixin, TemplateView):
+class TablonView(InstructorOrStaffRequiredMixin, TemplateView):
     """
     Creación de información en el tablón de anuncios de cada dojo
     """

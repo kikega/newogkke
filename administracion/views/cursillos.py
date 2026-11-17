@@ -25,7 +25,9 @@ from django.urls import reverse_lazy
 from administracion.models import Alumno, AlumnoColor, Cursillo, Examen
 from administracion.permissions import (
     InstructorOrStaffRequiredMixin,
+    es_alumno_solo_portal_dojo,
     obtener_alumno_instructor,
+    obtener_dojo_usuario,
     obtener_perfiles_alumno,
 )
 
@@ -73,9 +75,9 @@ def _resolver_estado_inscripcion_usuario(user, cursillo):
     return False, False
 
 
-class CursilloDetailView(LoginRequiredMixin, DetailView):
+class CursilloDetailView(InstructorOrStaffRequiredMixin, DetailView):
     """
-    Obtenemos el detalle de cada cursillo
+    Obtenemos el detalle de cada cursillo en el Core Nacional (Usuarios Globales)
     Los alumnos que han asistido
     """
 
@@ -130,9 +132,9 @@ class CursoNuevoView(LoginRequiredMixin, CreateView):
         return context
 
 
-class CursilloExaminaListView(LoginRequiredMixin, DetailView):
+class CursilloExaminaListView(InstructorOrStaffRequiredMixin, DetailView):
     """
-    Listado de todos los que se examinan en un cursillo
+    Listado de todos los que se examinan en un cursillo (Usuarios Globales)
     """
 
     model = Cursillo
@@ -157,9 +159,9 @@ class CursilloExaminaListView(LoginRequiredMixin, DetailView):
         return context
 
 
-class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
+class CursilloEstadisticasView(InstructorOrStaffRequiredMixin, DetailView):
     """
-    Obtiene las estadisticas de todos los cintos negros de cada Dojo que han asistido al cursillo
+    Obtiene las estadisticas de todos los cintos negros de cada Dojo que han asistido al cursillo (Usuarios Globales)
     """
 
     model = Cursillo
@@ -216,6 +218,10 @@ class CursilloInscripcionAlumnoView(LoginRequiredMixin, View):
         def _redirect_target():
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
+            if es_alumno_solo_portal_dojo(request.user):
+                dojo_propio = obtener_dojo_usuario(request.user)
+                if dojo_propio and dojo_propio.slug:
+                    return redirect('administracion:dojo_portal', slug=dojo_propio.slug)
             return redirect('administracion:cursillo_detalle', pk=cursillo.id)
 
         alumno_dan, alumno_color = obtener_perfiles_alumno(request.user)

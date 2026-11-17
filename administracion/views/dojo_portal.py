@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Prefetch
+from django.db.models import OuterRef, Subquery
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -94,16 +94,15 @@ class DojoPortalView(View):
         tablon_particulares_qs = Tablon.objects.for_dojo(dojo).order_by("fecha", "id")
         tablon_qs = obtener_tablon_intercalado(tablon_particulares_qs)
 
-        # Escalafón DAN del Dojo con los exámenes de cada compañero pre-cargados
+        # Escalafón DAN del Dojo con la fecha del último examen realizado por cada compañero
+        ultimo_examen_subquery = (
+            Examen.objects.filter(alumno=OuterRef("pk"))
+            .order_by("-evento__fecha", "-grado")
+            .values("evento__fecha")[:1]
+        )
         cintos_negros = list(
             Alumno.objects.filter(dojo=dojo, instructor=False, activo=True)
-            .prefetch_related(
-                Prefetch(
-                    "examen_set",
-                    queryset=Examen.objects.select_related("evento").order_by("grado", "evento__fecha"),
-                    to_attr="examenes_ordenados",
-                )
-            )
+            .annotate(fecha_ultimo_examen=Subquery(ultimo_examen_subquery))
             .order_by("-grado", "apellidos", "nombre")
         )
 

@@ -433,13 +433,12 @@ class AdministracionSecurityTests(TestCase):
         self.assertNotContains(correo_res, 'jsi18n')
 
     def test_phase3_native_dialogs_rendered_on_core_views(self):
-        """Verifica que las modales del Core se renderizan como <dialog> nativos accesibles."""
-        # Alumno regular: modalCambioPassword + modalInscripcionAlumno
+        """Verifica que las modales del Core y del Portal se renderizan como <dialog> nativos accesibles."""
+        # Alumno regular en el Portal de su Dojo: modalCambioPassword
         self.client.force_login(self.regular_user)
-        detalle_curso = self.client.get(reverse('administracion:cursillo_detalle', kwargs={'pk': self.cursillo.pk}))
-        self.assertContains(detalle_curso, '<dialog class="ogkke-dialog" id="modalCambioPassword"')
-        self.assertContains(detalle_curso, '<dialog class="ogkke-dialog" id="modalInscripcionAlumno"')
-        self.assertContains(detalle_curso, 'command="show-modal"')
+        portal_res = self.client.get(reverse('administracion:dojo_portal', kwargs={'slug': self.dojo.slug}))
+        self.assertContains(portal_res, '<dialog class="ogkke-dialog" id="modalCambioPassword"')
+        self.assertContains(portal_res, 'command="show-modal"')
 
         # Instructor: diálogo de confirmación para eliminar petición sin onclick confirm()
         self.client.force_login(self.instructor_user)
@@ -476,7 +475,7 @@ class AdministracionSecurityTests(TestCase):
         self.instructor_alumno.save()
         Examen.objects.create(alumno=self.instructor_alumno, evento=self.cursillo, grado=7)
 
-        self.client.force_login(self.regular_user)
+        self.client.force_login(self.instructor_user)
         res = self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': self.instructor_alumno.pk}))
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, 'href="#main-content"')
@@ -695,14 +694,19 @@ class AdministracionSecurityTests(TestCase):
         """
         Verifica:
         1. Login de alumno (DAN o Color adulto) redirige automáticamente al portal de su Dojo.
-        2. El alumno no puede acceder a los listados globales ni al portal de otro Dojo.
+        2. El alumno no puede acceder a las vistas del Core (listados ni detalles de alumnos/cursillos/peticiones/actividades/tablon) ni al portal de otro Dojo.
         3. En el portal de su Dojo ve su propio historial (exámenes y cursillos) y a sus
-           compañeros Cintos Negros con la fecha en que se examinaron.
-        4. Puede ver la ficha de un compañero de su mismo Dojo, pero recibe 403 ante un alumno de otro Dojo.
+           compañeros Cintos Negros únicamente con la fecha de su último examen y sin enlaces al Core.
         """
-        from administracion.models import AlumnoColor, GradoKyu
+        cursillo_antiguo = Cursillo.objects.create(
+            evento="Curso Antiguo",
+            descripcion="Curso pasado",
+            lugar="Polideportivo",
+            ciudad="Madrid",
+            fecha=datetime.date(2020, 5, 10),
+        )
 
-        # Compañero Cinto Negro del mismo Dojo con examen registrado
+        # Compañero Cinto Negro del mismo Dojo con dos exámenes registrados (1º DAN en 2020 y 2º DAN hoy)
         companero_dan = Alumno.objects.create(
             nombre="Kenji",
             apellidos="Compañero",
@@ -711,6 +715,7 @@ class AdministracionSecurityTests(TestCase):
             grado=2,
             activo=True,
         )
+        Examen.objects.create(alumno=companero_dan, evento=cursillo_antiguo, grado=1)
         Examen.objects.create(alumno=companero_dan, evento=self.cursillo, grado=2)
 
         # Alumno Cinto Negro de OTRO Dojo
@@ -741,25 +746,48 @@ class AdministracionSecurityTests(TestCase):
         self.assertEqual(other_portal_res.status_code, 302)
         self.assertEqual(other_portal_res.url, expected_portal_url)
 
-        # Vistas globales bloqueadas con 403
+        # Vistas del Core bloqueadas con 403 para alumnos regulares
         self.assertEqual(self.client.get(reverse('administracion:alumnos')).status_code, 403)
         self.assertEqual(self.client.get(reverse('administracion:dojos')).status_code, 403)
         self.assertEqual(self.client.get(reverse('administracion:cursillos')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:cursillo_detalle', kwargs={'pk': self.cursillo.pk})).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:cursillo_examinados', kwargs={'pk': self.cursillo.pk})).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:cursillo_estadisticas', kwargs={'pk': self.cursillo.pk})).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:peticiones')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:actividades')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:tablon')).status_code, 403)
 
-        # 3. En el portal de su Dojo ve los exámenes de sus compañeros y su propio historial
+        # 3. En el portal de su Dojo ve solo la fecha del último examen de sus compañeros y su propio historial sin enlaces al Core
         portal_res = self.client.get(expected_portal_url)
         self.assertEqual(portal_res.status_code, 200)
         self.assertContains(portal_res, 'Compañero, Kenji')
-        self.assertContains(portal_res, f"2º DAN ({self.cursillo.fecha.strftime('%d/%m/%Y')})")
+        self.assertContains(portal_res, self.cursillo.fecha.strftime('%d/%m/%Y'))
+        self.assertNotContains(portal_res, cursillo_antiguo.fecha.strftime('%d/%m/%Y'))
+        self.assertNotContains(portal_res, reverse('administracion:alumno_detalle', kwargs={'pk': companero_dan.pk}))
+        self.assertNotContains(portal_res, reverse('administracion:alumno_detalle', kwargs={'pk': self.instructor_alumno.pk}))
+        self.assertNotContains(portal_res, f'href="{reverse("administracion:cursillo_detalle", kwargs={"pk": self.cursillo.pk})}"')
         self.assertContains(portal_res, 'Mi Historial Técnico')
         self.assertContains(portal_res, 'Examen 1º DAN')
         self.assertContains(portal_res, self.cursillo.evento)
 
-        # 4. Puede ver la ficha de su compañero de Dojo (200), pero NO la de otro Dojo (403)
-        ok_detail = self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': companero_dan.pk}))
-        self.assertEqual(ok_detail.status_code, 200)
-        forbidden_detail = self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': ajeno_dan.pk}))
-        self.assertEqual(forbidden_detail.status_code, 403)
+        # 4. El alumno regular tampoco puede acceder por URL directa a las fichas del Core (403)
+        self.assertEqual(self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': self.regular_alumno.pk})).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': companero_dan.pk})).status_code, 403)
+        self.assertEqual(self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': ajeno_dan.pk})).status_code, 403)
+
+        # 5. El Superusuario tiene acceso total a todos los Dojos, Portales, fichas del Core y secciones
+        self.client.force_login(self.superuser)
+        super_portal = self.client.get(expected_portal_url)
+        self.assertEqual(super_portal.status_code, 200)
+        self.assertContains(super_portal, reverse('administracion:alumno_detalle', kwargs={'pk': companero_dan.pk}))
+        self.assertContains(super_portal, reverse('administracion:alumno_detalle', kwargs={'pk': self.instructor_alumno.pk}))
+        self.assertContains(super_portal, f'href="{reverse("administracion:cursillo_detalle", kwargs={"pk": self.cursillo.pk})}"')
+        self.assertContains(super_portal, reverse('administracion:dojo_detalle', kwargs={'pk': self.dojo.pk}))
+        self.assertEqual(self.client.get(reverse('administracion:dojo_portal', kwargs={'slug': self.other_dojo.slug})).status_code, 200)
+        self.assertEqual(self.client.get(reverse('administracion:alumno_detalle', kwargs={'pk': ajeno_dan.pk})).status_code, 200)
+        self.assertEqual(self.client.get(reverse('administracion:alumnos_color')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('administracion:tablon')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('campeonatos:lista')).status_code, 200)
 
     def test_invitacion_adultos_bloqueo_menores_cursillos_color_y_promocion_1_dan(self):
         """

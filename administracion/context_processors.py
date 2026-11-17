@@ -6,7 +6,7 @@ Los context processors en Django son funciones que toman el objeto request como 
 """
 from django.core.cache import cache
 
-from administracion.models import Peticion
+from administracion.models import Dojo, Peticion
 from administracion.permissions import (
     es_alumno_solo_portal_dojo,
     es_usuario_juez_efimero,
@@ -34,6 +34,7 @@ def common_navbar_context(request):
         'alumno_color_actual': None,
         'current_dojo': getattr(request, 'current_dojo', None),
         'is_dojo_host': getattr(request, 'is_dojo_host', False),
+        'todos_los_dojos': (),
     }
 
     if request.user.is_authenticated:
@@ -57,6 +58,9 @@ def common_navbar_context(request):
         context_data['usuario_es_instructor'] = es_instructor
         context_data['usuario_es_global'] = es_global
         context_data['usuario_es_alumno_portal'] = es_alumno_solo_portal_dojo(request.user)
+
+        if request.user.is_superuser or request.user.is_staff:
+            context_data['todos_los_dojos'] = list(Dojo.objects.only('id', 'nombre', 'slug').order_by('nombre'))
 
         # Contar peticiones pendientes con caché (5 minutos)
         peticiones_totales = cache.get('peticiones_totales')

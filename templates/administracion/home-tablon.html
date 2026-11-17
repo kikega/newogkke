@@ -29,10 +29,12 @@
                 <p class="text-body-secondary small mb-0">Actividades generales de OGKKE y comunicados particulares del dojo.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                {% if puede_gestionar_tablon and dojo_usuario %}
-                    <button type="button" class="btn btn-warning btn-sm fw-semibold" commandfor="modalTablon" command="show-modal">
-                        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Publicar aviso
-                    </button>
+                {% if puede_gestionar_tablon %}
+                    {% if dojo_usuario or todos_los_dojos %}
+                        <button type="button" class="btn btn-warning btn-sm fw-semibold" commandfor="modalTablon" command="show-modal">
+                            <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Publicar aviso
+                        </button>
+                    {% endif %}
                 {% endif %}
                 {% if dojo_usuario and dojo_usuario.slug %}
                     <a href="{% url 'administracion:dojo_portal' slug=dojo_usuario.slug %}" class="btn btn-outline-warning btn-sm">
@@ -110,12 +112,14 @@
                                         <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Eliminar
                                     </button>
                                 </div>
-                            {% elif tab.es_actividad_general and user.is_staff %}
-                                <div class="d-flex gap-2">
-                                    <a href="{% url 'administracion:actividades' %}" class="btn btn-outline-warning btn-sm">
-                                        <i class="bi bi-sliders me-1" aria-hidden="true"></i>Gestionar actividad general
-                                    </a>
-                                </div>
+                            {% elif tab.es_actividad_general %}
+                                {% if user.is_staff or user.is_superuser %}
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'administracion:actividades' %}" class="btn btn-outline-warning btn-sm">
+                                            <i class="bi bi-sliders me-1" aria-hidden="true"></i>Gestionar actividad general
+                                        </a>
+                                    </div>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>

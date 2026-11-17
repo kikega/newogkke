@@ -98,20 +98,37 @@
                         <a class="nav-link d-inline-flex align-items-center gap-1 {% if request.resolver_match.url_name == 'peticiones' %}active{% endif %}"
                            href="{% url 'administracion:peticiones' %}">
                             <span>Peticiones</span>
-                            {% if peticiones_totales > 0 and user.is_staff %}
-                                <span class="badge rounded-pill text-bg-danger">{{ peticiones_totales }}</span>
+                            {% if user.is_staff or user.is_superuser %}
+                                {% if peticiones_totales > 0 %}
+                                    <span class="badge rounded-pill text-bg-danger">{{ peticiones_totales }}</span>
+                                {% endif %}
                             {% endif %}
                         </a>
                     </li>
                     {% endif %}
 
-                    {% if user.is_staff %}
+                    {% if user.is_staff or user.is_superuser %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'correo' or request.resolver_match.url_name == 'actividades' %}active{% endif %}"
+                            <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'correo' or request.resolver_match.url_name == 'actividades' or request.resolver_match.url_name == 'tablon' %}active{% endif %}"
                                href="#" id="navbarDropdownStaff" role="button" data-bs-toggle="dropdown" aria-expanded="false">Staff</a>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdownStaff">
                                 <li><a class="dropdown-item" href="{% url 'administracion:correo' %}"><i class="bi bi-envelope me-2" aria-hidden="true"></i>Correo</a></li>
                                 <li><a class="dropdown-item" href="{% url 'administracion:actividades' %}"><i class="bi bi-calendar-event me-2" aria-hidden="true"></i>Actividades</a></li>
+                                <li><a class="dropdown-item" href="{% url 'administracion:tablon' %}"><i class="bi bi-pin-angle-fill me-2" aria-hidden="true"></i>Tablón de Dojos</a></li>
+                                <li><a class="dropdown-item" href="{% url 'campeonatos:historico' %}"><i class="bi bi-trophy me-2" aria-hidden="true"></i>Histórico Campeonatos</a></li>
+                                {% if todos_los_dojos %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header text-uppercase small">Portales de Dojos</h6></li>
+                                    {% for dj in todos_los_dojos %}
+                                        {% if dj.slug %}
+                                            <li>
+                                                <a class="dropdown-item d-flex justify-content-between align-items-center gap-2" href="{% url 'administracion:dojo_portal' slug=dj.slug %}">
+                                                    <span><i class="bi bi-globe2 me-2 color-texto" aria-hidden="true"></i>{{ dj.nombre }}</span>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2" aria-hidden="true"></i>Administración</a></li>
                             </ul>

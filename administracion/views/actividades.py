@@ -17,6 +17,7 @@ from django.template.loader import render_to_string
 
 # App administracion
 from administracion.models import Actividad
+from administracion.permissions import InstructorOrStaffRequiredMixin
 
 # Formularios
 from administracion.forms import ActividadNuevaForm, ActividadEditForm
@@ -24,7 +25,7 @@ from administracion.forms import ActividadNuevaForm, ActividadEditForm
 # Utilidades
 from administracion.utils import is_ajax
 
-class ActividadesView(LoginRequiredMixin, TemplateView):
+class ActividadesView(InstructorOrStaffRequiredMixin, TemplateView):
     """
     Gestión de actividades
     """

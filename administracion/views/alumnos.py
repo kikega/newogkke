@@ -92,28 +92,16 @@ class AlumnosView(InstructorOrStaffRequiredMixin, ListView):
         return context
 
 
-class AlumnoDetailView(LoginRequiredMixin, DetailView):
+class AlumnoDetailView(InstructorOrStaffRequiredMixin, DetailView):
     """
-    Muestra los detalles de un alumno específico:
+    Muestra los detalles de un alumno específico en el Core Nacional:
     Exámenes ordenados cronológicamente, tiempo de permanencia en cada grado y cursillos asistidos.
-    - Los usuarios globales pueden consultar cualquier ficha.
-    - Los alumnos regulares pueden consultar su propia ficha y la de sus compañeros Cintos Negros de su mismo Dojo.
+    - Exclusivo para Usuarios Globales (Staff, Superusuarios, Instructores y Directiva).
+    - Los alumnos regulares consultan su propio historial directamente dentro del Portal de su Dojo.
     """
     model = Alumno
     template_name = 'administracion/detalle_alumno.html'
     context_object_name = 'alumno'
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-        if not usuario_es_instructor_o_staff(request.user):
-            dojo_usuario = obtener_dojo_usuario(request.user)
-            alumno = self.get_object()
-            if not dojo_usuario or alumno.dojo_id != dojo_usuario.id:
-                raise PermissionDenied(
-                    "Solo tienes acceso al historial de los cintos negros pertenecientes a tu propio Dojo."
-                )
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
