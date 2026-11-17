@@ -11,8 +11,12 @@
 {% block container %}
     <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'administracion:alumnos' %}">Cintos Negros</a></li>
+            {% if usuario_es_alumno_portal and alumno.dojo.slug %}
+                <li class="breadcrumb-item"><a href="{% url 'administracion:dojo_portal' slug=alumno.dojo.slug %}">Portal {{ alumno.dojo.nombre }}</a></li>
+            {% else %}
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'administracion:alumnos' %}">Cintos Negros</a></li>
+            {% endif %}
             <li class="breadcrumb-item active" aria-current="page">{{ alumno.nombre }} {{ alumno.apellidos }}</li>
         </ol>
     </nav>
@@ -62,10 +66,19 @@
                         <p class="mb-0">
                             <strong>Dojo:</strong>
                             {% if alumno.dojo %}
-                                <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
-                                   href="{% url 'administracion:dojo_detalle' pk=alumno.dojo.id %}">
-                                    {{ alumno.dojo }}
-                                </a>
+                                {% if usuario_es_global %}
+                                    <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                       href="{% url 'administracion:dojo_detalle' pk=alumno.dojo.id %}">
+                                        {{ alumno.dojo }}
+                                    </a>
+                                {% elif alumno.dojo.slug %}
+                                    <a class="link-underline link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+                                       href="{% url 'administracion:dojo_portal' slug=alumno.dojo.slug %}">
+                                        {{ alumno.dojo }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-body">{{ alumno.dojo }}</span>
+                                {% endif %}
                             {% else %}
                                 <span class="text-body">Sin asignar</span>
                             {% endif %}
@@ -78,6 +91,26 @@
                                 <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis ms-1">Inactivo</span>
                             {% endif %}
                         </p>
+                        {% if puede_gestionar_acceso %}
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="small mb-2">
+                                    <strong>Acceso al Portal del Dojo:</strong>
+                                    {% if alumno.es_menor_edad %}
+                                        <span class="badge text-bg-secondary ms-1">Menor de 18 años (Gestión por Instructor)</span>
+                                    {% elif alumno.usuario %}
+                                        <span class="badge bg-success-subtle text-success-emphasis ms-1">{{ alumno.usuario.email }}</span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary ms-1">Sin cuenta activa</span>
+                                    {% endif %}
+                                </div>
+                                {% if not alumno.es_menor_edad %}
+                                    <button type="button" class="btn btn-outline-warning btn-sm" commandfor="modalInvitarUsuarioDan" command="show-modal">
+                                        <i class="bi bi-envelope-check me-1" aria-hidden="true"></i>
+                                        {% if alumno.usuario %}Reenviar invitación / Cambiar email{% else %}Dar acceso / Invitar al Portal{% endif %}
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-footer text-center text-body-secondary small py-3">
@@ -141,6 +174,67 @@
             {% endif %}
         </div>
     </section>
+
+    <!-- SECCIÓN DE CURSILLOS ASISTIDOS -->
+    <section class="row justify-content-center mt-5 mb-4">
+        <div class="col-lg-10 col-md-11">
+            <h2 class="h3 text-center mb-4 color-texto">Cursillos Asistidos</h2>
+            {% if cursillos_asistidos %}
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for curso in cursillos_asistidos %}
+                                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2 px-0">
+                                    <div>
+                                        <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
+                                            {{ curso.evento }}
+                                        </a>
+                                        <div class="small text-body-secondary">
+                                            {% if curso.lugar %}{{ curso.lugar }} · {% endif %}{{ curso.ciudad }} ({{ curso.pais }})
+                                        </div>
+                                    </div>
+                                    <span class="badge text-bg-secondary">{{ curso.fecha|date:"d-m-Y" }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card shadow-sm">
+                    <div class="card-body py-4 text-center text-body-secondary">
+                        No figuran asistencias a cursillos registradas para este practicante.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if puede_gestionar_acceso and not alumno.es_menor_edad %}
+        <dialog class="ogkke-dialog" id="modalInvitarUsuarioDan" closedby="any" aria-labelledby="modalInvitarUsuarioDanLabel">
+            <div class="ogkke-dialog-header">
+                <h2 class="h5 mb-0 color-texto" id="modalInvitarUsuarioDanLabel">Invitar al Portal del Dojo · {{ alumno.nombre }} {{ alumno.apellidos }}</h2>
+                <button type="button" class="btn-close" commandfor="modalInvitarUsuarioDan" command="close" aria-label="Cerrar"></button>
+            </div>
+            <form action="{% url 'administracion:alumno_invitar_usuario' pk=alumno.pk %}" method="post">
+                {% csrf_token %}
+                <div class="ogkke-dialog-body">
+                    <p class="small text-body-secondary mb-3">
+                        Se creará o actualizará la cuenta del alumno y se le enviará un correo con un enlace seguro para establecer su contraseña y acceder al portal de <strong>{{ alumno.dojo.nombre }}</strong>.
+                    </p>
+                    <div class="mb-2">
+                        <label class="form-label" for="{{ form_invitar_usuario.email.id_for_label }}">Correo electrónico del alumno *</label>
+                        {{ form_invitar_usuario.email }}
+                    </div>
+                </div>
+                <div class="ogkke-dialog-footer">
+                    <button type="button" class="btn btn-outline-secondary" commandfor="modalInvitarUsuarioDan" command="close">Cancelar</button>
+                    <button type="submit" class="btn btn-warning fw-semibold">
+                        <i class="bi bi-send-check-fill me-1" aria-hidden="true"></i>Enviar invitación
+                    </button>
+                </div>
+            </form>
+        </dialog>
+    {% endif %}
 {% endblock container %}
 
 {% block script_js %}

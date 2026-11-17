@@ -6,13 +6,21 @@ import json
 
 # Django
 
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.urls import reverse
 
 from django.db.models import Count, Q
 
 # App administracion
 from administracion.models import Alumno, Cursillo, Dojo, Actividad
+from administracion.permissions import (
+    es_usuario_juez_efimero,
+    obtener_dojo_usuario,
+    obtener_tatamis_activos_juez,
+    usuario_es_instructor_o_staff,
+)
 
 def home(request):
     """
@@ -20,7 +28,7 @@ def home(request):
     - Si la petición llega por el subdominio o dominio propio de un Dojo activo,
       sirve directamente su Portal de Dojo autónomo.
     - Si llega por el dominio del Core Nacional, requiere autenticación y muestra
-      el panel nacional de OGKKE.
+      el panel nacional de OGKKE a usuarios globales, o redirige al alumno al portal de su Dojo.
     """
     if getattr(request, "is_dojo_host", False) and getattr(request, "current_dojo", None):
         from administracion.views.dojo_portal import DojoPortalView
@@ -32,8 +40,22 @@ def home(request):
 def _core_home(request):
     """
     Home del Core Nacional de la aplicación.
-    Devuelve datos globales agregados y mapa de alumnos por grado.
+    Si el usuario autenticado es un alumno (Cinto Negro o Color), lo redirige
+    automáticamente al portal de su Dojo.
     """
+    user = request.user
+    if es_usuario_juez_efimero(user):
+        tatami_activo = obtener_tatamis_activos_juez(user).first()
+        if tatami_activo:
+            return redirect(reverse('campeonatos:tatami_live', kwargs={'tatami_id': tatami_activo.id}))
+        raise PermissionDenied("Acceso restringido a su Tatami activo.")
+
+    if not usuario_es_instructor_o_staff(user):
+        dojo_usuario = obtener_dojo_usuario(user)
+        if dojo_usuario and dojo_usuario.slug:
+            return redirect(reverse('administracion:dojo_portal', kwargs={'slug': dojo_usuario.slug}))
+        raise PermissionDenied("Acceso restringido al personal técnico e instructores de OGKKE.")
+
     hoy = datetime.date.today()
     actividades = Actividad.objects.filter(fecha__gte=hoy).order_by('fecha')
     cn = Alumno.objects.count()

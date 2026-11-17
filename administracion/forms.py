@@ -188,7 +188,18 @@ class CursoForm(forms.ModelForm):
 
     class Meta:
         model = Cursillo
-        fields = ['evento', 'descripcion', 'lugar', 'ciudad', 'pais', 'fecha', 'internacional', 'examenes', 'circular']
+        fields = [
+            'evento',
+            'descripcion',
+            'lugar',
+            'ciudad',
+            'pais',
+            'fecha',
+            'internacional',
+            'examenes',
+            'abierto_cintos_color',
+            'circular',
+        ]
         widgets = {
             'evento': forms.TextInput(attrs={"class": "form-control mt-2 mb-3"}),
             'descripcion': forms.Textarea(attrs={"class": "form-control mt-2 mb-3", "rows": 4}),
@@ -198,6 +209,7 @@ class CursoForm(forms.ModelForm):
             'fecha': forms.DateInput(attrs={"class": "form-control mt-2 mb-3", "type": "date"}),
             'internacional': forms.CheckboxInput(attrs={"class": "form-check-input"}),
             'examenes': forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            'abierto_cintos_color': forms.CheckboxInput(attrs={"class": "form-check-input"}),
             'circular': forms.FileInput(attrs={"class": "form-control mt-2 mb-3", "accept": ".pdf"}),
         }
         labels = {
@@ -209,6 +221,7 @@ class CursoForm(forms.ModelForm):
             'fecha': 'Fecha',
             'internacional': '¿Es internacional?',
             'examenes': '¿Hay exámenes?',
+            'abierto_cintos_color': '¿Abierto también a Cinturones de Color (Kyu)?',
             'circular': 'Circular (PDF)',
         }
 
@@ -216,14 +229,23 @@ class CursoForm(forms.ModelForm):
 class InscripcionAlumnosForm(forms.Form):
     """
     Formulario para la inscripción de alumnos a un cursillo por parte de un instructor.
+    Soporta Cinturones Negros (Alumno) y, cuando el cursillo está abierto a todos los grados,
+    también Cinturones de Color (AlumnoColor).
     """
 
     alumnos = forms.ModelMultipleChoiceField(
         queryset=Alumno.objects.none(),
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input ogkke-check-input'}),
-        label="Alumnos inscritos en el cursillo",
+        label="Cinturones Negros (DAN) inscritos",
         required=False,
-        help_text="Marca los alumnos que asistirán al cursillo y desmarca quienes causen baja."
+        help_text="Marca los cinturones negros que asistirán al cursillo y desmarca quienes causen baja."
+    )
+    alumnos_color = forms.ModelMultipleChoiceField(
+        queryset=AlumnoColor.objects.none(),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input ogkke-check-input'}),
+        label="Cinturones de Color (Kyu) inscritos",
+        required=False,
+        help_text="Marca los alumnos de cinturón de color (incluidos menores gestionados por el Dojo) que asistirán al cursillo."
     )
 
     def __init__(self, *args, **kwargs):
@@ -231,7 +253,7 @@ class InscripcionAlumnosForm(forms.Form):
         cursillo = kwargs.pop('cursillo', None)
         super().__init__(*args, **kwargs)
 
-        if user and user.is_authenticated:
+        if user and user.is_authenticated and cursillo is not None:
             if user.is_staff or user.is_superuser:
                 alumnos_queryset = Alumno.objects.filter(
                     instructor=False,
@@ -247,9 +269,22 @@ class InscripcionAlumnosForm(forms.Form):
                         + (f" · {obj.grado}º DAN" if obj.grado else "")
                     )
                 )
+
+                if cursillo.abierto_cintos_color:
+                    color_qs = (
+                        AlumnoColor.objects.filter(activo=True)
+                        .select_related('dojo', 'grado_actual')
+                        .order_by('dojo__nombre', 'apellidos', 'nombre')
+                    )
+                    self.fields['alumnos_color'].queryset = color_qs
+                    inscritos_color_ids = cursillo.alumnos_color.values_list('id', flat=True)
+                    self.fields['alumnos_color'].initial = color_qs.filter(id__in=inscritos_color_ids)
+                    self.fields['alumnos_color'].label_from_instance = (
+                        lambda obj: f"[{obj.dojo.nombre}] {obj.apellidos}, {obj.nombre} · Cinturón {obj.grado_actual.nombre}"
+                    )
             else:
                 try:
-                    instructor = Alumno.objects.get(usuario=user)
+                    instructor = Alumno.objects.get(usuario=user, instructor=True)
                     dojo_instructor = instructor.dojo
                     alumnos_queryset = Alumno.objects.filter(
                         dojo=dojo_instructor,
@@ -266,8 +301,25 @@ class InscripcionAlumnosForm(forms.Form):
                             + (f" · {obj.grado}º DAN" if obj.grado else "")
                         )
                     )
+
+                    if cursillo.abierto_cintos_color:
+                        color_qs = (
+                            AlumnoColor.objects.filter(dojo=dojo_instructor, activo=True)
+                            .select_related('grado_actual')
+                            .order_by('apellidos', 'nombre')
+                        )
+                        self.fields['alumnos_color'].queryset = color_qs
+                        inscritos_color_ids = cursillo.alumnos_color.values_list('id', flat=True)
+                        self.fields['alumnos_color'].initial = color_qs.filter(id__in=inscritos_color_ids)
+                        self.fields['alumnos_color'].label_from_instance = (
+                            lambda obj: f"{obj.apellidos}, {obj.nombre} · Cinturón {obj.grado_actual.nombre}"
+                        )
                 except Alumno.DoesNotExist:
                     self.fields['alumnos'].queryset = Alumno.objects.none()
+                    self.fields['alumnos_color'].queryset = AlumnoColor.objects.none()
+
+        if not cursillo or not cursillo.abierto_cintos_color:
+            self.fields.pop('alumnos_color', None)
 
 
 class DojoPortalConfigForm(forms.ModelForm):
@@ -433,5 +485,52 @@ class AscensoGradoKyuForm(forms.Form):
         }),
         label="Observaciones",
     )
+
+
+class InvitarUsuarioAlumnoForm(forms.Form):
+    """
+    Formulario para que el Instructor del Dojo o el Staff activen/inviten a un alumno
+    mayor de edad (>= 18 años) al Portal de su Dojo enviándole el correo de creación de contraseña.
+    """
+
+    email = forms.EmailField(
+        label="Correo electrónico del alumno",
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'alumno@ejemplo.com',
+            'autocomplete': 'email',
+            'autocorrect': 'off',
+            'autocapitalize': 'off',
+            'spellcheck': 'false',
+            'required': True,
+        }),
+    )
+
+
+class PromocionPrimerDanForm(forms.Form):
+    """
+    Formulario para promocionar a un Alumno de Cinturón de Color (Marrón) a Cinturón Negro 1º DAN (Alumno),
+    traspasando su cuenta de Usuario y su historial de cursillos asistidos.
+    """
+
+    cursillo_examen = forms.ModelChoiceField(
+        queryset=Cursillo.objects.filter(examenes=True).order_by('-fecha'),
+        required=False,
+        empty_label="-- Sin cursillo asociado (registrar solo alta en 1º DAN) --",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Cursillo oficial donde aprobó 1º DAN",
+        help_text="Si seleccionas el cursillo con exámenes, se creará automáticamente su acta de Examen de 1º DAN.",
+    )
+    foto = forms.ImageField(
+        required=False,
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'gif', 'webp'])],
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.jpg,.jpeg,.png,.gif,.webp',
+        }),
+        label="Fotografía para ficha de Cinturón Negro (opcional)",
+    )
+
 
 

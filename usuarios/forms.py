@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm
 
 # Modelos
-from administracion.models import Alumno, Dojo
+from administracion.models import Alumno, AlumnoColor, Dojo
 
 # Obtiene la clase del modelo de usuario que está configurado
 # como el modelo de usuario personalizado en la aplicación
@@ -92,15 +92,30 @@ class CustomPasswordResetForm(PasswordResetForm):
 
         valid_users = []
         for user in active_users:
+            matched = False
             try:
                 alumno = Alumno.objects.select_related('dojo').get(usuario=user)
                 if (alumno.nombre.strip().lower() == nombre and
                     alumno.apellidos.strip().lower() == apellidos and
                     alumno.dojo == dojo):
                     valid_users.append(user)
+                    matched = True
             except Alumno.DoesNotExist:
-                if user.externo:
-                    valid_users.append(user)
+                pass
+
+            if not matched:
+                try:
+                    alumno_color = AlumnoColor.objects.select_related('dojo').get(usuario=user)
+                    if (alumno_color.nombre.strip().lower() == nombre and
+                        alumno_color.apellidos.strip().lower() == apellidos and
+                        alumno_color.dojo == dojo):
+                        valid_users.append(user)
+                        matched = True
+                except AlumnoColor.DoesNotExist:
+                    pass
+
+            if not matched and user.externo:
+                valid_users.append(user)
 
         return valid_users
 

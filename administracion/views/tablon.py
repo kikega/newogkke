@@ -13,7 +13,12 @@ from django.template.loader import render_to_string
 from django.core.exceptions import PermissionDenied
 
 # App administracion
-from administracion.models import Alumno, Cursillo, Dojo, Tablon
+from administracion.models import Alumno, Cursillo, Dojo, Tablon, obtener_tablon_intercalado
+from administracion.permissions import (
+    obtener_alumno_instructor,
+    obtener_dojo_usuario,
+    usuario_es_instructor_o_staff,
+)
 
 # Formularios
 from administracion.forms import TablonNuevoForm, TablonEditForm
@@ -31,29 +36,34 @@ class TablonView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        dojo_alumno = None
-        es_instructor = False
-        try:
-            alumno = Alumno.objects.select_related('dojo').get(usuario=user)
-            dojo_alumno = alumno.dojo
-            es_instructor = alumno.instructor
-        except Alumno.DoesNotExist:
-            pass
+        dojo_alumno = obtener_dojo_usuario(user)
+        es_instructor = obtener_alumno_instructor(user) is not None
+        es_global = usuario_es_instructor_o_staff(user)
 
         dojo_param = self.request.GET.get('dojo')
         current_dojo = getattr(self.request, 'current_dojo', None)
-        if dojo_param and dojo_param.isdigit():
+        if not es_global and dojo_alumno is not None:
+            # Los alumnos regulares solo pueden ver el tablón de su propio Dojo
+            dojo = dojo_alumno
+            tablon_particulares_qs = Tablon.objects.for_dojo(dojo_alumno)
+        elif dojo_param and dojo_param.isdigit():
             dojo = get_object_or_404(Dojo, pk=int(dojo_param))
-            tablon_qs = Tablon.objects.for_dojo(dojo)
+            tablon_particulares_qs = Tablon.objects.for_dojo(dojo)
         elif current_dojo is not None:
             dojo = current_dojo
-            tablon_qs = Tablon.objects.for_dojo(current_dojo)
+            tablon_particulares_qs = Tablon.objects.for_dojo(current_dojo)
         elif dojo_alumno is not None:
             dojo = dojo_alumno
-            tablon_qs = Tablon.objects.for_dojo(dojo_alumno)
+            tablon_particulares_qs = Tablon.objects.for_dojo(dojo_alumno)
         else:
             dojo = None
-            tablon_qs = Tablon.objects.select_related('dojo').all() if (user.is_staff or user.is_superuser) else Tablon.objects.none()
+            tablon_particulares_qs = (
+                Tablon.objects.select_related('dojo').all()
+                if (user.is_staff or user.is_superuser)
+                else Tablon.objects.none()
+            )
+
+        tablon_intercalado = obtener_tablon_intercalado(tablon_particulares_qs)
 
         puede_gestionar = bool(
             user.is_staff
@@ -63,7 +73,8 @@ class TablonView(LoginRequiredMixin, TemplateView):
         )
 
         context["dojo_usuario"] = dojo
-        context["tablon"] = tablon_qs
+        context["tablon"] = tablon_intercalado
+        context["tablon_particulares"] = tablon_particulares_qs
         context["usuario_es_instructor"] = es_instructor
         context["puede_gestionar_tablon"] = puede_gestionar
         context["form"] = TablonNuevoForm()

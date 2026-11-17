@@ -12,14 +12,15 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from django.db.models import Count
 
 # App administracion
-from administracion.models import Alumno, Dojo, Peticion, Tablon
+from administracion.models import Alumno, Dojo, Peticion, Tablon, obtener_tablon_intercalado
+from administracion.permissions import InstructorOrStaffRequiredMixin, obtener_alumno_instructor
 from administracion.views.dojo_portal import usuario_puede_gestionar_dojo
 
 # Formularios
 from administracion.forms import DojoPortalConfigForm, TablonNuevoForm
 
-class DojosView(LoginRequiredMixin, ListView):
-    """Listado de gimnasios de la asociación"""
+class DojosView(InstructorOrStaffRequiredMixin, ListView):
+    """Listado de gimnasios de la asociación (Solo Usuarios Globales)"""
 
     template_name = 'administracion/dojos.html'
     model = Dojo
@@ -35,9 +36,9 @@ class DojosView(LoginRequiredMixin, ListView):
         return context
 
 
-class DojoDetailView(LoginRequiredMixin, DetailView):
+class DojoDetailView(InstructorOrStaffRequiredMixin, DetailView):
     """
-    Detalle de un Dojo
+    Detalle de un Dojo en el Core Nacional (Solo Usuarios Globales)
     """
 
     template_name = 'administracion/detalle_dojo.html'
@@ -60,11 +61,7 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
 
         # Obtenemos datos del usuario logado para añadirlo al contexto
         user = self.request.user
-        # Obtenemos el dato si es instructor
-        es_instructor = False
-        if user.is_authenticated:
-            es_instructor = user.groups.filter(name='Instructor').exists()
-        # Añades la variable booleana al contexto
+        es_instructor = obtener_alumno_instructor(user) is not None
         context['usuario_es_instructor'] = es_instructor
 
         # Obtenemos todos los cintos negros del dojo
@@ -96,9 +93,13 @@ class DojoDetailView(LoginRequiredMixin, DetailView):
         peticiones = Peticion.objects.for_dojo(dojo_actual).filter(finalizada=False)
         numero_peticiones = peticiones.count()
         puede_gestionar_dojo = usuario_puede_gestionar_dojo(user, dojo_actual)
+        tablon_particulares_qs = Tablon.objects.for_dojo(dojo_actual)
+        tablon_intercalado = obtener_tablon_intercalado(tablon_particulares_qs)
         context['peticiones'] = peticiones
         context['numero_peticiones'] = numero_peticiones
-        context['numero_anuncios_tablon'] = Tablon.objects.for_dojo(dojo_actual).count()
+        context['tablon'] = tablon_intercalado
+        context['numero_anuncios_tablon'] = len(tablon_intercalado)
+        context['numero_anuncios_particulares_tablon'] = tablon_particulares_qs.count()
         context["form"] = TablonNuevoForm()
         context["puede_gestionar_dojo"] = puede_gestionar_dojo
         context["config_form"] = DojoPortalConfigForm(instance=dojo_actual) if puede_gestionar_dojo else None

@@ -1,5 +1,5 @@
 """
-Vistas relacionadas con la gestión de los alumnos
+Vistas relacionadas con la gestión de los alumnos (Cinturones Negros DAN)
 """
 
 # Python
@@ -7,16 +7,30 @@ import datetime
 import json
 
 # Django
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
+from django.views.generic import ListView, DetailView
 
 # App administracion
+from administracion.forms import InvitarUsuarioAlumnoForm
 from administracion.models import Alumno, Examen
+from administracion.permissions import (
+    InstructorOrStaffRequiredMixin,
+    obtener_dojo_instructor,
+    obtener_dojo_usuario,
+    usuario_es_instructor_o_staff,
+    usuario_es_staff_asociacion,
+)
+from administracion.utils import invitar_o_vincular_usuario_alumno
 
-class AlumnosView(LoginRequiredMixin, ListView):
+
+class AlumnosView(InstructorOrStaffRequiredMixin, ListView):
     """
-    Vista de alumnos por grado
+    Vista global de alumnos por grado DAN (Solo Usuarios Globales: Staff, Instructores y Directiva)
     """
     model = Alumno
     template_name = 'administracion/alumnos.html'
@@ -81,11 +95,25 @@ class AlumnosView(LoginRequiredMixin, ListView):
 class AlumnoDetailView(LoginRequiredMixin, DetailView):
     """
     Muestra los detalles de un alumno específico:
-    Exámenes ordenados cronológicamente y tiempo de permanencia en cada grado.
+    Exámenes ordenados cronológicamente, tiempo de permanencia en cada grado y cursillos asistidos.
+    - Los usuarios globales pueden consultar cualquier ficha.
+    - Los alumnos regulares pueden consultar su propia ficha y la de sus compañeros Cintos Negros de su mismo Dojo.
     """
     model = Alumno
     template_name = 'administracion/detalle_alumno.html'
     context_object_name = 'alumno'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not usuario_es_instructor_o_staff(request.user):
+            dojo_usuario = obtener_dojo_usuario(request.user)
+            alumno = self.get_object()
+            if not dojo_usuario or alumno.dojo_id != dojo_usuario.id:
+                raise PermissionDenied(
+                    "Solo tienes acceso al historial de los cintos negros pertenecientes a tu propio Dojo."
+                )
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -112,15 +140,21 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
         context['anios'] = anios
         context['total_anios'] = sum(anios)
         context['examenes_anios'] = list(zip(examenes, anios))
+        context['cursillos_asistidos'] = alumno.cursillo_set.all().order_by('-fecha')
 
         # Cálculo exacto de la edad
-        if alumno.fecha_nacimiento:
-            edad = hoy.year - alumno.fecha_nacimiento.year - (
-                (hoy.month, hoy.day) < (alumno.fecha_nacimiento.month, alumno.fecha_nacimiento.day)
-            )
-        else:
-            edad = 0
+        edad = alumno.edad
         context['edad'] = edad
+
+        user = self.request.user
+        puede_gestionar_acceso = bool(
+            usuario_es_staff_asociacion(user)
+            or (obtener_dojo_instructor(user) == alumno.dojo)
+        )
+        context['puede_gestionar_acceso'] = puede_gestionar_acceso
+        context['form_invitar_usuario'] = InvitarUsuarioAlumnoForm(
+            initial={'email': alumno.usuario.email if alumno.usuario else ''}
+        )
 
         # Datos del gráfico de años en cada grado
         data_json = json.dumps({
@@ -131,5 +165,46 @@ class AlumnoDetailView(LoginRequiredMixin, DetailView):
         context['data_json'] = data_json
 
         return context
+
+
+class AlumnoInvitarUsuarioView(InstructorOrStaffRequiredMixin, View):
+    """
+    Permite al Instructor titular del Dojo o al Staff activar/invitar a un Alumno (Cinto Negro)
+    mayor de edad enviándole por email el enlace para establecer su contraseña.
+    """
+
+    def post(self, request, pk):
+        alumno = get_object_or_404(Alumno.objects.select_related('dojo', 'usuario'), pk=pk)
+        es_staff = usuario_es_staff_asociacion(request.user)
+        dojo_instructor = obtener_dojo_instructor(request.user)
+
+        if not es_staff and dojo_instructor != alumno.dojo:
+            raise PermissionDenied("No tienes permiso para gestionar el acceso de alumnos de otro Dojo.")
+
+        if alumno.es_menor_edad:
+            messages.error(
+                request,
+                "Los menores de 18 años no pueden tener cuenta de acceso en la aplicación; sus gestiones las realiza el instructor del Dojo.",
+            )
+            return redirect('administracion:alumno_detalle', pk=alumno.pk)
+
+        form = InvitarUsuarioAlumnoForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                invitar_o_vincular_usuario_alumno(alumno, email, request)
+                messages.success(
+                    request,
+                    f"Se ha activado la cuenta y enviado el correo de invitación a {email} para acceder al portal de {alumno.dojo.nombre}.",
+                )
+            except ValidationError as exc:
+                messages.error(request, "; ".join(exc.messages))
+            except Exception as exc:
+                messages.error(request, f"Se vinculó la cuenta pero ocurrió un error al enviar el correo: {exc}")
+        else:
+            messages.error(request, "Introduce una dirección de correo electrónico válida.")
+
+        return redirect('administracion:alumno_detalle', pk=alumno.pk)
+
 
 

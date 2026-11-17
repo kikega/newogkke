@@ -22,6 +22,7 @@ urlpatterns = [
     # Alumnos (Cinturones Negros DAN)
     path("alumnos/", alumnos_views.AlumnosView.as_view(), name="alumnos"),
     path("alumnos/<int:pk>/", alumnos_views.AlumnoDetailView.as_view(), name="alumno_detalle"),
+    path("alumnos/<int:pk>/invitar-usuario/", alumnos_views.AlumnoInvitarUsuarioView.as_view(), name="alumno_invitar_usuario"),
     path("alumnos/grado/<int:grado>/", alumnos_views.AlumnosView.as_view(), name="alumnos_grado"),
     # Alumnos de Cinturón de Color (Kyu y Menores - Aislamiento estricto RGPD)
     path("alumnos-color/", alumnos_color_views.AlumnosColorListView.as_view(), name="alumnos_color"),
@@ -29,6 +30,8 @@ urlpatterns = [
     path("alumnos-color/<uuid:codigo>/", alumnos_color_views.AlumnoColorDetailView.as_view(), name="alumno_color_detalle"),
     path("alumnos-color/<uuid:codigo>/editar/", alumnos_color_views.AlumnoColorUpdateView.as_view(), name="alumno_color_editar"),
     path("alumnos-color/<uuid:codigo>/ascenso/", alumnos_color_views.AlumnoColorAscensoView.as_view(), name="alumno_color_ascenso"),
+    path("alumnos-color/<uuid:codigo>/invitar-usuario/", alumnos_color_views.AlumnoColorInvitarUsuarioView.as_view(), name="alumno_color_invitar_usuario"),
+    path("alumnos-color/<uuid:codigo>/promocionar-dan/", alumnos_color_views.AlumnoColorPromocionDanView.as_view(), name="alumno_color_promocionar_dan"),
     path("alumnos-color/<uuid:codigo>/eliminar/", alumnos_color_views.AlumnoColorDeleteView.as_view(), name="alumno_color_eliminar"),
     # Dojos
     path("dojos/", dojos_views.DojosView.as_view(), name="dojos"),

@@ -9,8 +9,9 @@ from django.views.generic import ListView
 
 # App administracion
 from administracion.models import MiembroDirectiva
+from administracion.permissions import InstructorOrStaffRequiredMixin
 
-class DirectivaView(LoginRequiredMixin, ListView):
+class DirectivaView(InstructorOrStaffRequiredMixin, ListView):
     """Vista del equipo directivo"""
     model = MiembroDirectiva
     template_name = 'administracion/organigrama.html'

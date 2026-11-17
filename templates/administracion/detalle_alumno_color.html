@@ -79,12 +79,32 @@
                     <dt class="col-6 text-body-secondary">Ref. Expediente:</dt>
                     <dd class="col-6"><code>{{ alumno_color.referencia_consentimiento }}</code></dd>
                     {% endif %}
+
+                    <dt class="col-6 text-body-secondary">Acceso Portal Dojo:</dt>
+                    <dd class="col-6">
+                        {% if alumno_color.es_menor_edad %}
+                            <span class="badge text-bg-secondary">Menor de edad (Sin cuenta directa)</span>
+                        {% elif alumno_color.usuario %}
+                            <span class="badge bg-success-subtle text-success-emphasis">{{ alumno_color.usuario.email }}</span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">Sin cuenta activa</span>
+                        {% endif %}
+                    </dd>
                 </dl>
 
                 <div class="d-flex flex-wrap gap-2 mt-3">
                     <button type="button" class="btn btn-warning fw-semibold" commandfor="modalAscensoKyu" command="show-modal">
                         <i class="bi bi-award-fill me-1" aria-hidden="true"></i>Registrar Pase de Grado
                     </button>
+                    <button type="button" class="btn btn-dark fw-semibold" commandfor="modalPromocionDan" command="show-modal">
+                        <i class="bi bi-stars me-1 text-warning" aria-hidden="true"></i>Paso a 1º DAN (Cinto Negro)
+                    </button>
+                    {% if not alumno_color.es_menor_edad %}
+                        <button type="button" class="btn btn-outline-info" commandfor="modalInvitarUsuarioColor" command="show-modal">
+                            <i class="bi bi-envelope-check me-1" aria-hidden="true"></i>
+                            {% if alumno_color.usuario %}Reenviar invitación{% else %}Dar acceso al Portal{% endif %}
+                        </button>
+                    {% endif %}
                     <button type="button" class="btn btn-outline-warning" commandfor="modalEditarAlumnoColor" command="show-modal">
                         <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Editar / RGPD
                     </button>
@@ -147,6 +167,33 @@
                     </ul>
                 {% else %}
                     <p class="text-body-secondary mb-0">El alumno aún no ha sido inscrito en campeonatos.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header py-3">
+                <h2 class="h6 mb-0 fw-semibold">Cursillos Asistidos</h2>
+            </div>
+            <div class="card-body">
+                {% if cursillos_asistidos %}
+                    <ul class="list-group list-group-flush">
+                        {% for curso in cursillos_asistidos %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold">
+                                    {{ curso.evento }}
+                                </a>
+                                <div class="small text-body-secondary">
+                                    {{ curso.ciudad }} ({{ curso.pais }})
+                                </div>
+                            </div>
+                            <span class="badge text-bg-secondary">{{ curso.fecha|date:"d/m/Y" }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-body-secondary mb-0">El alumno aún no tiene asistencias registradas en cursillos.</p>
                 {% endif %}
             </div>
         </div>
@@ -279,5 +326,64 @@
             <button type="submit" class="btn btn-danger fw-semibold">Eliminar Ficha</button>
         </form>
     </div>
+</dialog>
+
+{% if not alumno_color.es_menor_edad %}
+<!-- Diálogo de Invitación al Portal del Dojo (Solo adultos >= 18 años) -->
+<dialog class="ogkke-dialog" id="modalInvitarUsuarioColor" closedby="any" aria-labelledby="modalInvitarUsuarioColorLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalInvitarUsuarioColorLabel">Invitar al Portal del Dojo · {{ alumno_color.nombre }} {{ alumno_color.apellidos }}</h2>
+        <button type="button" class="btn-close" commandfor="modalInvitarUsuarioColor" command="close" aria-label="Cerrar"></button>
+    </div>
+    <form action="{% url 'administracion:alumno_color_invitar_usuario' codigo=alumno_color.codigo_interno %}" method="post">
+        {% csrf_token %}
+        <div class="ogkke-dialog-body">
+            <p class="small text-body-secondary mb-3">
+                Se creará o actualizará la cuenta del alumno y se le enviará un correo con un enlace seguro para establecer su contraseña y acceder al portal de <strong>{{ alumno_color.dojo.nombre }}</strong>.
+            </p>
+            <div class="mb-2">
+                <label class="form-label" for="{{ form_invitar_usuario.email.id_for_label }}">Correo electrónico del alumno *</label>
+                {{ form_invitar_usuario.email }}
+            </div>
+        </div>
+        <div class="ogkke-dialog-footer">
+            <button type="button" class="btn btn-outline-secondary" commandfor="modalInvitarUsuarioColor" command="close">Cancelar</button>
+            <button type="submit" class="btn btn-warning fw-semibold">
+                <i class="bi bi-send-check-fill me-1" aria-hidden="true"></i>Enviar invitación
+            </button>
+        </div>
+    </form>
+</dialog>
+{% endif %}
+
+<!-- Diálogo de Promoción de Cinturón Marrón a Cinturón Negro 1º DAN -->
+<dialog class="ogkke-dialog" id="modalPromocionDan" closedby="any" aria-labelledby="modalPromocionDanLabel">
+    <div class="ogkke-dialog-header">
+        <h2 class="h5 mb-0 color-texto" id="modalPromocionDanLabel">Promocionar a Cinturón Negro 1º DAN</h2>
+        <button type="button" class="btn-close" commandfor="modalPromocionDan" command="close" aria-label="Cerrar"></button>
+    </div>
+    <form action="{% url 'administracion:alumno_color_promocionar_dan' codigo=alumno_color.codigo_interno %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="ogkke-dialog-body">
+            <p class="small text-body-secondary mb-3">
+                Esta acción dará de alta a <strong>{{ alumno_color.nombre }} {{ alumno_color.apellidos }}</strong> en el escalafón oficial de <strong>Cinturones Negros (1º DAN)</strong> de <strong>{{ alumno_color.dojo.nombre }}</strong>, traspasando automáticamente su cuenta de acceso y su historial de cursillos asistidos.
+            </p>
+            <div class="mb-3">
+                <label class="form-label" for="{{ form_promocion_dan.cursillo_examen.id_for_label }}">{{ form_promocion_dan.cursillo_examen.label }}</label>
+                {{ form_promocion_dan.cursillo_examen }}
+                <div class="form-text">{{ form_promocion_dan.cursillo_examen.help_text }}</div>
+            </div>
+            <div class="mb-2">
+                <label class="form-label" for="{{ form_promocion_dan.foto.id_for_label }}">{{ form_promocion_dan.foto.label }}</label>
+                {{ form_promocion_dan.foto }}
+            </div>
+        </div>
+        <div class="ogkke-dialog-footer">
+            <button type="button" class="btn btn-outline-secondary" commandfor="modalPromocionDan" command="close">Cancelar</button>
+            <button type="submit" class="btn btn-warning fw-semibold">
+                <i class="bi bi-stars me-1" aria-hidden="true"></i>Confirmar Paso a 1º DAN
+            </button>
+        </div>
+    </form>
 </dialog>
 {% endblock container %}

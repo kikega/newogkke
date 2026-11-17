@@ -23,7 +23,13 @@
     <form method="post" action="{% url 'administracion:cursillo_inscripcion_instructor' pk=cursillo.id %}">
         {% csrf_token %}
 
-        {% include "administracion/partials/searchable_checklist.html" with field=form.alumnos search_placeholder="Buscar alumno por apellidos, nombre o dojo..." %}
+        {% include "administracion/partials/searchable_checklist.html" with field=form.alumnos search_placeholder="Buscar cinto negro por apellidos, nombre o dojo..." %}
+
+        {% if form.alumnos_color %}
+            <div class="mt-4">
+                {% include "administracion/partials/searchable_checklist.html" with field=form.alumnos_color search_placeholder="Buscar alumno de cinturón de color por apellidos, nombre o cinturón..." %}
+            </div>
+        {% endif %}
 
         <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
             <a href="{% url 'administracion:cursillo_detalle' pk=cursillo.id %}" class="btn btn-outline-secondary">

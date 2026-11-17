@@ -22,7 +22,12 @@ from django.http import FileResponse
 from django.urls import reverse_lazy
 
 # App administracion
-from administracion.models import Alumno, Cursillo, Examen
+from administracion.models import Alumno, AlumnoColor, Cursillo, Examen
+from administracion.permissions import (
+    InstructorOrStaffRequiredMixin,
+    obtener_alumno_instructor,
+    obtener_perfiles_alumno,
+)
 
 # Utilidades
 from administracion.utils import enviar_correo_html
@@ -30,8 +35,8 @@ from administracion.utils import enviar_correo_html
 # Formularios
 from administracion.forms import InscripcionAlumnosForm, CursoForm
 
-class CursillosView(LoginRequiredMixin, ListView):
-    """Listado de cursillos realizados"""
+class CursillosView(InstructorOrStaffRequiredMixin, ListView):
+    """Listado general de cursillos realizados (Usuarios Globales)"""
 
     template_name = 'administracion/cursillos.html'
     model = Cursillo
@@ -48,7 +53,24 @@ class CursillosView(LoginRequiredMixin, ListView):
         # Obtenemos la fecha actual
         hoy = datetime.date.today()
         context['hoy'] = hoy
+        context['form'] = CursoForm()
         return context
+
+
+def _resolver_estado_inscripcion_usuario(user, cursillo):
+    """
+    Devuelve (inscrito, puede_inscribirse) para el usuario autenticado en un cursillo,
+    contemplando tanto Cinturones Negros (Alumno) como Cinturones de Color (AlumnoColor).
+    """
+    if not user or not user.is_authenticated or getattr(user, 'externo', False):
+        return False, False
+    alumno_dan, alumno_color = obtener_perfiles_alumno(user)
+    if alumno_dan:
+        return cursillo.alumnos.filter(pk=alumno_dan.pk).exists(), True
+    if alumno_color:
+        inscrito = cursillo.alumnos_color.filter(pk=alumno_color.pk).exists()
+        return inscrito, bool(cursillo.abierto_cintos_color)
+    return False, False
 
 
 class CursilloDetailView(LoginRequiredMixin, DetailView):
@@ -69,24 +91,18 @@ class CursilloDetailView(LoginRequiredMixin, DetailView):
         user = self.request.user
         
         if not user.externo:
-            # Obtenemos datos del alumno para ver si ya está inscrito
-            try:
-                alumno = Alumno.objects.select_related('usuario').get(usuario=user)
-                alumno_cursillo = curso_actual.alumnos.filter(pk=alumno.id).exists()
-                context['alumno_cursillo_inscrito'] = alumno_cursillo
-            except Alumno.DoesNotExist:
-                context['alumno_cursillo_inscrito'] = False
-
-            # Obtenemos el dato si es instructor
-            es_instructor = False
-            if user.is_authenticated:
-                es_instructor = user.groups.filter(name='Instructor').exists()
-            # Añades la variable booleana al contexto
-            context['usuario_es_instructor'] = es_instructor
+            inscrito, puede_inscribirse = _resolver_estado_inscripcion_usuario(user, curso_actual)
+            context['alumno_cursillo_inscrito'] = inscrito
+            context['puede_inscribirse_cursillo'] = puede_inscribirse
+            context['usuario_es_instructor'] = obtener_alumno_instructor(user) is not None
 
         # Obtenemos todos los asistentes a un cursillo
-        # asistentes_obj = Cursillo.objects.select_related('alumnos').get(pk=curso_actual.id)
         context["asistentes"] = curso_actual.alumnos.select_related('dojo').all().order_by('apellidos')
+        context["asistentes_color"] = (
+            curso_actual.alumnos_color.for_user(user)
+            .select_related('dojo', 'grado_actual')
+            .order_by('apellidos')
+        )
         # Obtenemos la fecha actual
         context['hoy'] = datetime.date.today()
 
@@ -129,11 +145,9 @@ class CursilloExaminaListView(LoginRequiredMixin, DetailView):
         user = self.request.user
 
         if not user.externo:
-            try:
-                alumno = Alumno.objects.select_related('usuario').get(usuario=user)
-                context['alumno_cursillo_inscrito'] = curso_actual.alumnos.filter(pk=alumno.id).exists()
-            except Alumno.DoesNotExist:
-                context['alumno_cursillo_inscrito'] = False
+            inscrito, puede_inscribirse = _resolver_estado_inscripcion_usuario(user, curso_actual)
+            context['alumno_cursillo_inscrito'] = inscrito
+            context['puede_inscribirse_cursillo'] = puede_inscribirse
 
         # Obtenemos todos los alumnos que se examinan en el cursillo
         context['examinan'] = Examen.objects.filter(evento=curso_actual).select_related('alumno', 'alumno__dojo').order_by('alumno__apellidos')
@@ -162,11 +176,9 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
 
         user = self.request.user
         if not user.externo:
-            try:
-                alumno = Alumno.objects.select_related('usuario').get(usuario=user)
-                context['alumno_cursillo_inscrito'] = curso_actual.alumnos.filter(pk=alumno.id).exists()
-            except Alumno.DoesNotExist:
-                context['alumno_cursillo_inscrito'] = False
+            inscrito, puede_inscribirse = _resolver_estado_inscripcion_usuario(user, curso_actual)
+            context['alumno_cursillo_inscrito'] = inscrito
+            context['puede_inscribirse_cursillo'] = puede_inscribirse
 
         asistentes_por_dojo = curso_actual.alumnos.values(
             'dojo__nombre'  # Agrupa por el nombre del Dojo
@@ -193,37 +205,62 @@ class CursilloEstadisticasView(LoginRequiredMixin, DetailView):
 
 class CursilloInscripcionAlumnoView(LoginRequiredMixin, View):
     """
-    Inscripción o anulación directa de un alumno individual a un cursillo mediante petición POST.
+    Inscripción o anulación directa de un alumno individual (Cinto Negro o Cinto de Color mayor de edad)
+    a un cursillo mediante petición POST. No envía correo al instructor; queda reflejado en la lista de inscritos.
     """
     def post(self, request, pk):
         cursillo = get_object_or_404(Cursillo, pk=pk)
         action = request.POST.get('action', 'inscribir')
+        next_url = request.POST.get('next', '')
 
-        try:
-            alumno = Alumno.objects.get(usuario=request.user)
-        except Alumno.DoesNotExist:
-            messages.error(request, "No tienes un perfil de alumno asociado para gestionar inscripciones.")
+        def _redirect_target():
+            if next_url and next_url.startswith('/'):
+                return redirect(next_url)
             return redirect('administracion:cursillo_detalle', pk=cursillo.id)
 
-        if action == 'desinscribir':
-            if cursillo.alumnos.filter(pk=alumno.id).exists():
-                cursillo.alumnos.remove(alumno)
-                messages.success(request, f"Has anulado correctamente tu inscripción en {cursillo.evento}.")
-            else:
-                messages.info(request, "No estabas inscrito en este cursillo.")
-        else:
-            if not cursillo.alumnos.filter(pk=alumno.id).exists():
-                cursillo.alumnos.add(alumno)
-                messages.success(request, f"Te has inscrito correctamente en {cursillo.evento}.")
-            else:
-                messages.info(request, "Ya estás inscrito en este cursillo.")
+        alumno_dan, alumno_color = obtener_perfiles_alumno(request.user)
 
-        return redirect('administracion:cursillo_detalle', pk=cursillo.id)
+        if alumno_dan:
+            if action == 'desinscribir':
+                if cursillo.alumnos.filter(pk=alumno_dan.id).exists():
+                    cursillo.alumnos.remove(alumno_dan)
+                    messages.success(request, f"Has anulado correctamente tu inscripción en {cursillo.evento}.")
+                else:
+                    messages.info(request, "No estabas inscrito en este cursillo.")
+            else:
+                if not cursillo.alumnos.filter(pk=alumno_dan.id).exists():
+                    cursillo.alumnos.add(alumno_dan)
+                    messages.success(request, f"Te has inscrito correctamente en {cursillo.evento}.")
+                else:
+                    messages.info(request, "Ya estás inscrito en este cursillo.")
+            return _redirect_target()
+
+        if alumno_color:
+            if action == 'desinscribir':
+                if cursillo.alumnos_color.filter(pk=alumno_color.id).exists():
+                    cursillo.alumnos_color.remove(alumno_color)
+                    messages.success(request, f"Has anulado correctamente tu inscripción en {cursillo.evento}.")
+                else:
+                    messages.info(request, "No estabas inscrito en este cursillo.")
+            else:
+                if not cursillo.abierto_cintos_color:
+                    messages.error(request, "Este cursillo está reservado exclusivamente para Cinturones Negros (DAN).")
+                    return _redirect_target()
+                if not cursillo.alumnos_color.filter(pk=alumno_color.id).exists():
+                    cursillo.alumnos_color.add(alumno_color)
+                    messages.success(request, f"Te has inscrito correctamente en {cursillo.evento}.")
+                else:
+                    messages.info(request, "Ya estás inscrito en este cursillo.")
+            return _redirect_target()
+
+        messages.error(request, "No tienes un perfil de alumno asociado para gestionar inscripciones.")
+        return _redirect_target()
 
 
 class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
     """
     Inscripción masiva de alumnos por parte del instructor de su dojo o administradores.
+    Soporta tanto Cinturones Negros como Cinturones de Color (cuando el cursillo lo admite).
     """
     template_name = 'administracion/inscripcion_instructor.html'
     cursillo = None
@@ -232,15 +269,7 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
         self.cursillo = get_object_or_404(Cursillo, pk=self.kwargs['pk'])
         user = request.user
 
-        # Verificar permisos: debe ser staff o instructor
-        es_instructor = False
-        if user.is_authenticated:
-            try:
-                alumno = Alumno.objects.get(usuario=user)
-                es_instructor = alumno.instructor
-            except Alumno.DoesNotExist:
-                pass
-
+        es_instructor = obtener_alumno_instructor(user) is not None
         if not (user.is_staff or user.is_superuser or es_instructor):
             raise PermissionDenied("No tienes permiso para gestionar la lista de inscritos de este cursillo.")
 
@@ -270,15 +299,14 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
 
         if form.is_valid():
             alumnos_a_inscribir = form.cleaned_data['alumnos']
+            alumnos_color_a_inscribir = form.cleaned_data.get('alumnos_color')
 
-            try:
-                instructor = Alumno.objects.get(usuario=request.user)
+            instructor = obtener_alumno_instructor(request.user)
+            if instructor and not (request.user.is_staff or request.user.is_superuser):
                 dojo = instructor.dojo
-                # Obtenemos los alumnos del dojo del instructor
+                # Cinturones Negros del dojo del instructor
                 alumnos_dojo_pks = set(Alumno.objects.filter(dojo=dojo, instructor=False, activo=True).values_list('pk', flat=True))
                 selected_dojo_pks = set(alumnos_a_inscribir.values_list('pk', flat=True)) & alumnos_dojo_pks
-
-                # Obtenemos los que estaban inscritos previamente de este dojo
                 actuales_dojo_pks = set(self.cursillo.alumnos.filter(dojo=dojo).values_list('pk', flat=True))
 
                 to_remove = actuales_dojo_pks - selected_dojo_pks
@@ -289,11 +317,25 @@ class CursilloInscripcionInstructorView(LoginRequiredMixin, TemplateView):
                 if to_add:
                     self.cursillo.alumnos.add(*to_add)
 
-            except Alumno.DoesNotExist:
-                # Administrador global sin perfil de alumno
-                self.cursillo.alumnos.set(alumnos_a_inscribir)
+                # Cinturones de Color del dojo del instructor (si el cursillo está abierto a grados Kyu)
+                if self.cursillo.abierto_cintos_color and alumnos_color_a_inscribir is not None:
+                    color_dojo_pks = set(AlumnoColor.objects.filter(dojo=dojo, activo=True).values_list('pk', flat=True))
+                    selected_color_pks = set(alumnos_color_a_inscribir.values_list('pk', flat=True)) & color_dojo_pks
+                    actuales_color_pks = set(self.cursillo.alumnos_color.filter(dojo=dojo).values_list('pk', flat=True))
 
-            messages.success(request, f"Se han actualizado las inscripciones correctamente.")
+                    color_remove = actuales_color_pks - selected_color_pks
+                    color_add = selected_color_pks - actuales_color_pks
+                    if color_remove:
+                        self.cursillo.alumnos_color.remove(*color_remove)
+                    if color_add:
+                        self.cursillo.alumnos_color.add(*color_add)
+            else:
+                # Administrador global
+                self.cursillo.alumnos.set(alumnos_a_inscribir)
+                if self.cursillo.abierto_cintos_color and alumnos_color_a_inscribir is not None:
+                    self.cursillo.alumnos_color.set(alumnos_color_a_inscribir)
+
+            messages.success(request, "Se han actualizado las inscripciones correctamente.")
         else:
             messages.error(request, "Hubo un error con el formulario. Por favor, inténtalo de nuevo.")
             context = self.get_context_data(**kwargs)

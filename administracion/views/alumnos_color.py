@@ -7,20 +7,27 @@ import datetime
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import ListView, DetailView
 
-from administracion.forms import AlumnoColorForm, AscensoGradoKyuForm
-from administracion.models import AlumnoColor, Dojo, GradoKyu, HistorialGradoKyu
+from administracion.forms import (
+    AlumnoColorForm,
+    AscensoGradoKyuForm,
+    InvitarUsuarioAlumnoForm,
+    PromocionPrimerDanForm,
+)
+from administracion.models import Alumno, AlumnoColor, Dojo, Examen, GradoKyu, HistorialGradoKyu
 from administracion.permissions import (
     InstructorOrStaffRequiredMixin,
     obtener_alumno_instructor,
     obtener_dojo_instructor,
     usuario_es_staff_asociacion,
 )
+from administracion.utils import invitar_o_vincular_usuario_alumno
 
 
 def obtener_alumno_color_autorizado(user, codigo=None, pk=None):
@@ -31,7 +38,11 @@ def obtener_alumno_color_autorizado(user, codigo=None, pk=None):
     para bloquear cualquier intento de acceso cruzado (IDOR).
     """
     lookup = {'codigo_interno': codigo} if codigo is not None else {'pk': pk}
-    existe_global = AlumnoColor.objects.select_related('dojo', 'grado_actual').filter(**lookup).first()
+    existe_global = (
+        AlumnoColor.objects.select_related('dojo', 'grado_actual', 'usuario')
+        .filter(**lookup)
+        .first()
+    )
     if existe_global is None:
         raise Http404("El alumno solicitado no existe.")
 
@@ -183,12 +194,20 @@ class AlumnoColorDetailView(InstructorOrStaffRequiredMixin, DetailView):
             'fecha_examen': datetime.date.today(),
         })
         form_edicion = AlumnoColorForm(instance=alumno, user=self.request.user)
+        form_invitar = InvitarUsuarioAlumnoForm(
+            initial={'email': alumno.usuario.email if alumno.usuario else ''}
+        )
+        form_promocion_dan = PromocionPrimerDanForm()
+        cursillos_asistidos = alumno.cursillos_asistidos.all().order_by('-fecha')
 
         context.update({
             'historial_grados': historial,
             'inscripciones_torneos': inscripciones,
+            'cursillos_asistidos': cursillos_asistidos,
             'form_ascenso': form_ascenso,
             'form_edicion': form_edicion,
+            'form_invitar_usuario': form_invitar,
+            'form_promocion_dan': form_promocion_dan,
             'siguiente_grado': siguiente_grado,
         })
         return context
@@ -275,3 +294,113 @@ class AlumnoColorDeleteView(InstructorOrStaffRequiredMixin, View):
         alumno_color.delete()
         messages.success(request, f"Ficha de {nombre_completo} eliminada conforme a RGPD.")
         return redirect('administracion:alumnos_color')
+
+
+class AlumnoColorInvitarUsuarioView(InstructorOrStaffRequiredMixin, View):
+    """
+    Activa y envía por correo la invitación al Portal del Dojo para un Alumno de Cinturón de Color
+    mayor de edad (>= 18 años). Bloquea cuentas para menores de edad.
+    """
+
+    def post(self, request, codigo):
+        alumno_color = obtener_alumno_color_autorizado(request.user, codigo=codigo)
+        if alumno_color.es_menor_edad:
+            messages.error(
+                request,
+                "Normativa de acceso: Los menores de 18 años no tienen acceso a la aplicación; el instructor del Dojo realiza sus gestiones.",
+            )
+            return redirect('administracion:alumno_color_detalle', codigo=alumno_color.codigo_interno)
+
+        form = InvitarUsuarioAlumnoForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                invitar_o_vincular_usuario_alumno(alumno_color, email, request)
+                messages.success(
+                    request,
+                    f"Cuenta activada e invitación enviada a {email} para acceder al portal de {alumno_color.dojo.nombre}.",
+                )
+            except ValidationError as exc:
+                messages.error(request, "; ".join(exc.messages))
+            except Exception as exc:
+                messages.error(request, f"Se vinculó la cuenta pero ocurrió un error al enviar el correo: {exc}")
+        else:
+            messages.error(request, "Introduce una dirección de correo electrónico válida.")
+
+        return redirect('administracion:alumno_color_detalle', codigo=alumno_color.codigo_interno)
+
+
+class AlumnoColorPromocionDanView(InstructorOrStaffRequiredMixin, View):
+    """
+    Promociona a un practicante de Cinturón de Color (Marrón) a Cinturón Negro 1º DAN (Alumno):
+    - Crea su nueva ficha oficial en Alumno (grado=1).
+    - Traspasa automáticamente su cuenta de Usuario (si tenía acceso activo) y sus asistencias a Cursillos.
+    - Registra opcionalmente el Examen de 1º DAN en el Cursillo indicado.
+    - Desactiva la ficha Kyu manteniendo su trazabilidad histórica (HistorialGradoKyu y torneos).
+    """
+
+    def post(self, request, codigo):
+        alumno_color = obtener_alumno_color_autorizado(request.user, codigo=codigo)
+
+        existente = getattr(alumno_color, 'alumno_dan_promocionado', None)
+        if existente is not None:
+            messages.info(request, "Este alumno ya fue promocionado a Cinturón Negro.")
+            return redirect('administracion:alumno_detalle', pk=existente.pk)
+
+        form = PromocionPrimerDanForm(request.POST, request.FILES)
+        if not form.is_valid():
+            messages.error(request, "Datos de promoción a 1º DAN no válidos.")
+            return redirect('administracion:alumno_color_detalle', codigo=alumno_color.codigo_interno)
+
+        cursillo_examen = form.cleaned_data.get('cursillo_examen')
+        foto = form.cleaned_data.get('foto')
+
+        with transaction.atomic():
+            usuario_transferido = alumno_color.usuario
+            if usuario_transferido is not None:
+                alumno_color.usuario = None
+
+            alumno_color.activo = False
+            alumno_color.save()
+
+            nuevo_alumno_dan = Alumno.objects.create(
+                usuario=usuario_transferido,
+                alumno_color_origen=alumno_color,
+                nombre=alumno_color.nombre,
+                apellidos=alumno_color.apellidos,
+                fecha_nacimiento=alumno_color.fecha_nacimiento,
+                dojo=alumno_color.dojo,
+                instructor=False,
+                grado=1,
+                foto=foto,
+                activo=True,
+            )
+
+            # Traspasar los cursillos a los que asistió siendo cinturón de color
+            for curso in alumno_color.cursillos_asistidos.all():
+                curso.alumnos.add(nuevo_alumno_dan)
+
+            # Si se indicó el cursillo del examen de 1º DAN, crear Examen y asistencia
+            if cursillo_examen is not None:
+                cursillo_examen.alumnos.add(nuevo_alumno_dan)
+                Examen.objects.get_or_create(
+                    alumno=nuevo_alumno_dan,
+                    evento=cursillo_examen,
+                    defaults={'grado': 1},
+                )
+
+            HistorialGradoKyu.objects.create(
+                alumno_color=alumno_color,
+                grado=alumno_color.grado_actual,
+                fecha_examen=cursillo_examen.fecha if cursillo_examen else datetime.date.today(),
+                evaluador=obtener_alumno_instructor(request.user),
+                observaciones="Promocionado oficialmente a Cinturón Negro 1º DAN.",
+            )
+
+        messages.success(
+            request,
+            f"¡Enhorabuena! {nuevo_alumno_dan.nombre} {nuevo_alumno_dan.apellidos} ha sido promocionado a Cinturón Negro 1º DAN "
+            "conservando su cuenta de acceso y su historial de cursillos.",
+        )
+        return redirect('administracion:alumno_detalle', pk=nuevo_alumno_dan.pk)
+

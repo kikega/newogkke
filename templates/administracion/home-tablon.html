@@ -26,7 +26,7 @@
                         Tablón de anuncios de Dojos
                     {% endif %}
                 </h1>
-                <p class="text-body-secondary small mb-0">Comunicados y avisos internos de ámbito local del dojo.</p>
+                <p class="text-body-secondary small mb-0">Actividades generales de OGKKE y comunicados particulares del dojo.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 {% if puede_gestionar_tablon and dojo_usuario %}
@@ -53,11 +53,19 @@
                 <article class="card activity-card shadow-sm">
                     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <h2 class="h5 color-texto mb-0">
-                            <i class="bi bi-card-text me-2" aria-hidden="true"></i>{{ tab.titulo }}
+                            {% if tab.es_actividad_general %}
+                                <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>{{ tab.titulo }}
+                            {% else %}
+                                <i class="bi bi-card-text me-2" aria-hidden="true"></i>{{ tab.titulo }}
+                            {% endif %}
                         </h2>
                         <div class="d-flex align-items-center gap-2">
-                            {% if not dojo_usuario %}
+                            {% if tab.es_actividad_general %}
+                                <span class="badge text-bg-warning">OGKKE · General</span>
+                            {% elif not dojo_usuario and tab.dojo %}
                                 <span class="badge text-bg-warning">{{ tab.dojo.nombre }}</span>
+                            {% elif dojo_usuario %}
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ dojo_usuario.nombre }}</span>
                             {% endif %}
                             {% if tab.tipo %}
                                 <span class="badge text-bg-secondary">{{ tab.tipo }}</span>
@@ -67,11 +75,15 @@
                     <div class="card-body">
                         <p class="text-body-secondary small mb-2 d-flex flex-wrap gap-3">
                             <span><i class="bi bi-calendar3 me-1 color-texto" aria-hidden="true"></i>{{ tab.fecha|date:"d-m-Y" }}</span>
-                            {% if tab.lugar %}
-                                <span><i class="bi bi-geo-alt-fill me-1 color-texto" aria-hidden="true"></i>{{ tab.lugar }}</span>
+                            {% if tab.lugar or tab.ciudad %}
+                                <span>
+                                    <i class="bi bi-geo-alt-fill me-1 color-texto" aria-hidden="true"></i>{{ tab.lugar }}{% if tab.ciudad %} ({{ tab.ciudad }}{% if tab.pais %}, {{ tab.pais }}{% endif %}){% endif %}
+                                </span>
                             {% endif %}
                         </p>
-                        <p class="card-text">{{ tab.descripcion }}</p>
+                        {% if tab.descripcion %}
+                            <p class="card-text">{{ tab.descripcion }}</p>
+                        {% endif %}
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
                             <div>
                                 {% if tab.informacion %}
@@ -80,7 +92,7 @@
                                     </a>
                                 {% endif %}
                             </div>
-                            {% if puede_gestionar_tablon %}
+                            {% if not tab.es_actividad_general and puede_gestionar_tablon %}
                                 <div class="d-flex gap-2">
                                     <button
                                         type="button"
@@ -97,6 +109,12 @@
                                     >
                                         <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Eliminar
                                     </button>
+                                </div>
+                            {% elif tab.es_actividad_general and user.is_staff %}
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'administracion:actividades' %}" class="btn btn-outline-warning btn-sm">
+                                        <i class="bi bi-sliders me-1" aria-hidden="true"></i>Gestionar actividad general
+                                    </a>
                                 </div>
                             {% endif %}
                         </div>

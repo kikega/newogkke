@@ -4,7 +4,8 @@
     <!-- ===== BARRA DE NAVEGACIÓN ===== -->
     <nav class="navbar navbar-expand-lg ogkke-navbar" aria-label="Navegación principal">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+            <a class="navbar-brand d-flex align-items-center gap-2"
+               href="{% if usuario_es_alumno_portal and usuario_dojo.slug %}{% url 'administracion:dojo_portal' slug=usuario_dojo.slug %}{% else %}{% url 'home' %}{% endif %}">
                 <img src="{% static 'img/favicon.png' %}" alt="" width="26" height="25">
                 <span class="fw-bold color-texto">OGKKE</span>
             </a>
@@ -27,6 +28,37 @@
                             <a class="nav-link {% if request.resolver_match.url_name == 'ayuda' %}active fw-semibold{% endif %}"
                                href="{% url 'campeonatos:ayuda' %}?rol=juez">
                                 <i class="bi bi-question-circle me-1" aria-hidden="true"></i>Ayuda Mesa / Juez
+                            </a>
+                        </li>
+                    {% elif usuario_es_alumno_portal and usuario_dojo and usuario_dojo.slug %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dojo_portal' %}active fw-semibold{% endif %}"
+                               href="{% url 'administracion:dojo_portal' slug=usuario_dojo.slug %}">
+                                <i class="bi bi-building me-1" aria-hidden="true"></i>Portal {{ usuario_dojo.nombre }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               href="{% url 'administracion:dojo_portal' slug=usuario_dojo.slug %}#dojoTablonHeading">
+                                <i class="bi bi-pin-angle-fill me-1" aria-hidden="true"></i>Tablón de Anuncios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               href="{% url 'administracion:dojo_portal' slug=usuario_dojo.slug %}#dojoCursillosHeading">
+                                <i class="bi bi-calendar-check me-1" aria-hidden="true"></i>Cursillos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               href="{% url 'administracion:dojo_portal' slug=usuario_dojo.slug %}#miHistorialHeading">
+                                <i class="bi bi-award me-1" aria-hidden="true"></i>Mi Historial
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               href="{% url 'administracion:dojo_portal' slug=usuario_dojo.slug %}#portalAlumnosCaption">
+                                <i class="bi bi-people me-1" aria-hidden="true"></i>Compañeros DAN
                             </a>
                         </li>
                     {% else %}

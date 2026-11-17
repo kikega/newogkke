@@ -20,7 +20,9 @@ from django.urls import reverse
 from administracion.utils import get_client_ip
 from administracion.permissions import (
     es_usuario_juez_efimero,
+    obtener_dojo_usuario,
     obtener_tatamis_activos_juez,
+    usuario_es_instructor_o_staff,
     verificar_vigencia_login_juez,
 )
 
@@ -28,13 +30,10 @@ from administracion.permissions import (
 from administracion.models import Alumno
 from .models import Usuario
 
-# Formularios
-from .forms import UsuarioSelectDojoForm
-
 logger = logging.getLogger('access_logger')
 
 def login_view(request):
-    """Vista para hacer login en la aplicación"""
+    """Vista para hacer login en la aplicación con enrutamiento automático según rol y Dojo."""
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -58,22 +57,22 @@ def login_view(request):
                 tatami_activo = obtener_tatamis_activos_juez(user).first()
                 if tatami_activo:
                     return redirect(reverse('campeonatos:tatami_live', kwargs={'tatami_id': tatami_activo.id}))
+
+            # Si no es usuario global (Staff, Instructor o Directiva), asignar y redirigir directo al portal de su Dojo
+            if not usuario_es_instructor_o_staff(user):
+                dojo_usuario = obtener_dojo_usuario(user)
+                if dojo_usuario and dojo_usuario.slug:
+                    return redirect(reverse('administracion:dojo_portal', kwargs={'slug': dojo_usuario.slug}))
+
             return redirect('home')
         return render(request, 'usuarios/login.html', {'form': form, 'error': 'Usuario o password incorrecto'})
 
     return render(request, 'usuarios/login.html', {'form': AuthenticationForm()})
 
+
 def registro_view(request):
-    """Vista para hacer registro de un alumno en la aplicación"""
-
-    if request.method == 'POST':
-        form = UsuarioSelectDojoForm(request.POST)
-        if form.is_valid():
-            dojo = form.cleaned_data['dojo']
-    else:
-        form = UsuarioSelectDojoForm()
-
-    return render(request, 'usuarios/registro.html', {'form': form})
+    """Redirige al login principal; el alta de usuarios se gestiona por invitación del Instructor o Staff."""
+    return redirect('login')
 
 
 @login_required

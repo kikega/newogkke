@@ -224,11 +224,19 @@ class Dojo(models.Model):
 
 class Alumno(models.Model):
     """ 
-    Modelo que representa un Alumno
+    Modelo que representa un Alumno (Cinturón Negro DAN)
     """
     objects = models.Manager()
 
     usuario = models.OneToOneField(Usuario, on_delete=models.SET_NULL, verbose_name="Alumno", blank=True, null=True)
+    alumno_color_origen = models.OneToOneField(
+        "AlumnoColor",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="alumno_dan_promocionado",
+        verbose_name="Ficha Kyu de origen",
+    )
     nombre = models.CharField(max_length=50)
     apellidos = models.CharField(max_length=50)
     fecha_nacimiento = models.DateField(auto_now=False, auto_now_add=False, blank=True, null=True)
@@ -252,6 +260,31 @@ class Alumno(models.Model):
         ordering = ['apellidos', 'nombre']
         verbose_name = "Alumno"
         verbose_name_plural = "Alumnos"
+
+    def edad_en_fecha(self, fecha_ref=None):
+        """Calcula la edad exacta del alumno en la fecha indicada (o hoy por defecto)."""
+        return calcular_edad_en_fecha(self.fecha_nacimiento, fecha_ref)
+
+    @property
+    def edad(self):
+        return self.edad_en_fecha()
+
+    @property
+    def es_menor_edad(self):
+        """Indica si el alumno tiene fecha de nacimiento registrada y es menor de 18 años."""
+        if not self.fecha_nacimiento:
+            return False
+        return self.edad < 18
+
+    def clean(self):
+        super().clean()
+        if self.usuario_id and self.es_menor_edad:
+            raise ValidationError({
+                'usuario': (
+                    "Normativa de acceso: Los menores de 18 años no tienen acceso directo a la aplicación; "
+                    "el instructor de su Dojo es el encargado de realizar sus gestiones."
+                )
+            })
 
     def __str__(self):
         return f'{self.apellidos}, {self.nombre}. {self.grado}'
@@ -367,7 +400,18 @@ class Cursillo(models.Model):
     pais = models.CharField(max_length=50, default='España')
     fecha = models.DateField(auto_now=False, auto_now_add=False)
     examenes = models.BooleanField(default=False, blank=True, null=True)
+    abierto_cintos_color = models.BooleanField(
+        default=False,
+        verbose_name="Abierto a Cinturones de Color",
+        help_text="Si se activa, los practicantes de cinturón de color también podrán inscribirse o ser inscritos en este cursillo.",
+    )
     alumnos = models.ManyToManyField(Alumno, blank=True)
+    alumnos_color = models.ManyToManyField(
+        "AlumnoColor",
+        blank=True,
+        related_name="cursillos_asistidos",
+        verbose_name="Alumnos de Color inscritos",
+    )
     circular = models.FileField(
         upload_to='pdf', max_length=100, blank=True, null=True, default=None,
         validators=[FileExtensionValidator(['pdf'])]
@@ -442,6 +486,22 @@ class Tablon(models.Model):
         verbose_name_plural = "Tablones"
         ordering = ['fecha']
 
+    @property
+    def es_actividad_general(self):
+        return False
+
+    @property
+    def ciudad(self):
+        return None
+
+    @property
+    def provincia(self):
+        return None
+
+    @property
+    def pais(self):
+        return None
+
     def __str__(self):
         return f'{self.fecha}: {self.titulo}'
 
@@ -466,8 +526,53 @@ class Actividad(models.Model):
         verbose_name_plural = "Actividades"
         ordering = ['fecha']
 
+    @property
+    def es_actividad_general(self):
+        return True
+
+    @property
+    def dojo(self):
+        return None
+
+    @property
+    def informacion(self):
+        return None
+
     def __str__(self): 
         return f'{self.fecha}: {self.titulo}'
+
+
+class TablonCombinadoList(list):
+    """
+    Lista combinada e intercalada por fecha de actividades generales (Actividad)
+    y anuncios particulares de un Dojo (Tablon).
+    Expone .count() sin argumentos para compatibilidad con vistas y tests.
+    """
+
+    def count(self, *args):
+        if not args:
+            return len(self)
+        return super().count(*args)
+
+
+def obtener_tablon_intercalado(tablon_qs, fecha_minima=None):
+    """
+    Combina las actividades particulares del tablón de un Dojo (Tablon) con las
+    actividades generales de la asociación (Actividad), intercalándolas por fecha.
+    """
+    if fecha_minima is None:
+        fecha_minima = datetime.date.today()
+    particulares = list(tablon_qs)
+    generales = list(Actividad.objects.filter(fecha__gte=fecha_minima).order_by('fecha', 'id'))
+    combinados = particulares + generales
+    combinados.sort(
+        key=lambda item: (
+            item.fecha,
+            0 if getattr(item, 'es_actividad_general', False) else 1,
+            item.id or 0,
+        )
+    )
+    return TablonCombinadoList(combinados)
 
 class Proverbio(models.Model):
     """
@@ -587,6 +692,15 @@ class AlumnoColor(models.Model):
         editable=False,
         db_index=True,
         verbose_name="Identificador opaco (Anti-IDOR)"
+    )
+    usuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="perfil_alumno_color",
+        verbose_name="Cuenta de Usuario",
+        help_text="Solo permitido para alumnos mayores de edad (18+ años).",
     )
     nombre = models.CharField(max_length=50, verbose_name="Nombre")
     apellidos = models.CharField(max_length=80, db_index=True, verbose_name="Apellidos")
@@ -730,6 +844,13 @@ class AlumnoColor(models.Model):
                         "Normativa RGPD/LOPDGDD (Menores de 14 años): No se puede dar de alta activa "
                         "a un menor de 14 años sin la autorización paterna/tutorial firmada y su fecha de firma."
                     )
+            if self.usuario_id and edad_actual < 18:
+                raise ValidationError({
+                    'usuario': (
+                        "Normativa de acceso: Los menores de 18 años no tienen acceso a la aplicación; "
+                        "el instructor del Dojo será el encargado de realizar sus gestiones."
+                    )
+                })
 
     def save(self, *args, **kwargs):
         self.full_clean()

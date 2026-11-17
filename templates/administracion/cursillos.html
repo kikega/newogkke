@@ -56,6 +56,9 @@
                                 {% if hoy and cursillo.fecha >= hoy %}
                                     <span class="badge rounded-pill text-bg-warning ms-2">Próximo</span>
                                 {% endif %}
+                                {% if cursillo.abierto_cintos_color %}
+                                    <span class="badge rounded-pill bg-info-subtle text-info-emphasis ms-1">Todos los grados</span>
+                                {% endif %}
                             </th>
                             <td data-order="{{ cursillo.fecha|date:'Y-m-d' }}">{{ cursillo.fecha|date:"d-m-Y" }}</td>
                             <td>{{ cursillo.ciudad }}</td>
@@ -152,6 +155,10 @@
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" name="examenes" id="switchExamenes">
                         <label class="form-check-label" for="switchExamenes">Exámenes</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" name="abierto_cintos_color" id="switchAbiertoColor">
+                        <label class="form-check-label" for="switchAbiertoColor">Abierto a Cintos de Color (Kyu)</label>
                     </div>
                 </div>
                 <div>

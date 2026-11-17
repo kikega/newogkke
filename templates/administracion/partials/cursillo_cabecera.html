@@ -4,11 +4,18 @@
         <span class="fw-semibold color-texto">
             <i class="bi bi-bookmark-star me-1" aria-hidden="true"></i>{{ cursillo.evento }}
         </span>
-        {% if cursillo.internacional %}
-            <span class="badge rounded-pill text-bg-warning">Internacional</span>
-        {% else %}
-            <span class="badge rounded-pill text-bg-secondary">Nacional</span>
-        {% endif %}
+        <div class="d-flex flex-wrap gap-1">
+            {% if cursillo.abierto_cintos_color %}
+                <span class="badge rounded-pill bg-info-subtle text-info-emphasis">Abierto a todos los grados</span>
+            {% else %}
+                <span class="badge rounded-pill text-bg-dark">Exclusivo Cintos Negros</span>
+            {% endif %}
+            {% if cursillo.internacional %}
+                <span class="badge rounded-pill text-bg-warning">Internacional</span>
+            {% else %}
+                <span class="badge rounded-pill text-bg-secondary">Nacional</span>
+            {% endif %}
+        </div>
     </div>
     <div class="card-body">
         <p class="text-body-secondary small mb-2 d-flex flex-wrap gap-3">
@@ -30,7 +37,7 @@
                     <button type="button" class="btn btn-outline-danger btn-sm" commandfor="modalDesinscripcionAlumno" command="show-modal">
                         <i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i>Anular mi inscripción
                     </button>
-                {% else %}
+                {% elif puede_inscribirse_cursillo %}
                     <button type="button" class="btn btn-warning btn-sm fw-semibold" commandfor="modalInscripcionAlumno" command="show-modal">
                         <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Inscribirme al cursillo
                     </button>

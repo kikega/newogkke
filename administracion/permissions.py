@@ -8,15 +8,17 @@ import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 
-from administracion.models import Alumno
+from administracion.models import Alumno, AlumnoColor, MiembroDirectiva
 
 
 JUEZ_TATAMI_GROUP_NAME = "JuezTatami"
+INSTRUCTOR_GROUP_NAME = "Instructor"
 
 
 def obtener_alumno_instructor(user):
     """
     Devuelve la instancia de Alumno si el usuario autenticado es un instructor activo.
+    Unifica la comprobación sobre el modelo Alumno (instructor=True, activo=True).
     """
     if not user or not user.is_authenticated:
         return None
@@ -40,11 +42,68 @@ def usuario_es_staff_asociacion(user):
     return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
 
 
+def usuario_es_directivo_externo(user):
+    """
+    Indica si el usuario es un miembro de la Junta Directiva externo (ej. Presidente no practicante).
+    """
+    if not user or not user.is_authenticated:
+        return False
+    if getattr(user, 'externo', False):
+        return True
+    return MiembroDirectiva.objects.filter(usuario=user, activo=True).exists()
+
+
 def usuario_es_instructor_o_staff(user):
-    """Indica si el usuario es Staff de la asociación o Instructor titular activo de un Dojo."""
+    """
+    Indica si el usuario es un Usuario Global de la asociación:
+    Staff/Superuser, Instructor titular activo de un Dojo o Directivo externo.
+    """
     if usuario_es_staff_asociacion(user):
         return True
-    return obtener_alumno_instructor(user) is not None
+    if obtener_alumno_instructor(user) is not None:
+        return True
+    if usuario_es_directivo_externo(user):
+        return True
+    return False
+
+
+def obtener_perfiles_alumno(user):
+    """
+    Devuelve la tupla (alumno_dan, alumno_color) asociada al usuario autenticado.
+    """
+    if not user or not user.is_authenticated:
+        return None, None
+    alumno_dan = Alumno.objects.select_related('dojo').filter(usuario=user).first()
+    alumno_color = (
+        AlumnoColor.objects.select_related('dojo', 'grado_actual')
+        .filter(usuario=user)
+        .first()
+    )
+    return alumno_dan, alumno_color
+
+
+def obtener_dojo_usuario(user):
+    """
+    Devuelve el Dojo al que pertenece el usuario autenticado (ya sea Cinto Negro o Cinto de Color).
+    """
+    alumno_dan, alumno_color = obtener_perfiles_alumno(user)
+    if alumno_dan and alumno_dan.dojo_id:
+        return alumno_dan.dojo
+    if alumno_color and alumno_color.dojo_id:
+        return alumno_color.dojo
+    return None
+
+
+def es_alumno_solo_portal_dojo(user):
+    """
+    Determina si el usuario autenticado es un alumno regular (Cinto Negro no instructor
+    o Cinto de Color mayor de edad) cuyo acceso debe estar confinado al portal de su Dojo.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    if usuario_es_instructor_o_staff(user) or es_usuario_juez_efimero(user):
+        return False
+    return obtener_dojo_usuario(user) is not None
 
 
 def es_usuario_juez_efimero(user):
@@ -56,12 +115,13 @@ def es_usuario_juez_efimero(user):
         return False
     if user.is_staff or user.is_superuser:
         return False
-    if Alumno.objects.filter(usuario=user).exists():
+    if Alumno.objects.filter(usuario=user).exists() or AlumnoColor.objects.filter(usuario=user).exists():
         return False
     if user.groups.filter(name=JUEZ_TATAMI_GROUP_NAME).exists():
         return True
     from campeonatos.models import Tatami
     return Tatami.objects.filter(juez_operador=user).exists()
+
 
 
 def obtener_tatamis_activos_juez(user, fecha_ref=None):

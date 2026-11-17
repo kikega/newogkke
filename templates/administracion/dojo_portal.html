@@ -10,7 +10,7 @@
     style="--dojo-accent: {{ dojo.color_primario|default:'#c89d3c' }}; --dojo-theme: {% if dojo.tiene_tema_personalizado %}custom{% else %}default{% endif %};"
 >
     <div class="dojo-portal-scope">
-        {% if not is_dojo_host and user.is_authenticated %}
+        {% if not is_dojo_host and usuario_es_global %}
             <nav class="mt-3" aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio Core</a></li>
@@ -222,7 +222,7 @@
                         <i class="bi bi-pin-angle-fill me-2" aria-hidden="true"></i>Tablón de Anuncios del Dojo
                     </h2>
                     <p class="text-body-secondary small mb-0">
-                        Avisos internos, convocatorias locales y circulares para los practicantes de {{ dojo.nombre }}
+                        Actividades generales de OGKKE, avisos internos y convocatorias locales para los practicantes de {{ dojo.nombre }}
                     </p>
                 </div>
                 {% if puede_gestionar_dojo %}
@@ -238,20 +238,35 @@
                         <article class="card activity-card shadow-sm">
                             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                 <h3 class="h5 color-texto mb-0">
-                                    <i class="bi bi-card-text me-2" aria-hidden="true"></i>{{ tab.titulo }}
+                                    {% if tab.es_actividad_general %}
+                                        <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>{{ tab.titulo }}
+                                    {% else %}
+                                        <i class="bi bi-card-text me-2" aria-hidden="true"></i>{{ tab.titulo }}
+                                    {% endif %}
                                 </h3>
-                                {% if tab.tipo %}
-                                    <span class="badge text-bg-secondary">{{ tab.tipo }}</span>
-                                {% endif %}
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if tab.es_actividad_general %}
+                                        <span class="badge text-bg-warning">OGKKE · General</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ dojo.nombre }}</span>
+                                    {% endif %}
+                                    {% if tab.tipo %}
+                                        <span class="badge text-bg-secondary">{{ tab.tipo }}</span>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="card-body">
                                 <p class="text-body-secondary small mb-2 d-flex flex-wrap gap-3">
                                     <span><i class="bi bi-calendar3 me-1 color-texto" aria-hidden="true"></i>{{ tab.fecha|date:"d-m-Y" }}</span>
-                                    {% if tab.lugar %}
-                                        <span><i class="bi bi-geo-alt-fill me-1 color-texto" aria-hidden="true"></i>{{ tab.lugar }}</span>
+                                    {% if tab.lugar or tab.ciudad %}
+                                        <span>
+                                            <i class="bi bi-geo-alt-fill me-1 color-texto" aria-hidden="true"></i>{{ tab.lugar }}{% if tab.ciudad %} ({{ tab.ciudad }}{% if tab.pais %}, {{ tab.pais }}{% endif %}){% endif %}
+                                        </span>
                                     {% endif %}
                                 </p>
-                                <p class="card-text mb-3">{{ tab.descripcion }}</p>
+                                {% if tab.descripcion %}
+                                    <p class="card-text mb-3">{{ tab.descripcion }}</p>
+                                {% endif %}
                                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
                                         {% if tab.informacion %}
@@ -260,7 +275,7 @@
                                             </a>
                                         {% endif %}
                                     </div>
-                                    {% if puede_gestionar_dojo %}
+                                    {% if not tab.es_actividad_general and puede_gestionar_dojo %}
                                         <div class="d-flex gap-2">
                                             <button
                                                 type="button"
@@ -277,6 +292,12 @@
                                             >
                                                 <i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Eliminar
                                             </button>
+                                        </div>
+                                    {% elif tab.es_actividad_general and user.is_staff %}
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'administracion:actividades' %}" class="btn btn-outline-warning btn-sm">
+                                                <i class="bi bi-sliders me-1" aria-hidden="true"></i>Gestionar actividad general
+                                            </a>
                                         </div>
                                     {% endif %}
                                 </div>
@@ -300,33 +321,78 @@
                 <div class="col-lg-5">
                     <div class="card shadow-sm h-100">
                         <div class="card-header d-flex justify-content-between align-items-center py-3">
-                            <span class="fw-semibold">
+                            <span id="dojoCursillosHeading" class="fw-semibold">
                                 <i class="bi bi-calendar-check me-2 color-texto" aria-hidden="true"></i>Próximos Cursillos OGKKE
                             </span>
-                            <a href="{% url 'administracion:cursillos' %}" class="btn btn-outline-secondary btn-sm">Ver todos</a>
+                            {% if usuario_es_global %}
+                                <a href="{% url 'administracion:cursillos' %}" class="btn btn-outline-secondary btn-sm">Ver todos</a>
+                            {% endif %}
                         </div>
                         <div class="card-body">
                             {% if proximos_cursillos %}
                                 <div class="d-flex flex-column gap-3">
                                     {% for curso in proximos_cursillos %}
-                                        <div class="p-3 rounded-3 border bg-body-tertiary d-flex justify-content-between align-items-center gap-2">
-                                            <div>
-                                                <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
-                                                    {{ curso.evento }}
-                                                </a>
-                                                <div class="small text-body-secondary">
-                                                    {{ curso.fecha|date:"d/m/Y" }} · {{ curso.ciudad }} ({{ curso.pais }})
+                                        <div class="p-3 rounded-3 border bg-body-tertiary d-flex flex-column gap-2">
+                                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                                <div>
+                                                    <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
+                                                        {{ curso.evento }}
+                                                    </a>
+                                                    <div class="small text-body-secondary">
+                                                        {{ curso.fecha|date:"d/m/Y" }} · {{ curso.ciudad }} ({{ curso.pais }})
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    {% if curso.abierto_cintos_color %}
+                                                        <span class="badge bg-info-subtle text-info-emphasis">Todos los grados</span>
+                                                    {% else %}
+                                                        <span class="badge text-bg-dark">Cintos Negros</span>
+                                                    {% endif %}
+                                                    {% if curso.usuario_inscrito %}
+                                                        <span class="badge bg-success-subtle text-success-emphasis">
+                                                            <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Inscrito
+                                                        </span>
+                                                    {% endif %}
                                                 </div>
                                             </div>
-                                            {% if puede_gestionar_dojo %}
-                                                <a
-                                                    href="{% url 'administracion:cursillo_inscripcion_instructor' pk=curso.id %}"
-                                                    class="btn btn-outline-warning btn-sm flex-shrink-0"
-                                                    title="Inscribir alumnos del Dojo"
-                                                >
-                                                    <i class="bi bi-person-check-fill me-1" aria-hidden="true"></i>Inscribir
-                                                </a>
-                                            {% endif %}
+                                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-1">
+                                                <div>
+                                                    {% if curso.circular %}
+                                                        <a href="{% url 'administracion:descargar_circular' pk=curso.id %}" class="btn btn-outline-info btn-sm">
+                                                            <i class="bi bi-file-earmark-pdf-fill me-1" aria-hidden="true"></i>Circular
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    {% if puede_gestionar_dojo %}
+                                                        <a
+                                                            href="{% url 'administracion:cursillo_inscripcion_instructor' pk=curso.id %}"
+                                                            class="btn btn-outline-warning btn-sm flex-shrink-0"
+                                                            title="Inscribir alumnos del Dojo"
+                                                        >
+                                                            <i class="bi bi-person-check-fill me-1" aria-hidden="true"></i>Inscribir Dojo
+                                                        </a>
+                                                    {% elif curso.usuario_inscrito %}
+                                                        <form method="post" action="{% url 'administracion:cursillo_inscripcion_alumno' pk=curso.id %}">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="desinscribir">
+                                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                                <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Anular inscripción
+                                                            </button>
+                                                        </form>
+                                                    {% elif curso.usuario_puede_inscribirse %}
+                                                        <form method="post" action="{% url 'administracion:cursillo_inscripcion_alumno' pk=curso.id %}">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="inscribir">
+                                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                                            <button type="submit" class="btn btn-warning btn-sm fw-semibold">
+                                                                <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Inscribirme
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
                                         </div>
                                     {% endfor %}
                                 </div>
@@ -355,12 +421,13 @@
                                         class="ogkke-data-table"
                                         data-ogkke-table
                                         data-page-size="10"
-                                        style="--label-2: 'Grado';"
+                                        style="--label-2: 'Grado'; --label-3: 'Exámenes DAN';"
                                     >
                                         <thead>
                                             <tr>
                                                 <th scope="col">Nombre</th>
                                                 <th scope="col">Grado</th>
+                                                <th scope="col">Exámenes DAN</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -373,6 +440,19 @@
                                                         </a>
                                                     </th>
                                                     <td data-order="{{ alm.grado|default:0 }}">{{ alm.grado }}º DAN</td>
+                                                    <td>
+                                                        {% if alm.examenes_ordenados %}
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                {% for ex in alm.examenes_ordenados %}
+                                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis" title="{{ ex.evento.evento }}">
+                                                                        {{ ex.grado }}º DAN ({{ ex.evento.fecha|date:"d/m/Y" }})
+                                                                    </span>
+                                                                {% endfor %}
+                                                            </div>
+                                                        {% else %}
+                                                            <span class="text-body-secondary small">—</span>
+                                                        {% endif %}
+                                                    </td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -387,6 +467,127 @@
                     </div>
                 </div>
             </section>
+
+            {% if mi_alumno_dan or mi_alumno_color %}
+                <!-- ===== MI HISTORIAL PERSONAL: EXÁMENES Y CURSILLOS ASISTIDOS ===== -->
+                <section class="mb-4" aria-labelledby="miHistorialHeading">
+                    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3 pb-2 border-bottom">
+                        <div>
+                            <h2 id="miHistorialHeading" class="h4 mb-1 color-texto">
+                                <i class="bi bi-person-vcard-fill me-2" aria-hidden="true"></i>Mi Historial Técnico en {{ dojo.nombre }}
+                            </h2>
+                            <p class="text-body-secondary small mb-0">
+                                {% if mi_alumno_dan %}
+                                    Registro personal de exámenes realizados desde tu paso a Cinturón Negro y cursillos a los que has asistido
+                                {% else %}
+                                    Tu progresión de cinturón de color (Kyu) y cursillos a los que has asistido
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% if mi_alumno_dan %}
+                            <a href="{% url 'administracion:alumno_detalle' pk=mi_alumno_dan.id %}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-bar-chart-steps me-1" aria-hidden="true"></i>Ver mi ficha completa y gráfica DAN
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                                    <span class="fw-semibold">
+                                        <i class="bi bi-award-fill me-2 color-texto" aria-hidden="true"></i>
+                                        {% if mi_alumno_dan %}Mis Exámenes de Cinturón Negro (DAN){% else %}Mi Grado Actual y Exámenes Kyu{% endif %}
+                                    </span>
+                                    {% if mi_alumno_dan %}
+                                        <span class="budo-rank-badge">{{ mi_alumno_dan.grado }}º DAN</span>
+                                    {% elif mi_alumno_color %}
+                                        <span class="badge rounded-pill text-bg-secondary">{{ mi_alumno_color.grado_actual.nombre }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    {% if mi_alumno_dan %}
+                                        {% if mis_examenes_dan %}
+                                            <ul class="list-group list-group-flush">
+                                                {% for exm, anios in mis_examenes_dan %}
+                                                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
+                                                        <div>
+                                                            <strong class="color-texto">Examen {{ exm.grado }}º DAN</strong>
+                                                            <div class="small text-body-secondary">
+                                                                {{ exm.evento.evento }} · Permanencia: {{ anios }} {% if anios == 1 %}año{% else %}años{% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <span class="badge text-bg-secondary">{{ exm.evento.fecha|date:"d/m/Y" }}</span>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-body-secondary small mb-0 text-center py-3">
+                                                Aún no figuran actas de examen de grado DAN registradas en tu expediente.
+                                            </p>
+                                        {% endif %}
+                                    {% elif mi_alumno_color %}
+                                        {% if mis_examenes_kyu %}
+                                            <ul class="list-group list-group-flush">
+                                                {% for item in mis_examenes_kyu %}
+                                                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
+                                                        <div>
+                                                            <strong>Cinturón {{ item.grado.nombre }}</strong>
+                                                            <span class="text-body-secondary small ms-1">({{ item.grado.kyu_referencia }})</span>
+                                                            {% if item.observaciones %}
+                                                                <div class="small text-body-secondary">{{ item.observaciones }}</div>
+                                                            {% endif %}
+                                                        </div>
+                                                        <span class="badge text-bg-secondary">{{ item.fecha_examen|date:"d/m/Y" }}</span>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-body-secondary small mb-0 text-center py-3">
+                                                Grado actual: <strong>{{ mi_alumno_color.grado_actual.nombre }}</strong>.
+                                            </p>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                                    <span class="fw-semibold">
+                                        <i class="bi bi-journal-check me-2 color-texto" aria-hidden="true"></i>Cursillos a los que he asistido
+                                    </span>
+                                    <span class="badge rounded-pill text-bg-secondary">Total: {{ mis_cursillos_asistidos|length }}</span>
+                                </div>
+                                <div class="card-body">
+                                    {% if mis_cursillos_asistidos %}
+                                        <ul class="list-group list-group-flush">
+                                            {% for curso in mis_cursillos_asistidos %}
+                                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
+                                                    <div>
+                                                        <a href="{% url 'administracion:cursillo_detalle' pk=curso.id %}" class="fw-semibold link-body-emphasis text-decoration-none">
+                                                            {{ curso.evento }}
+                                                        </a>
+                                                        <div class="small text-body-secondary">
+                                                            {{ curso.ciudad }} ({{ curso.pais }})
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge text-bg-dark">{{ curso.fecha|date:"d/m/Y" }}</span>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-body-secondary small mb-0 text-center py-3">
+                                            Aún no tienes asistencias registradas en cursillos de la asociación.
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            {% endif %}
         {% endif %}
 
         {% if puede_gestionar_dojo %}

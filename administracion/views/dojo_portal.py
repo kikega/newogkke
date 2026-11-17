@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db.models import Prefetch
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -19,7 +20,20 @@ from administracion.middleware.dojo_tenant import (
     is_core_host,
     resolve_dojo_from_host,
 )
-from administracion.models import Alumno, Cursillo, Dojo, Peticion, Tablon
+from administracion.models import (
+    Alumno,
+    Cursillo,
+    Dojo,
+    Examen,
+    Peticion,
+    Tablon,
+    obtener_tablon_intercalado,
+)
+from administracion.permissions import (
+    es_alumno_solo_portal_dojo,
+    obtener_dojo_usuario,
+    obtener_perfiles_alumno,
+)
 
 
 def usuario_puede_gestionar_dojo(user, dojo):
@@ -62,22 +76,92 @@ class DojoPortalView(View):
 
     def get(self, request, slug=None):
         dojo = self.get_dojo(request, slug=slug)
+
+        # Si el usuario autenticado es un alumno regular (DAN o Color), solo puede acceder al portal de su propio Dojo
+        if request.user.is_authenticated and es_alumno_solo_portal_dojo(request.user):
+            dojo_propio = obtener_dojo_usuario(request.user)
+            if dojo_propio and dojo_propio.pk != dojo.pk and dojo_propio.slug:
+                return redirect(reverse("administracion:dojo_portal", kwargs={"slug": dojo_propio.slug}))
+
         puede_gestionar = usuario_puede_gestionar_dojo(request.user, dojo)
+        hoy = datetime.date.today()
 
         instructor = (
             Alumno.objects.select_related("usuario")
             .filter(dojo=dojo, instructor=True)
             .first()
         )
-        tablon_qs = Tablon.objects.for_dojo(dojo).order_by("-fecha", "-id")
-        cintos_negros = (
+        tablon_particulares_qs = Tablon.objects.for_dojo(dojo).order_by("fecha", "id")
+        tablon_qs = obtener_tablon_intercalado(tablon_particulares_qs)
+
+        # Escalafón DAN del Dojo con los exámenes de cada compañero pre-cargados
+        cintos_negros = list(
             Alumno.objects.filter(dojo=dojo, instructor=False, activo=True)
+            .prefetch_related(
+                Prefetch(
+                    "examen_set",
+                    queryset=Examen.objects.select_related("evento").order_by("grado", "evento__fecha"),
+                    to_attr="examenes_ordenados",
+                )
+            )
             .order_by("-grado", "apellidos", "nombre")
         )
-        proximos_cursillos = (
-            Cursillo.objects.filter(fecha__gte=datetime.date.today())
-            .order_by("fecha")[:3]
+
+        # Perfil personal del usuario logado si pertenece a este Dojo
+        mi_alumno_dan = None
+        mi_alumno_color = None
+        mis_examenes_dan = []
+        mis_examenes_kyu = []
+        mis_cursillos_asistidos = []
+
+        if request.user.is_authenticated:
+            alumno_dan, alumno_color = obtener_perfiles_alumno(request.user)
+            if alumno_dan and alumno_dan.dojo_id == dojo.id:
+                mi_alumno_dan = alumno_dan
+                examenes_qs = list(
+                    Examen.objects.filter(alumno=alumno_dan)
+                    .select_related("evento")
+                    .order_by("evento__fecha")
+                )
+                for idx, exam in enumerate(examenes_qs):
+                    if idx == len(examenes_qs) - 1:
+                        anios_grado = max(0, hoy.year - exam.evento.fecha.year)
+                    else:
+                        siguiente_fecha = examenes_qs[idx + 1].evento.fecha
+                        anios_grado = max(0, siguiente_fecha.year - exam.evento.fecha.year)
+                    mis_examenes_dan.append((exam, anios_grado))
+                mis_cursillos_asistidos = list(alumno_dan.cursillo_set.all().order_by("-fecha"))
+            elif alumno_color and alumno_color.dojo_id == dojo.id:
+                mi_alumno_color = alumno_color
+                mis_examenes_kyu = list(
+                    alumno_color.historial_grados.select_related("grado", "evaluador").order_by("-fecha_examen", "-grado__orden")
+                )
+                mis_cursillos_asistidos = list(alumno_color.cursillos_asistidos.all().order_by("-fecha"))
+
+        proximos_cursillos = list(
+            Cursillo.objects.filter(fecha__gte=hoy).order_by("fecha")[:5]
         )
+        inscritos_dan_ids = (
+            set(mi_alumno_dan.cursillo_set.filter(fecha__gte=hoy).values_list("id", flat=True))
+            if mi_alumno_dan
+            else set()
+        )
+        inscritos_color_ids = (
+            set(mi_alumno_color.cursillos_asistidos.filter(fecha__gte=hoy).values_list("id", flat=True))
+            if mi_alumno_color
+            else set()
+        )
+        for curso in proximos_cursillos:
+            if mi_alumno_dan:
+                curso.usuario_inscrito = curso.id in inscritos_dan_ids
+                curso.usuario_puede_inscribirse = not mi_alumno_dan.instructor
+            elif mi_alumno_color:
+                curso.usuario_inscrito = curso.id in inscritos_color_ids
+                curso.usuario_puede_inscribirse = bool(curso.abierto_cintos_color)
+            else:
+                curso.usuario_inscrito = False
+                curso.usuario_puede_inscribirse = False
+
         peticiones_pendientes = (
             Peticion.objects.for_dojo(dojo).filter(finalizada=False).count()
             if puede_gestionar
@@ -94,12 +178,18 @@ class DojoPortalView(View):
             "dojo": dojo,
             "instructor": instructor,
             "tablon": tablon_qs,
+            "tablon_particulares": tablon_particulares_qs,
             "cintos_negros_dojo": cintos_negros,
-            "total_cintos_negros": cintos_negros.count(),
+            "total_cintos_negros": len(cintos_negros),
             "proximos_cursillos": proximos_cursillos,
             "puede_gestionar_dojo": puede_gestionar,
             "peticiones_pendientes": peticiones_pendientes,
             "lineas_horario": lineas_horario,
+            "mi_alumno_dan": mi_alumno_dan,
+            "mi_alumno_color": mi_alumno_color,
+            "mis_examenes_dan": mis_examenes_dan,
+            "mis_examenes_kyu": mis_examenes_kyu,
+            "mis_cursillos_asistidos": mis_cursillos_asistidos,
             "tablon_form": TablonNuevoForm(),
             "config_form": DojoPortalConfigForm(instance=dojo) if puede_gestionar else None,
             "dojo_base_domain": getattr(settings, "DOJO_BASE_DOMAIN", "ogkke.es"),

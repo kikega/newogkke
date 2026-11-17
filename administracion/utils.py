@@ -179,3 +179,95 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR', '')
     return ip
+
+
+def invitar_o_vincular_usuario_alumno(alumno_obj, email, request):
+    """
+    Crea o actualiza la cuenta de Usuario para un Alumno (DAN) o AlumnoColor (Kyu mayor de edad)
+    y envía por correo electrónico el enlace seguro para establecer su contraseña e iniciar sesión
+    en el portal de su Dojo.
+    Bloquea estrictamente la creación de cuentas para menores de 18 años.
+    """
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.tokens import default_token_generator
+    from django.core.exceptions import ValidationError
+    from django.utils.encoding import force_bytes
+    from django.utils.http import urlsafe_base64_encode
+    from administracion.models import Alumno, AlumnoColor
+
+    if getattr(alumno_obj, 'es_menor_edad', False):
+        raise ValidationError(
+            "Los menores de 18 años no tienen acceso a la aplicación; el instructor del Dojo es el encargado de realizar sus gestiones."
+        )
+
+    email_clean = (email or "").strip().lower()
+    if not email_clean:
+        raise ValidationError("Debes proporcionar un correo electrónico válido.")
+
+    User = get_user_model()
+    current_user = alumno_obj.usuario
+
+    existing_user = User.objects.filter(email__iexact=email_clean).first()
+    if existing_user and (not current_user or existing_user.pk != current_user.pk):
+        tiene_otro_dan = Alumno.objects.filter(usuario=existing_user).exclude(
+            pk=alumno_obj.pk if isinstance(alumno_obj, Alumno) else None
+        ).exists()
+        tiene_otro_color = AlumnoColor.objects.filter(usuario=existing_user).exclude(
+            pk=alumno_obj.pk if isinstance(alumno_obj, AlumnoColor) else None
+        ).exists()
+        if tiene_otro_dan or tiene_otro_color or existing_user.is_staff or existing_user.is_superuser:
+            raise ValidationError("Ese correo electrónico ya está asignado a otro usuario del sistema.")
+        user = existing_user
+        user.first_name = alumno_obj.nombre
+        user.last_name = alumno_obj.apellidos
+        user.is_active = True
+        user.save()
+    elif current_user:
+        user = current_user
+        user.email = email_clean
+        user.username = email_clean
+        user.first_name = alumno_obj.nombre
+        user.last_name = alumno_obj.apellidos
+        user.is_active = True
+        user.save()
+    else:
+        user = User(
+            email=email_clean,
+            username=email_clean,
+            first_name=alumno_obj.nombre,
+            last_name=alumno_obj.apellidos,
+            is_active=True,
+        )
+        user.set_unusable_password()
+        user.save()
+
+    if alumno_obj.usuario_id != user.pk:
+        alumno_obj.usuario = user
+        alumno_obj.save()
+
+    # Generar enlace de activación / creación de contraseña
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    domain = request.get_host() if request else getattr(settings, 'DOJO_BASE_DOMAIN', 'ogkke.es')
+    protocol = 'https' if (request and request.is_secure()) else 'http'
+
+    context = {
+        'email': user.email,
+        'domain': domain,
+        'site_name': 'OGKKE',
+        'uid': uid,
+        'user': user,
+        'token': token,
+        'protocol': protocol,
+        'dojo': alumno_obj.dojo,
+    }
+    subject = f"Activación de acceso al Portal del Dojo {alumno_obj.dojo.nombre} · OGKKE"
+    html_body = render_to_string('usuarios/emails/email_reset_password.html', context)
+    text_body = strip_tags(html_body)
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'ogkke@egalvez.es')
+
+    msg = EmailMultiAlternatives(subject, text_body, from_email, [user.email])
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=False)
+
+    return user
